@@ -18,10 +18,10 @@ const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
 });
 
 async function imgDataUrl(imgUrl: string): Promise<string> {
-  let blob = await fetch(imgUrl).then((r) => r.blob());
+  const blob = await fetch(imgUrl).then((r) => r.blob());
 
   return await new Promise((resolve) => {
-    let reader = new FileReader();
+    const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
@@ -59,7 +59,7 @@ export default function AppView(params: { post: Post }) {
         position,
       });
     })();
-  }, [imgUrl, title, intro, rubrique, slidesContent, position]);
+  }, [params.post.id, imgUrl, title, intro, rubrique, slidesContent, position]);
 
   const scale = colWidth ? colWidth / 1080 : 0;
 

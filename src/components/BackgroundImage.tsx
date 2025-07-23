@@ -1,9 +1,9 @@
 "use client";
 
-import { Image } from "react-konva";
+import { Image as KImage } from "react-konva";
 
 export default function BackgroundImage(
-  props: React.ComponentProps<typeof Image> & { image: HTMLImageElement },
+  props: React.ComponentProps<typeof KImage> & { image: HTMLImageElement },
 ) {
   const imgScale =
     props.image.width / props.image.height > 1080 / 1350
@@ -11,7 +11,7 @@ export default function BackgroundImage(
       : 1080 / props.image.width;
 
   return (
-    <Image
+    <KImage
       x={0}
       y={0}
       scaleY={imgScale}

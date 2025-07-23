@@ -4,7 +4,7 @@ import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
 import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
-import { Image, Layer, Rect, Stage, Text } from "react-konva";
+import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 
 export default function ContentSlide(props: {
@@ -72,7 +72,7 @@ export default function ContentSlide(props: {
           height={1350}
           fill="rgba(17,17,17,0.61)"
         />
-        <Image image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
+        <KImage image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
         <Text
           text={props.rubrique}
           x={1080 - 60 - rubriqueWidth}

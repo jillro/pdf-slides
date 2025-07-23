@@ -76,7 +76,7 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .input-group input[type="text"], textarea {
