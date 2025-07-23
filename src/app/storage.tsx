@@ -47,5 +47,6 @@ export async function savePost(post: Post) {
   }
 
   client.SET(post.id, JSON.stringify(post));
+  client.EXPIRE(post.id, 60 * 60 * 24 * 30);
   return;
 }
