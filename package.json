@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "license": "MIT",
   "dependencies": {
     "eslint-config-prettier": "^10.1.8",
     "jszip": "^3.10.1",
