@@ -16,6 +16,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-konva": "^19.0.7",
+    "redis": "^5.6.1",
     "use-image": "^1.1.4",
     "usehooks-ts": "^3.1.1"
   },
