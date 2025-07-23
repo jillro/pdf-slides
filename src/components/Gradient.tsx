@@ -1,6 +1,8 @@
+"use client";
+
 import { Rect } from "react-konva";
 
-export function Gradient(props: {
+export default function Gradient(props: {
   position: "top" | "bottom";
   height: number;
 }) {

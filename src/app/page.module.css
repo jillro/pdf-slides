@@ -14,13 +14,13 @@
 }
 
 
-.container .col.result .canvas-container {
+.container .col.result .canvasContainer {
   border: 1px solid #aaa;
   position: relative;
 }
 
 
-.container .col.result .canvas-container button.canvas-overlay {
+.container .col.result .canvasContainer .canvasOverlay {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -36,12 +36,12 @@
     background-color: rgba(0, 0, 0, 0.2);
   }
 
-  &.canvas-next {
+  &.canvasNext {
     right: 0;
   }
 }
 
-.container .col.content {
+.container .col.controls {
   display: flex;
   flex-direction: column;
   gap: 1rem;

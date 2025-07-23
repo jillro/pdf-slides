@@ -1,6 +1,8 @@
+"use client";
+
 import { Image } from "react-konva";
 
-export function BackgroundImage(
+export default function BackgroundImage(
   props: React.ComponentProps<typeof Image> & { image: HTMLImageElement },
 ) {
   const imgScale =

@@ -1,14 +1,20 @@
+"use client";
+
 import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
 import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
-import { Image, Layer, Rect, Text } from "react-konva";
-import { BackgroundImage } from "./BackgroundImage.tsx";
+import { Image, Layer, Rect, Stage, Text } from "react-konva";
+import BackgroundImage from "./BackgroundImage";
 
-export function ContentSlide(props: {
+export default function ContentSlide(props: {
   img?: HTMLImageElement;
   rubrique: string;
   content: string;
+  scale: number;
+  width: number;
+  ref: React.Ref<Konva.Stage>;
+  display: boolean;
 }) {
   const [logo] = useImage(logoUrl, "anonymous");
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
@@ -43,39 +49,54 @@ export function ContentSlide(props: {
   }, [contentHeight, fontSize]);
 
   return (
-    <Layer background={"white"}>
-      {props.img && (
-        <BackgroundImage
-          image={props.img}
-          filters={[Konva.Filters.Blur]}
-          blurRadius={100}
-          ref={imgRef}
+    <Stage
+      scaleX={props.scale}
+      scaleY={props.scale}
+      width={props.width}
+      height={props.width ? (props.width * 1350) / 1080 : 0}
+      ref={props.ref}
+      style={{ display: props.display ? "block" : "none" }}
+    >
+      <Layer background={"white"}>
+        {props.img && (
+          <BackgroundImage
+            image={props.img}
+            filters={[Konva.Filters.Blur]}
+            blurRadius={100}
+            ref={imgRef}
+          />
+        )}
+        <Rect
+          x={0}
+          y={0}
+          width={1080}
+          height={1350}
+          fill="rgba(17,17,17,0.61)"
         />
-      )}
-      <Rect x={0} y={0} width={1080} height={1350} fill="rgba(17,17,17,0.61)" />
-      <Image image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
-      <Text
-        text={props.rubrique}
-        x={1080 - 60 - rubriqueWidth}
-        y={60}
-        ref={rubriqueRef}
-        fill={"#ffd9af"}
-        wrap={"word"}
-        fontSize={(60 / 80) * 64}
-        fontFamily={"Rubik"}
-      />
+        <Image image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
+        <Text
+          text={props.rubrique}
+          x={1080 - 60 - rubriqueWidth}
+          y={60}
+          ref={rubriqueRef}
+          fill={"#ffd9af"}
+          wrap={"word"}
+          fontSize={(60 / 80) * 64}
+          fontFamily={"Rubik"}
+        />
 
-      <Text
-        text={props.content}
-        x={150}
-        y={(1350 - contentHeight) / 2}
-        ref={contentRef}
-        width={1080 - 150 * 2}
-        fill={"white"}
-        wrap={"word"}
-        fontSize={fontSize}
-        fontFamily={"Atkinson Hyperlegible"}
-      />
-    </Layer>
+        <Text
+          text={props.content}
+          x={150}
+          y={(1350 - contentHeight) / 2}
+          ref={contentRef}
+          width={1080 - 150 * 2}
+          fill={"white"}
+          wrap={"word"}
+          fontSize={fontSize}
+          fontFamily={"Atkinson Hyperlegible"}
+        />
+      </Layer>
+    </Stage>
   );
 }

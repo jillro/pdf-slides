@@ -1,23 +1,33 @@
-import "./App.css";
+"use client";
+
+import styles from "./page.module.css";
+
+import dynamicImport from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { Stage } from "react-konva";
 import { useResizeObserver } from "usehooks-ts";
 import useImage from "use-image";
 import JSZip from "jszip";
+import { useSearchParams } from "next/navigation";
 
-import { FisrtSlide } from "./components/FirstSlide.tsx";
-import { ContentSlide } from "./components/ContentSlide.tsx";
-import Konva from "konva";
+export const dynamic = "force-static";
 
-function App() {
-  const hash = window.location.hash.slice(1);
+const FisrtSlide = dynamicImport(() => import("../components/FirstSlide"), {
+  ssr: false,
+});
+const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
+  ssr: false,
+});
+
+function Page() {
+  useSearchParams();
+  const hash =
+    typeof window !== "undefined" ? window?.location.hash.slice(1) : "";
   const init = hash ? JSON.parse(decodeURIComponent(hash)) : {};
   const [imgUrl, setImgUrl] = useState<string>("");
   const [img] = useImage(imgUrl, "anonymous");
   const ref = useRef<HTMLDivElement>(null);
 
   const { width: colWidth } = useResizeObserver({
-    // @ts-expect-error This works
     ref,
     box: "content-box",
   });
@@ -47,12 +57,12 @@ function App() {
 
   const scale = colWidth ? colWidth / 1080 : 0;
 
-  const stagesRef = useRef<Konva.Stage[]>([]);
+  const stagesRef = useRef([]);
   const handleDownload = async () => {
     const zip = new JSZip();
     await Promise.all(
       stagesRef.current.map(async (stage, i) => {
-        zip.file(`${i}.png`, await stage.toBlob({ pixelRatio: 2 }));
+        zip.file(`${i}.png`, (await stage.toBlob({ pixelRatio: 2 })) as Blob);
       }),
     );
     zip.generateAsync({ type: "blob" }).then((content) => {
@@ -64,12 +74,12 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <div className="col result">
-        <div className={"canvas-container"} ref={ref}>
+    <div className={styles.container}>
+      <div className={styles.col + " " + styles.result}>
+        <div className={styles.canvasContainer} ref={ref}>
           {currentSlide > 0 ? (
             <button
-              className="canvas-overlay canvas-previous"
+              className={styles.canvasOverlay + " " + styles.canvasPrev}
               onClick={() => setCurrentSlide(currentSlide - 1)}
             >
               &lt;
@@ -77,53 +87,47 @@ function App() {
           ) : null}
           {currentSlide < 1 + slidesContent.length - 1 ? (
             <button
-              className="canvas-overlay canvas-next"
+              className={styles.canvasOverlay + " " + styles.canvasNext}
               onClick={() => setCurrentSlide(currentSlide + 1)}
             >
               &gt;
             </button>
           ) : null}
 
-          <Stage
-            scaleX={scale}
-            scaleY={scale}
+          <FisrtSlide
+            img={img}
+            position={position}
+            rubrique={rubrique}
+            title={title}
+            intro={intro}
+            scale={scale}
             width={colWidth}
-            height={colWidth ? (colWidth * 1350) / 1080 : 0}
             ref={(el) => {
               if (el) {
                 stagesRef.current[0] = el;
               }
             }}
-            style={{ display: currentSlide === 0 ? "block" : "none" }}
-          >
-            <FisrtSlide
-              img={img}
-              position={position}
-              rubrique={rubrique}
-              title={title}
-              intro={intro}
-            />
-          </Stage>
+            display={currentSlide === 0}
+          />
           {slidesContent.map((content, i) => (
-            <Stage
+            <ContentSlide
               key={i}
-              scaleX={scale}
-              scaleY={scale}
+              img={img}
+              rubrique={rubrique}
+              content={content}
+              scale={scale}
               width={colWidth}
-              height={colWidth ? (colWidth * 1350) / 1080 : 0}
               ref={(el) => {
                 if (el) {
                   stagesRef.current[i + 1] = el;
                 }
               }}
-              style={{ display: i + 1 === currentSlide ? "block" : "none" }}
-            >
-              <ContentSlide img={img} rubrique={rubrique} content={content} />
-            </Stage>
+              display={i + 1 === currentSlide}
+            />
           ))}
         </div>
       </div>
-      <div className="col content">
+      <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
           <label htmlFor="rubrique">Rubrique</label>
           <select name="rubrique" onChange={(e) => setRubrique(e.target.value)}>
@@ -193,7 +197,7 @@ function App() {
         </div>
         <button onClick={handleDownload}>Télécharger</button>
       </div>
-      <div className="col controls">
+      <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
           {[...slidesContent, ""].map(
             (slideContent, i, slidesContentPlusNew) => (
@@ -220,4 +224,4 @@ function App() {
   );
 }
 
-export default App;
+export default Page;
