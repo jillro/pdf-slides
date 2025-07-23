@@ -46,5 +46,6 @@ export async function savePost(post: Post) {
     return;
   }
 
-  await client.SET(post.id, JSON.stringify(post));
+  client.SET(post.id, JSON.stringify(post));
+  return;
 }
