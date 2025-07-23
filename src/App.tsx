@@ -34,13 +34,15 @@ function App() {
   const [position, setPosition] = useState<"top" | "bottom">("top");
 
   useEffect(() => {
-    window.location.hash = JSON.stringify({
-      title,
-      intro,
-      rubrique,
-      slidesContent,
-      position,
-    });
+    window.location.hash = encodeURIComponent(
+      JSON.stringify({
+        title,
+        intro,
+        rubrique,
+        slidesContent,
+        position,
+      }),
+    );
   }, [title, intro, rubrique, slidesContent, position]);
 
   const scale = colWidth ? colWidth / 1080 : 0;
@@ -177,7 +179,7 @@ function App() {
             id="top"
             name="position"
             value="top"
-            checked={position === "top"}
+            defaultChecked={position === "top"}
           />
           <label htmlFor="top">En haut</label>
           <input
@@ -185,7 +187,7 @@ function App() {
             id="bottom"
             name="position"
             value="bottom"
-            checked={position === "bottom"}
+            defaultChecked={position === "bottom"}
           />
           <label htmlFor="bottom">En bas</label>
         </div>
