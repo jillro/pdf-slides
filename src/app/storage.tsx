@@ -19,23 +19,29 @@ export type Post = {
   position: "top" | "bottom";
 };
 
+const newPost = (id: string): Post => ({
+  id,
+  img: null,
+  title: "",
+  intro: "",
+  rubrique: "",
+  slidesContent: [],
+  position: "top",
+});
+
 const memory: { [key: string]: Post } = {};
 
 export async function getPost(id: string) {
-  const data = process.env.REDIS_URL
-    ? JSON.parse((await client.GET(id)) as string)
-    : memory[id];
-  return (
-    data || {
-      id,
-      img: null,
-      title: "",
-      intro: "",
-      rubrique: "",
-      slidesContent: [],
-      position: "top",
-    }
-  );
+  if (!process.env.REDIS_URL) {
+    return memory[id] || newPost(id);
+  }
+
+  if (!client.isReady) {
+    await client.connect();
+  }
+
+  const data: string = (await client.GET(id)) as string;
+  return JSON.parse(data) || newPost(id);
 }
 
 export async function savePost(post: Post) {
@@ -44,6 +50,10 @@ export async function savePost(post: Post) {
   if (!process.env.REDIS_URL) {
     memory[post.id] = post;
     return;
+  }
+
+  if (!client.isReady) {
+    await client.connect();
   }
 
   client.SET(post.id, JSON.stringify(post));
