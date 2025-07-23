@@ -1,5 +1,7 @@
 import { redirect, RedirectType } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 function Page() {
   const id = Math.random().toString(36).substring(7);
 
