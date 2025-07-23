@@ -19,7 +19,7 @@ export default function FisrtSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
 }) {
-  const [logo] = useImage(logoUrl, "anonymous");
+  const [logo] = useImage(logoUrl.src, "anonymous");
   const [titleHeight, setTitleHeight] = useState<number>(0);
   const [introHeight, setIntroHeight] = useState<number>(0);
 

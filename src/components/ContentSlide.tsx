@@ -16,7 +16,7 @@ export default function ContentSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
 }) {
-  const [logo] = useImage(logoUrl, "anonymous");
+  const [logo] = useImage(logoUrl.src, "anonymous");
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [contentHeight, setContentHeight] = useState<number>(0);
   const [fontSize, setFontSize] = useState<number>(64);
@@ -27,7 +27,6 @@ export default function ContentSlide(props: {
 
   useEffect(() => {
     imgRef.current?.cache();
-    console.log("expensive");
   }, [props.img]);
 
   useEffect(() => {

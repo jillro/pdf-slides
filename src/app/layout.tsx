@@ -3,6 +3,16 @@ import "./global.css";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { Rubik, Atkinson_Hyperlegible } from "next/font/google";
+
+const rubik = Rubik({
+  subsets: ["latin-ext"],
+});
+const atkinson = Atkinson_Hyperlegible({
+  subsets: ["latin-ext"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Visuels PDF",
 };
