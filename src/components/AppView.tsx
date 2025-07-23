@@ -10,7 +10,7 @@ import { useResizeObserver } from "usehooks-ts";
 
 import { Post, savePost } from "../app/storage";
 
-const FisrtSlide = dynamicImport(() => import("../components/FirstSlide"), {
+const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
   ssr: false,
 });
 const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
@@ -45,7 +45,9 @@ export default function AppView(params: { post: Post }) {
     init.slidesContent || [],
   );
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [position, setPosition] = useState<"top" | "bottom">("top");
+  const [position, setPosition] = useState<"top" | "bottom">(
+    init.position || "top",
+  );
 
   useEffect(() => {
     (async () => {
@@ -100,7 +102,7 @@ export default function AppView(params: { post: Post }) {
             </button>
           ) : null}
 
-          <FisrtSlide
+          <FirstSlide
             img={img}
             position={position}
             rubrique={rubrique}

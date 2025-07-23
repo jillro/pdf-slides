@@ -8,7 +8,7 @@ import { Image as KImage, Layer, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import Gradient from "./Gradient";
 
-export default function FisrtSlide(props: {
+export default function FirstSlide(props: {
   img?: HTMLImageElement;
   position: "top" | "bottom";
   rubrique: string;
