@@ -4,7 +4,6 @@ import styles from "./AppView.module.css";
 
 import { useEffect, useRef, useState } from "react";
 import dynamicImport from "next/dynamic";
-import { useRouter } from "next/navigation";
 import JSZip from "jszip";
 import useImage from "use-image";
 import { useResizeObserver } from "usehooks-ts";

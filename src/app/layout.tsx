@@ -5,10 +5,10 @@ import { Suspense } from "react";
 
 import { Rubik, Atkinson_Hyperlegible } from "next/font/google";
 
-const rubik = Rubik({
+Rubik({
   subsets: ["latin-ext"],
 });
-const atkinson = Atkinson_Hyperlegible({
+Atkinson_Hyperlegible({
   subsets: ["latin-ext"],
   weight: ["400", "700"],
 });
