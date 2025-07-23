@@ -2,7 +2,7 @@ import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
 import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
-import { Image, Layer, Rect, Text } from "react-konva";
+import { Image, Layer, Text } from "react-konva";
 import { BackgroundImage } from "./BackgroundImage.tsx";
 import { Gradient } from "./Gradient.tsx";
 
