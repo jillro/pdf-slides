@@ -20,7 +20,7 @@ export default function ContentSlide(props: {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [contentHeight, setContentHeight] = useState<number>(0);
-  const [fontSize, setFontSize] = useState<number>(64);
+  const [fontSize, setFontSize] = useState<number>(58);
 
   const imgRef = useRef<Konva.Image>(null);
   const rubriqueRef = useRef<Konva.Text>(null);
@@ -39,12 +39,12 @@ export default function ContentSlide(props: {
   }, [fontSize, props.content]);
 
   useEffect(() => {
-    if ((contentRef.current?.height() || 0) > 1050) {
-      setFontSize(Math.min(64, fontSize - 1));
+    if ((contentRef.current?.height() || 0) > 1000) {
+      setFontSize(Math.min(58, fontSize - 1));
     }
 
     if ((contentRef.current?.height() || 0) < 950) {
-      setFontSize(Math.min(64, fontSize + 1));
+      setFontSize(Math.min(58, fontSize + 1));
     }
   }, [contentHeight, fontSize]);
 
