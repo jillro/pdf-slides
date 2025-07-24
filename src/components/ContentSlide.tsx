@@ -15,6 +15,7 @@ export default function ContentSlide(props: {
   width: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
+  last?: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
@@ -95,6 +96,20 @@ export default function ContentSlide(props: {
           fontSize={fontSize}
           fontFamily={"Atkinson Hyperlegible"}
         />
+
+        {!props.last ? (
+          <Text
+            text=">"
+            x={1080 - 150}
+            y={1143}
+            width={1080 - 150 * 2}
+            fill={"#ffd9af"}
+            wrap={"word"}
+            fontSize={108}
+            fontFamily={"Rubik"}
+            fontVariant={"bold"}
+          />
+        ) : null}
       </Layer>
     </Stage>
   );

@@ -165,6 +165,7 @@ export default function AppView(params: { post?: Post }) {
                 }
               }}
               display={i + 1 === currentSlide}
+              last={i + 1 === slidesContent.length}
             />
           ))}
         </div>
