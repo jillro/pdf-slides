@@ -3,10 +3,27 @@
 import { createClient } from "redis";
 
 let client: ReturnType<typeof createClient>;
-if (process.env.REDIS_URL) {
-  client = await createClient({
-    url: process.env.REDIS_URL,
-  }).connect();
+
+async function getClient() {
+  if (!client) {
+    client = await createClient({
+      url: process.env.REDIS_URL,
+    }).connect();
+  }
+
+  if (!client.isReady) {
+    try {
+      await client.connect();
+    } catch (e) {
+      if (e.message.includes("Socket already opened")) {
+        return client;
+      }
+
+      throw e;
+    }
+  }
+
+  return client;
 }
 
 export type Post = {
@@ -59,10 +76,7 @@ export async function getPost(id: string): Promise<Post> {
     return memory[id] || newPost(id);
   }
 
-  if (!client.isReady) {
-    await client.connect();
-  }
-
+  const client = await getClient();
   const redisResult = (await client.hGetAll(`hash:${id}`)) as RedisPost;
   if (redisResult) {
     return toJsValue(id, redisResult) as Post;
@@ -88,10 +102,7 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
     return;
   }
 
-  if (!client.isReady) {
-    await client.connect();
-  }
-
+  const client = await getClient();
   await client.hSet(`hash:${post.id}`, toRedisHash(post));
   await client.EXPIRE(`hash:${post.id}`, 60 * 60 * 24 * 30);
   return;
