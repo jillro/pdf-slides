@@ -8,6 +8,7 @@ async function getClient() {
   if (!client) {
     client = await createClient({
       url: process.env.REDIS_URL,
+      pingInterval: 10000,
     }).connect();
   }
 
