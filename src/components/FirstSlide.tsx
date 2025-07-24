@@ -47,7 +47,7 @@ export default function FirstSlide(props: {
         {props.img && <BackgroundImage image={props.img} />}
         <Gradient
           position={props.position}
-          height={titleHeight + introHeight + 350}
+          height={titleHeight + introHeight + 400}
         />
         <KImage
           image={logo}

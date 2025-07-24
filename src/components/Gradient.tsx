@@ -21,13 +21,17 @@ export default function Gradient(props: {
       fillLinearGradientEndPoint={{ x: 0, y: position === "top" ? height : 0 }}
       fillLinearGradientColorStops={[
         0,
-        "rgba(0,0,0,0.9)",
-        0.6,
-        "rgba(0,0,0,0.8)",
+        "rgba(0,0,0,1)",
+        0.5,
+        "rgba(0,0,0,1)",
         0.7,
-        "rgba(0,0,0,0.7)",
+        "rgba(0,0,0,0.9)",
+        0.75,
+        "rgba(0,0,0,0.8)",
         0.85,
         "rgba(0,0,0,0.4)",
+        0.95,
+        "rgba(0,0,0,0.1)",
         1,
         "rgba(0,0,0,0)",
       ]}
