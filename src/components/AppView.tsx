@@ -27,10 +27,28 @@ async function imgDataUrl(imgUrl: string): Promise<string> {
   });
 }
 
-export default function AppView(params: { post: Post }) {
+function getUseSavedState(id: string, init: Post) {
+  return function useSavedState<T>(key: string, defaultValue: T) {
+    const [state, setState] = useState(init[key] || defaultValue);
+
+    useEffect(() => {}, [key, state]);
+
+    return [
+      state,
+      async (value: T) => {
+        setState(value);
+        await savePost({
+          id,
+          [key]: state,
+        });
+      },
+    ];
+  };
+}
+
+export default function AppView(params: { post?: Post }) {
   const init = params.post;
-  const [imgUrl, setImgUrl] = useState<string>(init.img || "");
-  const [img] = useImage(imgUrl, "anonymous");
+  const id = params.post.id;
   const ref = useRef<HTMLDivElement>(null);
 
   const { width: colWidth } = useResizeObserver({
@@ -38,16 +56,32 @@ export default function AppView(params: { post: Post }) {
     box: "content-box",
   });
 
-  const [title, setTitle] = useState<string>(init.title || "");
-  const [intro, setIntro] = useState<string>(init.intro || "");
-  const [rubrique, setRubrique] = useState<string>(init.rubrique || "édito");
-  const [slidesContent, setSlidesContent] = useState<string[]>(
-    init.slidesContent || [],
+  const useSavedState = getUseSavedState(id, init);
+  const [title, setTitle] = useSavedState<string>("title", "");
+  const [intro, setIntro] = useSavedState<string>("intro", "");
+  const [rubrique, setRubrique] = useSavedState<string>("rubrique", "édito");
+  const [slidesContent, setSlidesContent] = useSavedState<string[]>(
+    "slidesContent",
+    [],
   );
+  const [position, setPosition] = useSavedState<"top" | "bottom">(
+    "position",
+    "top",
+  );
+  const [imgUrl, setImgUrl] = useState<string>(init.img || "");
+  const [img] = useImage(imgUrl, "anonymous");
+  useEffect(() => {
+    (async () => {
+      const dataUrl = await imgDataUrl(imgUrl);
+      if (!dataUrl) return;
+      await savePost({
+        id: params.post.id,
+        img: dataUrl,
+      });
+    })();
+  }, [params.post.id, imgUrl]);
+
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [position, setPosition] = useState<"top" | "bottom">(
-    init.position || "top",
-  );
 
   useEffect(() => {
     (async () => {

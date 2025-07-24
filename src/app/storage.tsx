@@ -92,7 +92,7 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
     await client.connect();
   }
 
-  client.hSet(`hash:${post.id}`, toRedisHash(post));
-  client.EXPIRE(`hash:${post.id}`, 60 * 60 * 24 * 30);
+  await client.hSet(`hash:${post.id}`, toRedisHash(post));
+  await client.EXPIRE(`hash:${post.id}`, 60 * 60 * 24 * 30);
   return;
 }
