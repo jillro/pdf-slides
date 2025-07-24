@@ -19,6 +19,29 @@ export type Post = {
   position: "top" | "bottom";
 };
 
+type RedisPost = Partial<
+  Omit<Post, "slidesContent"> & {
+    slidesContent: string; // serialized array
+  }
+>;
+
+const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
+  ...(post.img ? { img: post.img } : {}),
+  ...(post.title ? { title: post.title } : {}),
+  ...(post.intro ? { intro: post.intro } : {}),
+  ...(post.rubrique ? { rubrique: post.rubrique } : {}),
+  ...(post.slidesContent
+    ? { slidesContent: JSON.stringify(post.slidesContent) }
+    : {}),
+  ...(post.position ? { position: post.position } : {}),
+});
+
+const toJsValue = (id: string, post: RedisPost): Post => ({
+  ...newPost(id),
+  ...post,
+  slidesContent: post.slidesContent ? JSON.parse(post.slidesContent) : [],
+});
+
 const newPost = (id: string): Post => ({
   id,
   img: null,
@@ -40,9 +63,9 @@ export async function getPost(id: string): Promise<Post> {
     await client.connect();
   }
 
-  const redisResult = await client.json.get(`json:${id}`);
+  const redisResult = (await client.hGetAll(`hash:${id}`)) as RedisPost;
   if (redisResult) {
-    return redisResult as Post;
+    return toJsValue(id, redisResult) as Post;
   }
 
   const legacyRedisResult: string = (await client.GET(id)) as string;
@@ -69,7 +92,7 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
     await client.connect();
   }
 
-  client.json.merge(`json:${post.id}`, "$", post);
-  client.EXPIRE(`json:${post.id}`, 60 * 60 * 24 * 30);
+  client.hSet(`hash:${post.id}`, toRedisHash(post));
+  client.EXPIRE(`hash:${post.id}`, 60 * 60 * 24 * 30);
   return;
 }
