@@ -169,6 +169,8 @@ export default function AppView(params: { post?: Post }) {
             />
           ))}
         </div>
+
+        <button onClick={handleDownload}>Télécharger</button>
       </div>
       <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
@@ -238,7 +240,6 @@ export default function AppView(params: { post?: Post }) {
           />
           <label htmlFor="bottom">En bas</label>
         </div>
-        <button onClick={handleDownload}>Télécharger</button>
       </div>
       <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
