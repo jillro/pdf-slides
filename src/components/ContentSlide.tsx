@@ -43,7 +43,7 @@ export default function ContentSlide(props: {
       setFontSize(Math.min(58, fontSize - 1));
     }
 
-    if ((contentRef.current?.height() || 0) < 950) {
+    if ((contentRef.current?.height() || 0) < 900) {
       setFontSize(Math.min(58, fontSize + 1));
     }
   }, [contentHeight, fontSize]);
