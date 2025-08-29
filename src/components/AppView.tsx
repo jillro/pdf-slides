@@ -2,11 +2,11 @@
 
 import styles from "./AppView.module.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamicImport from "next/dynamic";
 import JSZip from "jszip";
 import useImage from "use-image";
-import { useResizeObserver } from "usehooks-ts";
+import { useInterval, useResizeObserver } from "usehooks-ts";
 
 import { Post, savePost } from "../app/storage";
 
@@ -27,23 +27,37 @@ async function imgDataUrl(imgUrl: string): Promise<string> {
   });
 }
 
-function getUseSavedState(id: string, init: Post) {
-  return function useSavedState<T>(key: string, defaultValue: T) {
-    const [state, setState] = useState(init[key] || defaultValue);
-
-    useEffect(() => {}, [key, state]);
-
-    return [
-      state,
-      async (value: T) => {
-        setState(value);
-        await savePost({
-          id,
-          [key]: state,
-        });
-      },
-    ];
+function useSavedPost(id: string, init: Post) {
+  const [scheduledChanges, setScheduledChanges] = useState<Partial<Post>>({});
+  const scheduleSave = (key: string, value: string) => {
+    setScheduledChanges((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
+
+  useInterval(async () => {
+    if (Object.keys(scheduledChanges).length === 0) return;
+    await savePost({ ...scheduledChanges, id });
+    setScheduledChanges({});
+  }, 1000);
+
+  return useCallback(
+    function useSavedState<T>(key: string, defaultValue: T) {
+      const [state, setState] = useState(init[key] || defaultValue);
+      const unsaved = key in scheduledChanges;
+
+      return [
+        state,
+        unsaved,
+        (value: T) => {
+          setState(value);
+          scheduleSave(key, state);
+        },
+      ];
+    },
+    [init, scheduledChanges],
+  );
 }
 
 export default function AppView(params: { post?: Post }) {
@@ -56,21 +70,23 @@ export default function AppView(params: { post?: Post }) {
     box: "content-box",
   });
 
-  const useSavedState = getUseSavedState(id, init);
-  const [title, setTitle] = useSavedState<string>("title", "");
-  const [intro, setIntro] = useSavedState<string>("intro", "");
-  const [rubrique, setRubrique] = useSavedState<string>("rubrique", "édito");
-  const [slidesContent, setSlidesContent] = useSavedState<string[]>(
-    "slidesContent",
-    [],
+  const useSavedState = useSavedPost(id, init);
+  const [title, unsavedTitle, setTitle] = useSavedState<string>("title", "");
+  const [intro, unsavedIntro, setIntro] = useSavedState<string>("intro", "");
+  const [rubrique, unsavedRubrique, setRubrique] = useSavedState<string>(
+    "rubrique",
+    "édito",
   );
-  const [position, setPosition] = useSavedState<"top" | "bottom">(
-    "position",
-    "top",
-  );
+  const [slidesContent, unsavedSlidesContent, setSlidesContent] = useSavedState<
+    string[]
+  >("slidesContent", []);
+  const [position, unsavedPosition, setPosition] = useSavedState<
+    "top" | "bottom"
+  >("position", "top");
   const [imgUrl, setImgUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgUrl, "anonymous");
   useEffect(() => {
+    // This is only for saving the image
     (async () => {
       const dataUrl = await imgDataUrl(imgUrl);
       if (!dataUrl) return;
@@ -82,20 +98,6 @@ export default function AppView(params: { post?: Post }) {
   }, [params.post.id, imgUrl]);
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-
-  useEffect(() => {
-    (async () => {
-      await savePost({
-        id: params.post.id,
-        img: imgUrl ? await imgDataUrl(imgUrl) : null,
-        title,
-        intro,
-        rubrique,
-        slidesContent,
-        position,
-      });
-    })();
-  }, [params.post.id, imgUrl, title, intro, rubrique, slidesContent, position]);
 
   const scale = colWidth ? colWidth / 1080 : 0;
 
@@ -174,7 +176,9 @@ export default function AppView(params: { post?: Post }) {
       </div>
       <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
-          <label htmlFor="rubrique">Rubrique</label>
+          <label htmlFor="rubrique">
+            Rubrique {unsavedRubrique ? "⏳" : null}
+          </label>
           <select name="rubrique" onChange={(e) => setRubrique(e.target.value)}>
             <option value="édito">Édito</option>
             <option value="actu">Actu</option>
@@ -199,20 +203,22 @@ export default function AppView(params: { post?: Post }) {
           />
         </div>
         <div className="input-group">
-          <label htmlFor="title">Titre</label>
+          <label htmlFor="title">Rubrique {unsavedTitle ? "⏳" : null}</label>
           <input
             name="title"
             type="text"
             value={title}
+            className={unsavedTitle ? styles.unsavedInput : ""}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <div className="input-group">
-          <label htmlFor="intro">Intro</label>
+          <label htmlFor="intro">Intro {unsavedIntro ? "⏳" : null}</label>
           <textarea
             rows={4}
             name="intro"
             value={intro}
+            className={unsavedIntro ? styles.unsavedInput : ""}
             onChange={(e) => setIntro(e.target.value)}
           />
         </div>
@@ -238,7 +244,7 @@ export default function AppView(params: { post?: Post }) {
             value="bottom"
             defaultChecked={position === "bottom"}
           />
-          <label htmlFor="bottom">En bas</label>
+          <label htmlFor="bottom">En bas {unsavedPosition ? "⏳" : null}</label>
         </div>
       </div>
       <div className={styles.col + " " + styles.controls}>
@@ -249,6 +255,7 @@ export default function AppView(params: { post?: Post }) {
                 key={i}
                 rows={7}
                 value={slideContent}
+                className={unsavedSlidesContent ? styles.unsavedInput : ""}
                 onChange={(e) => {
                   setSlidesContent(
                     slidesContentPlusNew
