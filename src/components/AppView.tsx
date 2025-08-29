@@ -17,14 +17,21 @@ const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
   ssr: false,
 });
 
-async function imgDataUrl(imgUrl: string): Promise<string> {
-  const blob = await fetch(imgUrl).then((r) => r.blob());
+async function resizeImage(imgBlob: Blob): Promise<string> {
+  // Get image current height
+  const img = new Image();
+  img.src = URL.createObjectURL(imgBlob);
+  await new Promise<void>((resolve) => (img.onload = () => resolve()));
 
-  return await new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
+  // Scale down the image to 1350 height, keeping the aspect ratio
+  const canvas = document.createElement("canvas");
+  canvas.height = 1350;
+  canvas.width = (1350 * img.width) / img.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  console.log(canvas.toDataURL());
+  return canvas.toDataURL();
 }
 
 function useSavedPost(id: string, init: Post) {
@@ -83,19 +90,18 @@ export default function AppView(params: { post?: Post }) {
   const [position, unsavedPosition, setPosition] = useSavedState<
     "top" | "bottom"
   >("position", "top");
-  const [imgUrl, setImgUrl] = useState<string>(init.img || "");
-  const [img] = useImage(imgUrl, "anonymous");
+  const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
+  const [img] = useImage(imgDataUrl, "anonymous");
   useEffect(() => {
     // This is only for saving the image
     (async () => {
-      const dataUrl = await imgDataUrl(imgUrl);
-      if (!dataUrl) return;
+      if (!imgDataUrl) return;
       await savePost({
         id: params.post.id,
-        img: dataUrl,
+        img: imgDataUrl,
       });
     })();
-  }, [params.post.id, imgUrl]);
+  }, [params.post.id, imgDataUrl]);
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
@@ -197,7 +203,7 @@ export default function AppView(params: { post?: Post }) {
             accept="image/*"
             onChange={async (e) => {
               if (e.target.files?.[0]) {
-                setImgUrl(URL.createObjectURL(e.target.files[0]));
+                setImgDataUrl(await resizeImage(e.target.files[0]));
               }
             }}
           />
