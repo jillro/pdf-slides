@@ -103,6 +103,7 @@ export default function AppView(params: { post?: Post }) {
     "subForMore",
     false,
   );
+  const [imgX, _, setImgX] = useSavedState("imgX", 0);
   const [numero, unsavedNumero, setNumero] = useSavedState("numero", 1);
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
@@ -161,6 +162,7 @@ export default function AppView(params: { post?: Post }) {
 
           <FirstSlide
             img={img}
+            imgX={imgX}
             position={position}
             rubrique={rubrique}
             title={title}
@@ -173,6 +175,7 @@ export default function AppView(params: { post?: Post }) {
               }
             }}
             display={currentSlide === 0}
+            onImgXChange={setImgX}
           />
           {slidesContent.map((content, i) => (
             <ContentSlide

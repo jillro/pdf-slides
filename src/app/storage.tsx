@@ -30,6 +30,7 @@ async function getClient() {
 export type Post = {
   id: string;
   img: string | null; // data-url
+  imgX: number;
   title: string;
   intro: string;
   rubrique: string;
@@ -49,6 +50,7 @@ type RedisPost = Partial<
 
 const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.img ? { img: post.img } : {}),
+  ...(post.imgX ? { imgX: post.imgX } : {}),
   ...(post.title ? { title: post.title } : {}),
   ...(post.intro ? { intro: post.intro } : {}),
   ...(post.rubrique ? { rubrique: post.rubrique } : {}),
@@ -72,6 +74,7 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
 const newPost = (id: string): Post => ({
   id,
   img: null,
+  imgX: 0,
   title: "",
   intro: "",
   rubrique: "",

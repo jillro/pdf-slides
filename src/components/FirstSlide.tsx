@@ -10,6 +10,7 @@ import Gradient from "./Gradient";
 
 export default function FirstSlide(props: {
   img?: HTMLImageElement;
+  imgX: number;
   position: "top" | "bottom";
   rubrique: string;
   title: string;
@@ -18,6 +19,7 @@ export default function FirstSlide(props: {
   width: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
+  onImgXChange: (x: number) => void;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [titleHeight, setTitleHeight] = useState<number>(0);
@@ -44,7 +46,13 @@ export default function FirstSlide(props: {
       style={{ display: props.display ? "block" : "none" }}
     >
       <Layer background={"white"}>
-        {props.img && <BackgroundImage image={props.img} />}
+        {props.img && (
+          <BackgroundImage
+            x={props.imgX}
+            image={props.img}
+            onCoordinateChange={props.onImgXChange}
+          />
+        )}
         <Gradient
           position={props.position}
           height={titleHeight + introHeight + 400}
