@@ -35,11 +35,15 @@ export type Post = {
   rubrique: string;
   slidesContent: string[];
   position: "top" | "bottom";
+  subForMore: boolean;
+  numero: number;
 };
 
 type RedisPost = Partial<
-  Omit<Post, "slidesContent"> & {
-    slidesContent: string; // serialized array
+  Omit<Post, "slidesContent" | "subForMore"> & {
+    slidesContent: string;
+    subForMore: "true" | "false";
+    // serialized array
   }
 >;
 
@@ -52,12 +56,17 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
     ? { slidesContent: JSON.stringify(post.slidesContent) }
     : {}),
   ...(post.position ? { position: post.position } : {}),
+  ...(post.subForMore !== undefined
+    ? { subForMore: String(post.subForMore) as "true" | "false" }
+    : {}),
+  ...(post.numero ? { numero: post.numero } : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
   ...newPost(id),
   ...post,
   slidesContent: post.slidesContent ? JSON.parse(post.slidesContent) : [],
+  subForMore: post.subForMore === "true",
 });
 
 const newPost = (id: string): Post => ({
@@ -68,6 +77,8 @@ const newPost = (id: string): Post => ({
   rubrique: "",
   slidesContent: [],
   position: "top",
+  subForMore: false,
+  numero: 1,
 });
 
 const memory: { [key: string]: Post } = {};

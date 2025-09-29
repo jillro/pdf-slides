@@ -16,6 +16,10 @@ const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
 const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
   ssr: false,
 });
+const SubForMoreSlide = dynamicImport(
+  () => import("../components/SubForMoreSlide"),
+  { ssr: false },
+);
 
 async function resizeImage(imgBlob: Blob): Promise<string> {
   // Get image current height
@@ -36,7 +40,7 @@ async function resizeImage(imgBlob: Blob): Promise<string> {
 
 function useSavedPost(id: string, init: Post) {
   const [scheduledChanges, setScheduledChanges] = useState<Partial<Post>>({});
-  const scheduleSave = (key: string, value: string) => {
+  const scheduleSave = <K extends keyof Post>(key: K, value: Post[K]) => {
     setScheduledChanges((prev) => ({
       ...prev,
       [key]: value,
@@ -50,14 +54,17 @@ function useSavedPost(id: string, init: Post) {
   }, 1000);
 
   return useCallback(
-    function useSavedState<T>(key: string, defaultValue: T) {
-      const [state, setState] = useState(init[key] || defaultValue);
+    function useSavedState<K extends keyof Post>(
+      key: K,
+      defaultValue: Post[K],
+    ): [Post[K], boolean, (value: Post[K]) => void] {
+      const [state, setState] = useState<Post[K]>(init[key] || defaultValue);
       const unsaved = key in scheduledChanges;
 
       return [
         state,
         unsaved,
-        (value: T) => {
+        (value: Post[K]) => {
           setState(value);
           scheduleSave(key, state);
         },
@@ -78,18 +85,25 @@ export default function AppView(params: { post?: Post }) {
   });
 
   const useSavedState = useSavedPost(id, init);
-  const [title, unsavedTitle, setTitle] = useSavedState<string>("title", "");
-  const [intro, unsavedIntro, setIntro] = useSavedState<string>("intro", "");
-  const [rubrique, unsavedRubrique, setRubrique] = useSavedState<string>(
+  const [title, unsavedTitle, setTitle] = useSavedState("title", "");
+  const [intro, unsavedIntro, setIntro] = useSavedState("intro", "");
+  const [rubrique, unsavedRubrique, setRubrique] = useSavedState(
     "rubrique",
     "édito",
   );
-  const [slidesContent, unsavedSlidesContent, setSlidesContent] = useSavedState<
-    string[]
-  >("slidesContent", []);
-  const [position, unsavedPosition, setPosition] = useSavedState<
-    "top" | "bottom"
-  >("position", "top");
+  const [slidesContent, unsavedSlidesContent, setSlidesContent] = useSavedState(
+    "slidesContent",
+    [],
+  );
+  const [position, unsavedPosition, setPosition] = useSavedState(
+    "position",
+    "top",
+  );
+  const [subForMore, unsavedSubForMore, setSubForMore] = useSavedState(
+    "subForMore",
+    false,
+  );
+  const [numero, unsavedNumero, setNumero] = useSavedState("numero", 1);
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
   useEffect(() => {
@@ -135,7 +149,8 @@ export default function AppView(params: { post?: Post }) {
               &lt;
             </button>
           ) : null}
-          {currentSlide < 1 + slidesContent.length - 1 ? (
+          {currentSlide <
+          1 + slidesContent.length - 1 + (subForMore ? 1 : 0) ? (
             <button
               className={styles.canvasOverlay + " " + styles.canvasNext}
               onClick={() => setCurrentSlide(currentSlide + 1)}
@@ -176,6 +191,20 @@ export default function AppView(params: { post?: Post }) {
               last={i + 1 === slidesContent.length}
             />
           ))}
+          {subForMore ? (
+            <SubForMoreSlide
+              img={img}
+              numero={numero}
+              scale={scale}
+              width={colWidth}
+              ref={(el) => {
+                if (el) {
+                  stagesRef.current[0] = el;
+                }
+              }}
+              display={currentSlide === slidesContent.length + 1}
+            />
+          ) : null}
         </div>
 
         <button onClick={handleDownload}>Télécharger</button>
@@ -251,6 +280,33 @@ export default function AppView(params: { post?: Post }) {
             defaultChecked={position === "bottom"}
           />
           <label htmlFor="bottom">En bas {unsavedPosition ? "⏳" : null}</label>
+        </div>
+        <div className="input-group">
+          <label htmlFor="subscribeformore">
+            <input
+              type="checkbox"
+              id="subscribeformore"
+              defaultChecked={subForMore}
+              onChange={(e) => setSubForMore(e.target.checked)}
+            />
+            Ajouter la slide « Abonne-toi pour lire la suite »{" "}
+            {unsavedSubForMore ? "⏳" : null}
+          </label>
+        </div>
+        <div className="input-group">
+          <label htmlFor="numero">Numéro</label>
+          <input
+            type="text"
+            id="numero"
+            className={unsavedNumero ? styles.unsavedInput : ""}
+            value={numero}
+            maxLength={2}
+            onChange={(e) =>
+              !isNaN(Number(e.target.value)) &&
+              (Number(e.target.value) || e.target.value === "") &&
+              setNumero(Number(e.target.value))
+            }
+          />
         </div>
       </div>
       <div className={styles.col + " " + styles.controls}>
