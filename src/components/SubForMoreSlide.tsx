@@ -9,6 +9,7 @@ import BackgroundImage from "./BackgroundImage";
 
 export default function SubForMoreSlide(props: {
   img?: HTMLImageElement;
+  imgX: number;
   numero: number;
   scale: number;
   width: number;
@@ -37,6 +38,7 @@ export default function SubForMoreSlide(props: {
         {props.img && (
           <BackgroundImage
             image={props.img}
+            x={props.imgX}
             filters={[Konva.Filters.Blur]}
             blurRadius={100}
             ref={imgRef}

@@ -9,6 +9,7 @@ import BackgroundImage from "./BackgroundImage";
 
 export default function ContentSlide(props: {
   img?: HTMLImageElement;
+  imgX: number;
   rubrique: string;
   content: string;
   scale: number;
@@ -61,6 +62,7 @@ export default function ContentSlide(props: {
         {props.img && (
           <BackgroundImage
             image={props.img}
+            x={props.imgX}
             filters={[Konva.Filters.Blur]}
             blurRadius={100}
             ref={imgRef}
