@@ -181,6 +181,7 @@ export default function AppView(params: { post?: Post }) {
             <ContentSlide
               key={i}
               img={img}
+              imgX={imgX}
               rubrique={rubrique}
               content={content}
               scale={scale}
@@ -197,6 +198,7 @@ export default function AppView(params: { post?: Post }) {
           {subForMore ? (
             <SubForMoreSlide
               img={img}
+              imgX={imgX}
               numero={numero}
               scale={scale}
               width={colWidth}
