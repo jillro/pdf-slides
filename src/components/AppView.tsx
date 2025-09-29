@@ -66,7 +66,7 @@ function useSavedPost(id: string, init: Post) {
         unsaved,
         (value: Post[K]) => {
           setState(value);
-          scheduleSave(key, state);
+          scheduleSave(key, value);
         },
       ];
     },
