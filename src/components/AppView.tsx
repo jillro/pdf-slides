@@ -204,7 +204,7 @@ export default function AppView(params: { post?: Post }) {
               width={colWidth}
               ref={(el) => {
                 if (el) {
-                  stagesRef.current[0] = el;
+                  stagesRef.current[slidesContent.length + 1] = el;
                 }
               }}
               display={currentSlide === slidesContent.length + 1}
