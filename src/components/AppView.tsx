@@ -103,7 +103,7 @@ export default function AppView(params: { post?: Post }) {
     "subForMore",
     false,
   );
-  const [imgX, _, setImgX] = useSavedState("imgX", 0);
+  const [imgX, , setImgX] = useSavedState("imgX", 0);
   const [numero, unsavedNumero, setNumero] = useSavedState("numero", 1);
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
