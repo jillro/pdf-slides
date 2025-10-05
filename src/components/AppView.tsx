@@ -298,21 +298,23 @@ export default function AppView(params: { post?: Post }) {
             {unsavedSubForMore ? "⏳" : null}
           </label>
         </div>
-        <div className="input-group">
-          <label htmlFor="numero">Numéro</label>
-          <input
-            type="text"
-            id="numero"
-            className={unsavedNumero ? styles.unsavedInput : ""}
-            value={numero}
-            maxLength={2}
-            onChange={(e) =>
-              !isNaN(Number(e.target.value)) &&
-              (Number(e.target.value) || e.target.value === "") &&
-              setNumero(Number(e.target.value))
-            }
-          />
-        </div>
+        {subForMore ? (
+          <div className="input-group">
+            <label htmlFor="numero">Numéro</label>
+            <input
+              type="text"
+              id="numero"
+              className={unsavedNumero ? styles.unsavedInput : ""}
+              value={numero}
+              maxLength={2}
+              onChange={(e) =>
+                !isNaN(Number(e.target.value)) &&
+                (Number(e.target.value) || e.target.value === "") &&
+                setNumero(Number(e.target.value))
+              }
+            />
+          </div>
+        ) : null}
       </div>
       <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
