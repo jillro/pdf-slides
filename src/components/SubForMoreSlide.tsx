@@ -3,9 +3,10 @@
 import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
 import { useEffect, useRef } from "react";
-import Konva from "konva";
+import type Konva from "konva";
 import { Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
+import { Blur } from "konva/lib/filters/Blur";
 
 export default function SubForMoreSlide(props: {
   img?: HTMLImageElement;
@@ -39,7 +40,7 @@ export default function SubForMoreSlide(props: {
           <BackgroundImage
             image={props.img}
             x={props.imgX}
-            filters={[Konva.Filters.Blur]}
+            filters={[Blur]}
             blurRadius={100}
             ref={imgRef}
           />

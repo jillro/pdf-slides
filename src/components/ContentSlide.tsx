@@ -3,9 +3,10 @@
 import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
 import { useEffect, useRef, useState } from "react";
-import Konva from "konva";
+import type Konva from "konva";
 import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
+import { Blur } from "konva/lib/filters/Blur";
 
 export default function ContentSlide(props: {
   img?: HTMLImageElement;
@@ -63,7 +64,7 @@ export default function ContentSlide(props: {
           <BackgroundImage
             image={props.img}
             x={props.imgX}
-            filters={[Konva.Filters.Blur]}
+            filters={[Blur]}
             blurRadius={100}
             ref={imgRef}
           />
