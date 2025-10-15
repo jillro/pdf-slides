@@ -8,11 +8,13 @@ import { Rubik, Atkinson_Hyperlegible } from "next/font/google";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rubik = Rubik({
   subsets: ["latin-ext"],
+  display: "block",
 });
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const atkinson = Atkinson_Hyperlegible({
   subsets: ["latin-ext"],
   weight: ["400", "700"],
+  display: "block",
 });
 
 export const metadata: Metadata = {
