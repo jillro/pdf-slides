@@ -39,7 +39,7 @@ export default function BackgroundImage(
           Math.min(e.target.x() + e.evt.movementX, 0),
           1080 - props.image.width * imgScale,
         );
-        props.onCoordinateChange?.(x);
+        props.onCoordinateChange?.(isNaN(x) ? 0 : x);
       }}
       {...props}
     />
