@@ -33,6 +33,12 @@ export default function BackgroundImage(
             1350 - props.image.height * imgScale,
           ),
         );
+      }}
+      onDragEnd={(e) => {
+        const x = Math.max(
+          Math.min(e.target.x() + e.evt.movementX, 0),
+          1080 - props.image.width * imgScale,
+        );
         props.onCoordinateChange?.(x);
       }}
       {...props}
