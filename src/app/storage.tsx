@@ -49,19 +49,19 @@ type RedisPost = Partial<
 >;
 
 const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
-  ...(post.img ? { img: post.img } : {}),
-  ...(post.imgX ? { imgX: post.imgX } : {}),
-  ...(post.title ? { title: post.title } : {}),
-  ...(post.intro ? { intro: post.intro } : {}),
-  ...(post.rubrique ? { rubrique: post.rubrique } : {}),
-  ...(post.slidesContent
+  ...(post.img != undefined ? { img: post.img } : {}),
+  ...(post.imgX != undefined ? { imgX: post.imgX } : {}),
+  ...(post.title != undefined ? { title: post.title } : {}),
+  ...(post.intro != undefined ? { intro: post.intro } : {}),
+  ...(post.rubrique != undefined ? { rubrique: post.rubrique } : {}),
+  ...(post.slidesContent != undefined
     ? { slidesContent: JSON.stringify(post.slidesContent) }
     : {}),
-  ...(post.position ? { position: post.position } : {}),
+  ...(post.position != undefined ? { position: post.position } : {}),
   ...(post.subForMore !== undefined
     ? { subForMore: String(post.subForMore) as "true" | "false" }
     : {}),
-  ...(post.numero ? { numero: post.numero } : {}),
+  ...(post.numero != undefined ? { numero: post.numero } : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
