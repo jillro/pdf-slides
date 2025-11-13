@@ -7,6 +7,7 @@ import type Konva from "konva";
 import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import { Blur } from "konva/lib/filters/Blur";
+import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 
 export default function ContentSlide(props: {
   img?: HTMLImageElement;
@@ -23,6 +24,7 @@ export default function ContentSlide(props: {
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [contentHeight, setContentHeight] = useState<number>(0);
   const [fontSize, setFontSize] = useState<number>(58);
+  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
   const imgRef = useRef<Konva.Image>(null);
   const rubriqueRef = useRef<Konva.Text>(null);
@@ -30,6 +32,13 @@ export default function ContentSlide(props: {
 
   useEffect(() => {
     imgRef.current?.cache();
+    if (props.img) {
+      const luminosity = getImageLuminosity(props.img);
+      const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
+      setOverlayOpacity(opacity);
+    } else {
+      setOverlayOpacity(0.61); // Default opacity when no image
+    }
   }, [props.img]);
 
   useEffect(() => {
@@ -74,7 +83,7 @@ export default function ContentSlide(props: {
           y={0}
           width={1080}
           height={1350}
-          fill="rgba(17,17,17,0.61)"
+          fill={`rgba(17,17,17,${overlayOpacity})`}
         />
         <KImage image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
         <Text

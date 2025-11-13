@@ -2,11 +2,12 @@
 
 import useImage from "use-image";
 import logoUrl from "../assets/logo.svg";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import { Blur } from "konva/lib/filters/Blur";
+import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 
 export default function SubForMoreSlide(props: {
   img?: HTMLImageElement;
@@ -18,12 +19,20 @@ export default function SubForMoreSlide(props: {
   display: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
+  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
   const imgRef = useRef<Konva.Image>(null);
   const contentRef = useRef<Konva.Text>(null);
 
   useEffect(() => {
     imgRef.current?.cache();
+    if (props.img) {
+      const luminosity = getImageLuminosity(props.img);
+      const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
+      setOverlayOpacity(opacity);
+    } else {
+      setOverlayOpacity(0.61); // Default opacity when no image
+    }
   }, [props.img]);
 
   return (
@@ -50,7 +59,7 @@ export default function SubForMoreSlide(props: {
           y={0}
           width={1080}
           height={1350}
-          fill="rgba(17,17,17,0.61)"
+          fill={`rgba(17,17,17,${overlayOpacity})`}
         />
 
         <Text

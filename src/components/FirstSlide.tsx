@@ -7,6 +7,7 @@ import type Konva from "konva";
 import { Image as KImage, Layer, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import Gradient from "./Gradient";
+import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 
 export default function FirstSlide(props: {
   img?: HTMLImageElement;
@@ -24,6 +25,7 @@ export default function FirstSlide(props: {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [titleHeight, setTitleHeight] = useState<number>(0);
   const [introHeight, setIntroHeight] = useState<number>(0);
+  const [gradientOpacity, setGradientOpacity] = useState<number>(1);
 
   const titleRef = useRef<Konva.Text>(null);
   const introRef = useRef<Konva.Text>(null);
@@ -35,6 +37,18 @@ export default function FirstSlide(props: {
   useEffect(() => {
     setIntroHeight(introRef.current?.height() || 0);
   }, [introRef, props.intro]);
+
+  useEffect(() => {
+    if (props.img) {
+      // Sample luminosity from the region where text will be displayed
+      const region = props.position === "top" ? "top" : "bottom";
+      const luminosity = getImageLuminosity(props.img, region);
+      const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.9);
+      setGradientOpacity(opacity);
+    } else {
+      setGradientOpacity(1);
+    }
+  }, [props.img, props.position]);
 
   return (
     <Stage
@@ -56,6 +70,7 @@ export default function FirstSlide(props: {
         <Gradient
           position={props.position}
           height={titleHeight + introHeight + 400}
+          maxOpacity={gradientOpacity}
         />
         <KImage
           image={logo}

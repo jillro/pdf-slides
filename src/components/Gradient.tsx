@@ -5,8 +5,12 @@ import { Rect } from "react-konva";
 export default function Gradient(props: {
   position: "top" | "bottom";
   height: number;
+  maxOpacity?: number; // Scale gradient opacity (0-1)
 }) {
-  const { position, height } = props;
+  const { position, height, maxOpacity = 1 } = props;
+
+  // Helper to create rgba with scaled opacity
+  const rgba = (opacity: number) => `rgba(0,0,0,${opacity * maxOpacity})`;
 
   return (
     <Rect
@@ -21,17 +25,17 @@ export default function Gradient(props: {
       fillLinearGradientEndPoint={{ x: 0, y: position === "top" ? height : 0 }}
       fillLinearGradientColorStops={[
         0,
-        "rgba(0,0,0,1)",
+        rgba(1),
         0.5,
-        "rgba(0,0,0,1)",
+        rgba(1),
         0.7,
-        "rgba(0,0,0,0.9)",
+        rgba(0.9),
         0.75,
-        "rgba(0,0,0,0.8)",
+        rgba(0.8),
         0.85,
-        "rgba(0,0,0,0.4)",
+        rgba(0.4),
         0.95,
-        "rgba(0,0,0,0.1)",
+        rgba(0.1),
         1,
         "rgba(0,0,0,0)",
       ]}
