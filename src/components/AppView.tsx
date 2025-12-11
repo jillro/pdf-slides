@@ -219,7 +219,7 @@ export default function AppView(params: { post?: Post }) {
           <label htmlFor="rubrique">
             Rubrique {unsavedRubrique ? "⏳" : null}
           </label>
-          <select name="rubrique" onChange={(e) => setRubrique(e.target.value)}>
+          <select name="rubrique" value={rubrique} onChange={(e) => setRubrique(e.target.value)}>
             <option value="édito">Édito</option>
             <option value="actu">Actu</option>
             <option value="ailleurs">Ailleurs</option>
