@@ -18,6 +18,8 @@ export default function FirstSlide(props: {
   intro: string;
   scale: number;
   width: number;
+  canvasWidth: number;
+  canvasHeight: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   onImgXChange: (x: number) => void;
@@ -55,7 +57,9 @@ export default function FirstSlide(props: {
       scaleX={props.scale}
       scaleY={props.scale}
       width={props.width}
-      height={props.width ? (props.width * 1350) / 1080 : 0}
+      height={
+        props.width ? (props.width * props.canvasHeight) / props.canvasWidth : 0
+      }
       ref={props.ref}
       style={{ display: props.display ? "block" : "none" }}
     >
@@ -64,6 +68,8 @@ export default function FirstSlide(props: {
           <BackgroundImage
             x={props.imgX}
             image={props.img}
+            canvasWidth={props.canvasWidth}
+            canvasHeight={props.canvasHeight}
             onCoordinateChange={props.onImgXChange}
           />
         )}
@@ -71,6 +77,7 @@ export default function FirstSlide(props: {
           position={props.position}
           height={titleHeight + introHeight + 400}
           maxOpacity={gradientOpacity}
+          canvasHeight={props.canvasHeight}
         />
         <KImage
           image={logo}
@@ -78,7 +85,7 @@ export default function FirstSlide(props: {
           y={
             props.position === "top"
               ? 70
-              : 1350 - 250 - introHeight - titleHeight
+              : props.canvasHeight - 250 - introHeight - titleHeight
           }
           width={80}
         />
@@ -88,7 +95,7 @@ export default function FirstSlide(props: {
           y={
             props.position === "top"
               ? 85
-              : 1350 - 235 - introHeight - titleHeight
+              : props.canvasHeight - 235 - introHeight - titleHeight
           }
           fill={"#ffd9af"}
           wrap={"word"}
@@ -101,10 +108,10 @@ export default function FirstSlide(props: {
           y={
             props.position === "top"
               ? 200
-              : 1350 - 150 - titleHeight - introHeight
+              : props.canvasHeight - 150 - titleHeight - introHeight
           }
           ref={titleRef}
-          width={1080 - 150 * 2}
+          width={props.canvasWidth - 150 * 2}
           fill={"white"}
           wrap={"word"}
           fontSize={80}
@@ -118,10 +125,10 @@ export default function FirstSlide(props: {
           y={
             props.position === "top"
               ? 250 + titleHeight
-              : 1350 - 100 - introHeight
+              : props.canvasHeight - 100 - introHeight
           }
           ref={introRef}
-          width={1080 - 150 * 2}
+          width={props.canvasWidth - 150 * 2}
           fill={"white"}
           wrap={"word"}
           fontSize={64}

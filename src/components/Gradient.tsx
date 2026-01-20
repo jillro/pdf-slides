@@ -6,8 +6,9 @@ export default function Gradient(props: {
   position: "top" | "bottom";
   height: number;
   maxOpacity?: number; // Scale gradient opacity (0-1)
+  canvasHeight: number;
 }) {
-  const { position, height, maxOpacity = 1 } = props;
+  const { position, height, maxOpacity = 1, canvasHeight } = props;
 
   // Helper to create rgba with scaled opacity
   const rgba = (opacity: number) => `rgba(0,0,0,${opacity * maxOpacity})`;
@@ -15,7 +16,7 @@ export default function Gradient(props: {
   return (
     <Rect
       x={0}
-      y={position === "top" ? 0 : 1350 - height}
+      y={position === "top" ? 0 : canvasHeight - height}
       width={1080}
       height={height}
       fillLinearGradientStartPoint={{

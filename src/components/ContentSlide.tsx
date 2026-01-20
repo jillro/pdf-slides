@@ -16,6 +16,8 @@ export default function ContentSlide(props: {
   content: string;
   scale: number;
   width: number;
+  canvasWidth: number;
+  canvasHeight: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   last?: boolean;
@@ -50,21 +52,26 @@ export default function ContentSlide(props: {
   }, [fontSize, props.content]);
 
   useEffect(() => {
-    if ((contentRef.current?.height() || 0) > 1000) {
+    const maxContentHeight = props.canvasHeight * 0.74;
+    const minContentHeight = props.canvasHeight * 0.67;
+
+    if ((contentRef.current?.height() || 0) > maxContentHeight) {
       setFontSize(Math.min(58, fontSize - 1));
     }
 
-    if ((contentRef.current?.height() || 0) < 900) {
+    if ((contentRef.current?.height() || 0) < minContentHeight) {
       setFontSize(Math.min(58, fontSize + 1));
     }
-  }, [contentHeight, fontSize]);
+  }, [contentHeight, fontSize, props.canvasHeight]);
 
   return (
     <Stage
       scaleX={props.scale}
       scaleY={props.scale}
       width={props.width}
-      height={props.width ? (props.width * 1350) / 1080 : 0}
+      height={
+        props.width ? (props.width * props.canvasHeight) / props.canvasWidth : 0
+      }
       ref={props.ref}
       style={{ display: props.display ? "block" : "none" }}
     >
@@ -73,6 +80,8 @@ export default function ContentSlide(props: {
           <BackgroundImage
             image={props.img}
             x={props.imgX}
+            canvasWidth={props.canvasWidth}
+            canvasHeight={props.canvasHeight}
             filters={[Blur]}
             blurRadius={100}
             ref={imgRef}
@@ -81,14 +90,19 @@ export default function ContentSlide(props: {
         <Rect
           x={0}
           y={0}
-          width={1080}
-          height={1350}
+          width={props.canvasWidth}
+          height={props.canvasHeight}
           fill={`rgba(17,17,17,${overlayOpacity})`}
         />
-        <KImage image={logo} x={1080 - 150 - rubriqueWidth} y={37} width={60} />
+        <KImage
+          image={logo}
+          x={props.canvasWidth - 150 - rubriqueWidth}
+          y={37}
+          width={60}
+        />
         <Text
           text={props.rubrique}
-          x={1080 - 60 - rubriqueWidth}
+          x={props.canvasWidth - 60 - rubriqueWidth}
           y={60}
           ref={rubriqueRef}
           fill={"#ffd9af"}
@@ -100,9 +114,9 @@ export default function ContentSlide(props: {
         <Text
           text={props.content}
           x={150}
-          y={(1350 - contentHeight) / 2}
+          y={(props.canvasHeight - contentHeight) / 2}
           ref={contentRef}
-          width={1080 - 150 * 2}
+          width={props.canvasWidth - 150 * 2}
           fill={"white"}
           wrap={"word"}
           fontSize={fontSize}
@@ -112,9 +126,9 @@ export default function ContentSlide(props: {
         {!props.last ? (
           <Text
             text=">"
-            x={1080 - 150}
-            y={1143}
-            width={1080 - 150 * 2}
+            x={props.canvasWidth - 150}
+            y={props.canvasHeight - 207}
+            width={props.canvasWidth - 150 * 2}
             fill={"#ffd9af"}
             wrap={"word"}
             fontSize={108}

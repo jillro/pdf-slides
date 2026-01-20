@@ -27,6 +27,8 @@ async function getClient() {
   return client;
 }
 
+import type { Format } from "../lib/formats";
+
 export type Post = {
   id: string;
   img: string | null; // data-url
@@ -38,6 +40,7 @@ export type Post = {
   position: "top" | "bottom";
   subForMore: boolean;
   numero: number;
+  format: Format;
 };
 
 type RedisPost = Partial<
@@ -62,6 +65,7 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
     ? { subForMore: String(post.subForMore) as "true" | "false" }
     : {}),
   ...(post.numero != undefined ? { numero: post.numero } : {}),
+  ...(post.format != undefined ? { format: post.format } : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
@@ -82,6 +86,7 @@ const newPost = (id: string): Post => ({
   position: "top",
   subForMore: false,
   numero: 1,
+  format: "post",
 });
 
 const memory: { [key: string]: Post } = {};

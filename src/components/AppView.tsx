@@ -9,6 +9,7 @@ import useImage from "use-image";
 import { useInterval, useResizeObserver } from "usehooks-ts";
 
 import { Post, savePost } from "../app/storage";
+import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 
 const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
   ssr: false,
@@ -27,14 +28,13 @@ async function resizeImage(imgBlob: Blob): Promise<string> {
   img.src = URL.createObjectURL(imgBlob);
   await new Promise<void>((resolve) => (img.onload = () => resolve()));
 
-  // Scale down the image to 1350 height, keeping the aspect ratio
+  // Scale down the image to target height, keeping the aspect ratio
   const canvas = document.createElement("canvas");
-  canvas.height = 1350;
-  canvas.width = (1350 * img.width) / img.height;
+  canvas.height = MAX_FORMAT_HEIGHT;
+  canvas.width = (MAX_FORMAT_HEIGHT * img.width) / img.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  console.log(canvas.toDataURL());
   return canvas.toDataURL();
 }
 
@@ -105,6 +105,10 @@ export default function AppView(params: { post?: Post }) {
   );
   const [imgX, , setImgX] = useSavedState("imgX", 0);
   const [numero, unsavedNumero, setNumero] = useSavedState("numero", 1);
+  const [format, unsavedFormat, setFormat] = useSavedState(
+    "format",
+    "post" as Format,
+  );
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
   useEffect(() => {
@@ -120,7 +124,9 @@ export default function AppView(params: { post?: Post }) {
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
-  const scale = colWidth ? colWidth / 1080 : 0;
+  const { width: canvasWidth, height: canvasHeight } =
+    FORMAT_DIMENSIONS[format];
+  const scale = colWidth ? colWidth / canvasWidth : 0;
 
   const stagesRef = useRef([]);
   const handleDownload = async () => {
@@ -169,6 +175,8 @@ export default function AppView(params: { post?: Post }) {
             intro={intro}
             scale={scale}
             width={colWidth}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
             ref={(el) => {
               if (el) {
                 stagesRef.current[0] = el;
@@ -186,6 +194,8 @@ export default function AppView(params: { post?: Post }) {
               content={content}
               scale={scale}
               width={colWidth}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
               ref={(el) => {
                 if (el) {
                   stagesRef.current[i + 1] = el;
@@ -202,6 +212,8 @@ export default function AppView(params: { post?: Post }) {
               numero={numero}
               scale={scale}
               width={colWidth}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
               ref={(el) => {
                 if (el) {
                   stagesRef.current[slidesContent.length + 1] = el;
@@ -216,10 +228,25 @@ export default function AppView(params: { post?: Post }) {
       </div>
       <div className={styles.col + " " + styles.controls}>
         <div className="input-group">
+          <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
+          <select
+            name="format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as Format)}
+          >
+            <option value="post">Post (4:5)</option>
+            <option value="story">Story (9:16)</option>
+          </select>
+        </div>
+        <div className="input-group">
           <label htmlFor="rubrique">
             Rubrique {unsavedRubrique ? "⏳" : null}
           </label>
-          <select name="rubrique" value={rubrique} onChange={(e) => setRubrique(e.target.value)}>
+          <select
+            name="rubrique"
+            value={rubrique}
+            onChange={(e) => setRubrique(e.target.value)}
+          >
             <option value="édito">Édito</option>
             <option value="actu">Actu</option>
             <option value="ailleurs">Ailleurs</option>
@@ -243,7 +270,7 @@ export default function AppView(params: { post?: Post }) {
           />
         </div>
         <div className="input-group">
-          <label htmlFor="title">Rubrique {unsavedTitle ? "⏳" : null}</label>
+          <label htmlFor="title">Titre {unsavedTitle ? "⏳" : null}</label>
           <input
             name="title"
             type="text"
