@@ -4,6 +4,7 @@ import styles from "./AppView.module.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamicImport from "next/dynamic";
+import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
 import JSZip from "jszip";
 import useImage from "use-image";
 import { useInterval, useResizeObserver } from "usehooks-ts";
@@ -344,28 +345,11 @@ export default function AppView(params: { post?: Post }) {
         ) : null}
       </div>
       <div className={styles.col + " " + styles.controls}>
-        <div className="input-group">
-          {[...slidesContent, ""].map(
-            (slideContent, i, slidesContentPlusNew) => (
-              <textarea
-                key={i}
-                rows={7}
-                value={slideContent}
-                className={unsavedSlidesContent ? styles.unsavedInput : ""}
-                onChange={(e) => {
-                  setSlidesContent(
-                    slidesContentPlusNew
-                      .map((s, j) => (j === i ? e.target.value : s))
-                      .filter(
-                        (s, j) =>
-                          j < slidesContentPlusNew.length - 2 || !!s.length,
-                      ),
-                  );
-                }}
-              />
-            ),
-          )}
-        </div>
+        <SlideContentEditor
+          value={slidesContent}
+          onChange={setSlidesContent}
+          unsaved={unsavedSlidesContent}
+        />
       </div>
     </div>
   );
