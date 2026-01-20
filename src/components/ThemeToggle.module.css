@@ -1,0 +1,27 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4em 0.8em;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.toggle:hover {
+  border-color: var(--accent);
+}
+
+.icon {
+  font-size: 1.1rem;
+}
+
+.label {
+  font-size: 0.85rem;
+}

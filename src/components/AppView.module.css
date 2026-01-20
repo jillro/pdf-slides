@@ -16,12 +16,10 @@
   gap: 1rem;
 }
 
-
 .container .col.result .canvasContainer {
-  border: 1px solid #aaa;
+  border: 1px solid var(--border-color);
   position: relative;
 }
-
 
 .container .col.result .canvasContainer .canvasOverlay {
   position: absolute;
@@ -45,20 +43,34 @@
 }
 
 .unsavedInput {
-    background: linear-gradient(-45deg, #ffffff, #eeeeee, #ffffff);
-    background-size: 400% 400%;
-    animation: gradient 1s ease infinite;
+  background: linear-gradient(
+    -45deg,
+    var(--unsaved-gradient-1),
+    var(--unsaved-gradient-2),
+    var(--unsaved-gradient-1)
+  );
+  background-size: 400% 400%;
+  animation: gradient 1s ease infinite;
 }
 
 @keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }
 
+.header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 100;
+}

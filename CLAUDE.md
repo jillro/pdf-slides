@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **pdf-posts** is a Next.js web application for creating social media visual content (Instagram Stories-sized posts) with PDF export capabilities. It's designed for "Parti des Femmes" (a feminist publication) to generate templated social media slides.
 
 ### Tech Stack
+
 - **Next.js 15.4.3** (App Router) + React 19.1.0 + TypeScript
 - **Konva.js** (2D canvas) + React-Konva (React bindings)
 - **Redis** (optional persistence, in-memory fallback)
@@ -45,6 +46,7 @@ npx prettier --write .  # Format entire codebase
 ### Core Components
 
 **AppView.tsx** (Client-only)
+
 - Main editor orchestrator, manages post state via `useSavedPost()` hook
 - Renders three Konva stages (canvas elements):
   - **FirstSlide**: Title slide with logo, rubrique, title, intro, gradient, draggable background image
@@ -55,6 +57,7 @@ npx prettier --write .  # Format entire codebase
 - Handles image resizing, canvas export to ZIP download
 
 **Storage Layer** (src/app/storage.tsx)
+
 - Two-tier system: Redis → Memory fallback
 - Server-side functions: `getPost(id)`, `savePost(post)`, `newPost()`
 - Post data: `{ id, img, imgX, title, intro, rubrique, slidesContent[], position, subForMore, numero }`
@@ -62,6 +65,7 @@ npx prettier --write .  # Format entire codebase
 - Visual indicator (⏳) for unsaved changes
 
 **Slide Components**
+
 - Dynamic rendering via Konva Stage (1080×1350px, Instagram Stories ratio)
 - Responsive scaling based on container width
 - Shared features: Google Fonts (Rubik, Atkinson Hyperlegible), image filtering, text auto-scaling
@@ -70,6 +74,7 @@ npx prettier --write .  # Format entire codebase
 ### Data Persistence Pattern
 
 Client calls `savePost()` server action → Server checks `REDIS_URL` env var:
+
 - **If Redis configured**: Writes to Redis HASH with 30-day TTL
 - **If no Redis**: Falls back to in-memory Map (data lost on restart)
 
@@ -89,7 +94,7 @@ Client-side state updates immediately; server saves are debounced (batched ~1s).
 webpack: (config) => {
   config.externals = [...config.externals, { canvas: "canvas" }];
   return config;
-}
+};
 ```
 
 Required to prevent canvas module errors with Konva in Next.js builds.
@@ -100,26 +105,26 @@ Required to prevent canvas module errors with Konva in Next.js builds.
 // next.config.mjs
 experimental: {
   serverActions: {
-    bodySizeLimit: "10mb"  // Supports large base64 image data URLs
+    bodySizeLimit: "10mb"; // Supports large base64 image data URLs
   }
 }
 ```
 
 ## Key Files & Responsibilities
 
-| File | Purpose |
-|------|---------|
-| `src/app/page.tsx` | Home route; generates random ID and redirects |
-| `src/app/[id]/page.tsx` | Dynamic post editor page; fetches post from storage |
-| `src/app/storage.tsx` | Server-side data access layer (Redis/Memory) |
-| `src/components/AppView.tsx` | Main client editor, state management, slide rendering |
-| `src/components/FirstSlide.tsx` | Konva stage for title slide |
-| `src/components/ContentSlide.tsx` | Konva stage for body slides |
-| `src/components/SubForMoreSlide.tsx` | Konva stage for subscription CTA |
-| `src/components/BackgroundImage.tsx` | Draggable image component (saves imgX position) |
-| `src/components/Gradient.tsx` | Gradient overlay component |
-| `src/app/global.css` | Global styles, font imports |
-| `src/app/layout.tsx` | Root HTML scaffold |
+| File                                 | Purpose                                               |
+| ------------------------------------ | ----------------------------------------------------- |
+| `src/app/page.tsx`                   | Home route; generates random ID and redirects         |
+| `src/app/[id]/page.tsx`              | Dynamic post editor page; fetches post from storage   |
+| `src/app/storage.tsx`                | Server-side data access layer (Redis/Memory)          |
+| `src/components/AppView.tsx`         | Main client editor, state management, slide rendering |
+| `src/components/FirstSlide.tsx`      | Konva stage for title slide                           |
+| `src/components/ContentSlide.tsx`    | Konva stage for body slides                           |
+| `src/components/SubForMoreSlide.tsx` | Konva stage for subscription CTA                      |
+| `src/components/BackgroundImage.tsx` | Draggable image component (saves imgX position)       |
+| `src/components/Gradient.tsx`        | Gradient overlay component                            |
+| `src/app/global.css`                 | Global styles, font imports                           |
+| `src/app/layout.tsx`                 | Root HTML scaffold                                    |
 
 ## Development Notes
 
@@ -148,7 +153,7 @@ experimental: {
 
 ### CSS & Styling
 
-- **CSS Modules** for component scoping (*.module.css)
+- **CSS Modules** for component scoping (\*.module.css)
 - No global CSS conflicts
 - Flexbox/Grid for layouts
 - Google Fonts loaded in `global.css`:
@@ -166,6 +171,7 @@ experimental: {
 ### Optional Redis
 
 Uncomment in `.env`:
+
 ```env
 REDIS_URL=redis://localhost:6379
 ```

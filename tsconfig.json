@@ -11,11 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "skipLibCheck": true,
     "strict": false,
     "noEmit": true,
@@ -28,9 +24,7 @@
     "./src",
     "./dist/types/**/*.ts",
     "./next-env.d.ts",
-    ".next/types/**/*.ts",
+    ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "./node_modules"
-  ]
+  "exclude": ["./node_modules"]
 }

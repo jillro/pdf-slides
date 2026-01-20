@@ -3,6 +3,7 @@
 import styles from "./AppView.module.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 import dynamicImport from "next/dynamic";
 import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
 import JSZip from "jszip";
@@ -146,211 +147,218 @@ export default function AppView(params: { post?: Post }) {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.col + " " + styles.result}>
-        <div className={styles.canvasContainer} ref={ref}>
-          {currentSlide > 0 ? (
-            <button
-              className={styles.canvasOverlay + " " + styles.canvasPrev}
-              onClick={() => setCurrentSlide(currentSlide - 1)}
-            >
-              &lt;
-            </button>
-          ) : null}
-          {currentSlide <
-          1 + slidesContent.length - 1 + (subForMore ? 1 : 0) ? (
-            <button
-              className={styles.canvasOverlay + " " + styles.canvasNext}
-              onClick={() => setCurrentSlide(currentSlide + 1)}
-            >
-              &gt;
-            </button>
-          ) : null}
-
-          <FirstSlide
-            img={img}
-            imgX={imgX}
-            position={position}
-            rubrique={rubrique}
-            title={title}
-            intro={intro}
-            scale={scale}
-            width={colWidth}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            ref={(el) => {
-              if (el) {
-                stagesRef.current[0] = el;
-              }
-            }}
-            display={currentSlide === 0}
-            onImgXChange={setImgX}
-          />
-          {slidesContent.map((content, i) => (
-            <ContentSlide
-              key={i}
-              img={img}
-              imgX={imgX}
-              rubrique={rubrique}
-              content={content}
-              scale={scale}
-              width={colWidth}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
-              ref={(el) => {
-                if (el) {
-                  stagesRef.current[i + 1] = el;
-                }
-              }}
-              display={i + 1 === currentSlide}
-              last={i + 1 === slidesContent.length}
-            />
-          ))}
-          {subForMore ? (
-            <SubForMoreSlide
-              img={img}
-              imgX={imgX}
-              numero={numero}
-              scale={scale}
-              width={colWidth}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
-              ref={(el) => {
-                if (el) {
-                  stagesRef.current[slidesContent.length + 1] = el;
-                }
-              }}
-              display={currentSlide === slidesContent.length + 1}
-            />
-          ) : null}
-        </div>
-
-        <button onClick={handleDownload}>Télécharger</button>
+    <>
+      <div className={styles.header}>
+        <ThemeToggle />
       </div>
-      <div className={styles.col + " " + styles.controls}>
-        <div className="input-group">
-          <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
-          <select
-            name="format"
-            value={format}
-            onChange={(e) => setFormat(e.target.value as Format)}
-          >
-            <option value="post">Post (4:5)</option>
-            <option value="story">Story (9:16)</option>
-          </select>
-        </div>
-        <div className="input-group">
-          <label htmlFor="rubrique">
-            Rubrique {unsavedRubrique ? "⏳" : null}
-          </label>
-          <select
-            name="rubrique"
-            value={rubrique}
-            onChange={(e) => setRubrique(e.target.value)}
-          >
-            <option value="édito">Édito</option>
-            <option value="actu">Actu</option>
-            <option value="ailleurs">Ailleurs</option>
-            <option value="pop !">Pop !</option>
-            <option value="comprendre">Comprendre</option>
-            <option value="dossier">Dossier</option>
-            <option value="au cas où">Au cas où</option>
-          </select>
-        </div>
-        <div className="input-group">
-          <label htmlFor="image">Image</label>
-          <input
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={async (e) => {
-              if (e.target.files?.[0]) {
-                setImgDataUrl(await resizeImage(e.target.files[0]));
-              }
-            }}
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="title">Titre {unsavedTitle ? "⏳" : null}</label>
-          <input
-            name="title"
-            type="text"
-            value={title}
-            className={unsavedTitle ? styles.unsavedInput : ""}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="intro">Intro {unsavedIntro ? "⏳" : null}</label>
-          <textarea
-            rows={4}
-            name="intro"
-            value={intro}
-            className={unsavedIntro ? styles.unsavedInput : ""}
-            onChange={(e) => setIntro(e.target.value)}
-          />
-        </div>
-        <div
-          onChange={(e) =>
-            setPosition(
-              (e.target as HTMLInputElement).value as "top" | "bottom",
-            )
-          }
-        >
-          <input
-            type="radio"
-            id="top"
-            name="position"
-            value="top"
-            defaultChecked={position === "top"}
-          />
-          <label htmlFor="top">En haut</label>
-          <input
-            type="radio"
-            id="bottom"
-            name="position"
-            value="bottom"
-            defaultChecked={position === "bottom"}
-          />
-          <label htmlFor="bottom">En bas {unsavedPosition ? "⏳" : null}</label>
-        </div>
-        <div className="input-group">
-          <label htmlFor="subscribeformore">
-            <input
-              type="checkbox"
-              id="subscribeformore"
-              defaultChecked={subForMore}
-              onChange={(e) => setSubForMore(e.target.checked)}
+      <div className={styles.container}>
+        <div className={styles.col + " " + styles.result}>
+          <div className={styles.canvasContainer} ref={ref}>
+            {currentSlide > 0 ? (
+              <button
+                className={styles.canvasOverlay + " " + styles.canvasPrev}
+                onClick={() => setCurrentSlide(currentSlide - 1)}
+              >
+                &lt;
+              </button>
+            ) : null}
+            {currentSlide <
+            1 + slidesContent.length - 1 + (subForMore ? 1 : 0) ? (
+              <button
+                className={styles.canvasOverlay + " " + styles.canvasNext}
+                onClick={() => setCurrentSlide(currentSlide + 1)}
+              >
+                &gt;
+              </button>
+            ) : null}
+
+            <FirstSlide
+              img={img}
+              imgX={imgX}
+              position={position}
+              rubrique={rubrique}
+              title={title}
+              intro={intro}
+              scale={scale}
+              width={colWidth}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
+              ref={(el) => {
+                if (el) {
+                  stagesRef.current[0] = el;
+                }
+              }}
+              display={currentSlide === 0}
+              onImgXChange={setImgX}
             />
-            Ajouter la slide « Abonne-toi pour lire la suite »{" "}
-            {unsavedSubForMore ? "⏳" : null}
-          </label>
+            {slidesContent.map((content, i) => (
+              <ContentSlide
+                key={i}
+                img={img}
+                imgX={imgX}
+                rubrique={rubrique}
+                content={content}
+                scale={scale}
+                width={colWidth}
+                canvasWidth={canvasWidth}
+                canvasHeight={canvasHeight}
+                ref={(el) => {
+                  if (el) {
+                    stagesRef.current[i + 1] = el;
+                  }
+                }}
+                display={i + 1 === currentSlide}
+                last={i + 1 === slidesContent.length}
+              />
+            ))}
+            {subForMore ? (
+              <SubForMoreSlide
+                img={img}
+                imgX={imgX}
+                numero={numero}
+                scale={scale}
+                width={colWidth}
+                canvasWidth={canvasWidth}
+                canvasHeight={canvasHeight}
+                ref={(el) => {
+                  if (el) {
+                    stagesRef.current[slidesContent.length + 1] = el;
+                  }
+                }}
+                display={currentSlide === slidesContent.length + 1}
+              />
+            ) : null}
+          </div>
+
+          <button onClick={handleDownload}>Télécharger</button>
         </div>
-        {subForMore ? (
+        <div className={styles.col + " " + styles.controls}>
           <div className="input-group">
-            <label htmlFor="numero">Numéro</label>
+            <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
+            <select
+              name="format"
+              value={format}
+              onChange={(e) => setFormat(e.target.value as Format)}
+            >
+              <option value="post">Post (4:5)</option>
+              <option value="story">Story (9:16)</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label htmlFor="rubrique">
+              Rubrique {unsavedRubrique ? "⏳" : null}
+            </label>
+            <select
+              name="rubrique"
+              value={rubrique}
+              onChange={(e) => setRubrique(e.target.value)}
+            >
+              <option value="édito">Édito</option>
+              <option value="actu">Actu</option>
+              <option value="ailleurs">Ailleurs</option>
+              <option value="pop !">Pop !</option>
+              <option value="comprendre">Comprendre</option>
+              <option value="dossier">Dossier</option>
+              <option value="au cas où">Au cas où</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label htmlFor="image">Image</label>
             <input
-              type="text"
-              id="numero"
-              className={unsavedNumero ? styles.unsavedInput : ""}
-              value={numero}
-              maxLength={2}
-              onChange={(e) =>
-                !isNaN(Number(e.target.value)) &&
-                (Number(e.target.value) || e.target.value === "") &&
-                setNumero(Number(e.target.value))
-              }
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                if (e.target.files?.[0]) {
+                  setImgDataUrl(await resizeImage(e.target.files[0]));
+                }
+              }}
             />
           </div>
-        ) : null}
+          <div className="input-group">
+            <label htmlFor="title">Titre {unsavedTitle ? "⏳" : null}</label>
+            <input
+              name="title"
+              type="text"
+              value={title}
+              className={unsavedTitle ? styles.unsavedInput : ""}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="intro">Intro {unsavedIntro ? "⏳" : null}</label>
+            <textarea
+              rows={4}
+              name="intro"
+              value={intro}
+              className={unsavedIntro ? styles.unsavedInput : ""}
+              onChange={(e) => setIntro(e.target.value)}
+            />
+          </div>
+          <div
+            onChange={(e) =>
+              setPosition(
+                (e.target as HTMLInputElement).value as "top" | "bottom",
+              )
+            }
+          >
+            <input
+              type="radio"
+              id="top"
+              name="position"
+              value="top"
+              defaultChecked={position === "top"}
+            />
+            <label htmlFor="top">En haut</label>
+            <input
+              type="radio"
+              id="bottom"
+              name="position"
+              value="bottom"
+              defaultChecked={position === "bottom"}
+            />
+            <label htmlFor="bottom">
+              En bas {unsavedPosition ? "⏳" : null}
+            </label>
+          </div>
+          <div className="input-group">
+            <label htmlFor="subscribeformore">
+              <input
+                type="checkbox"
+                id="subscribeformore"
+                defaultChecked={subForMore}
+                onChange={(e) => setSubForMore(e.target.checked)}
+              />
+              Ajouter la slide « Abonne-toi pour lire la suite »{" "}
+              {unsavedSubForMore ? "⏳" : null}
+            </label>
+          </div>
+          {subForMore ? (
+            <div className="input-group">
+              <label htmlFor="numero">Numéro</label>
+              <input
+                type="text"
+                id="numero"
+                className={unsavedNumero ? styles.unsavedInput : ""}
+                value={numero}
+                maxLength={2}
+                onChange={(e) =>
+                  !isNaN(Number(e.target.value)) &&
+                  (Number(e.target.value) || e.target.value === "") &&
+                  setNumero(Number(e.target.value))
+                }
+              />
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.col + " " + styles.controls}>
+          <SlideContentEditor
+            value={slidesContent}
+            onChange={setSlidesContent}
+            unsaved={unsavedSlidesContent}
+          />
+        </div>
       </div>
-      <div className={styles.col + " " + styles.controls}>
-        <SlideContentEditor
-          value={slidesContent}
-          onChange={setSlidesContent}
-          unsaved={unsavedSlidesContent}
-        />
-      </div>
-    </div>
+    </>
   );
 }
