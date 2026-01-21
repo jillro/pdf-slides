@@ -52,6 +52,10 @@ export default function FirstSlide(props: {
     }
   }, [props.img, props.position]);
 
+  // Extra margin for story format (1920px height) to leave room for Instagram UI
+  const isStoryFormat = props.canvasHeight === 1920;
+  const storyMargin = isStoryFormat ? 100 : 0;
+
   return (
     <Stage
       scaleX={props.scale}
@@ -75,7 +79,7 @@ export default function FirstSlide(props: {
         )}
         <Gradient
           position={props.position}
-          height={titleHeight + introHeight + 400}
+          height={titleHeight + introHeight + 400 + storyMargin}
           maxOpacity={gradientOpacity}
           canvasHeight={props.canvasHeight}
         />
@@ -84,8 +88,12 @@ export default function FirstSlide(props: {
           x={150}
           y={
             props.position === "top"
-              ? 70
-              : props.canvasHeight - 250 - introHeight - titleHeight
+              ? 70 + storyMargin
+              : props.canvasHeight -
+                250 -
+                introHeight -
+                titleHeight -
+                storyMargin
           }
           width={80}
         />
@@ -94,8 +102,12 @@ export default function FirstSlide(props: {
           x={260}
           y={
             props.position === "top"
-              ? 85
-              : props.canvasHeight - 235 - introHeight - titleHeight
+              ? 85 + storyMargin
+              : props.canvasHeight -
+                235 -
+                introHeight -
+                titleHeight -
+                storyMargin
           }
           fill={"#ffd9af"}
           wrap={"word"}
@@ -107,8 +119,12 @@ export default function FirstSlide(props: {
           x={150}
           y={
             props.position === "top"
-              ? 200
-              : props.canvasHeight - 150 - titleHeight - introHeight
+              ? 200 + storyMargin
+              : props.canvasHeight -
+                150 -
+                titleHeight -
+                introHeight -
+                storyMargin
           }
           ref={titleRef}
           width={props.canvasWidth - 150 * 2}
@@ -124,8 +140,8 @@ export default function FirstSlide(props: {
           x={150}
           y={
             props.position === "top"
-              ? 250 + titleHeight
-              : props.canvasHeight - 100 - introHeight
+              ? 250 + titleHeight + storyMargin
+              : props.canvasHeight - 100 - introHeight - storyMargin
           }
           ref={introRef}
           width={props.canvasWidth - 150 * 2}
