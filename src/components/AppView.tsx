@@ -11,6 +11,7 @@ import useImage from "use-image";
 import { useInterval, useResizeObserver } from "usehooks-ts";
 
 import { Post, savePost } from "../app/storage";
+import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 
 const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
@@ -126,6 +127,11 @@ export default function AppView(params: { post?: Post }) {
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
+  // WordPress import state
+  const [wpUrl, setWpUrl] = useState("");
+  const [wpLoading, setWpLoading] = useState(false);
+  const [wpError, setWpError] = useState<string | null>(null);
+
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
   const scale = colWidth ? colWidth / canvasWidth : 0;
@@ -144,6 +150,49 @@ export default function AppView(params: { post?: Post }) {
       link.download = "slides.zip";
       link.click();
     });
+  };
+
+  const handleWordPressImport = async () => {
+    if (!wpUrl.trim()) {
+      setWpError("URL invalide");
+      return;
+    }
+
+    setWpLoading(true);
+    setWpError(null);
+
+    const result = await importFromWordPress(wpUrl);
+
+    if (result.success === false) {
+      setWpError(result.error);
+      setWpLoading(false);
+      return;
+    }
+
+    const {
+      title: importedTitle,
+      content,
+      imageDataUrl,
+      rubrique: importedRubrique,
+    } = result.data;
+
+    setTitle(importedTitle);
+    setSlidesContent([content]);
+
+    if (importedRubrique) {
+      setRubrique(importedRubrique);
+    }
+
+    if (imageDataUrl) {
+      // Convert base64 to blob and resize using existing resizeImage function
+      const response = await fetch(imageDataUrl);
+      const blob = await response.blob();
+      const resizedDataUrl = await resizeImage(blob);
+      setImgDataUrl(resizedDataUrl);
+    }
+
+    setWpLoading(false);
+    setWpUrl("");
   };
 
   return (
@@ -233,6 +282,24 @@ export default function AppView(params: { post?: Post }) {
           <button onClick={handleDownload}>Télécharger</button>
         </div>
         <div className={styles.col + " " + styles.controls}>
+          <div className={styles.importSection}>
+            <label>Importer depuis WordPress</label>
+            <div className={styles.importRow}>
+              <input
+                type="url"
+                placeholder="URL de l'article"
+                value={wpUrl}
+                onChange={(e) => {
+                  setWpUrl(e.target.value);
+                  setWpError(null);
+                }}
+              />
+              <button onClick={handleWordPressImport} disabled={wpLoading}>
+                {wpLoading ? "..." : "Importer"}
+              </button>
+            </div>
+            {wpError && <div className={styles.importError}>{wpError}</div>}
+          </div>
           <div className="input-group">
             <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
             <select
