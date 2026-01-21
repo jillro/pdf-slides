@@ -26,44 +26,76 @@ function parseWordPressUrl(
   }
 }
 
+const HTML_ENTITIES: Record<string, string> = {
+  nbsp: "\u00A0",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  // French accented characters
+  agrave: "à",
+  acirc: "â",
+  auml: "ä",
+  eacute: "é",
+  egrave: "è",
+  ecirc: "ê",
+  euml: "ë",
+  iacute: "í",
+  igrave: "ì",
+  icirc: "î",
+  iuml: "ï",
+  oacute: "ó",
+  ograve: "ò",
+  ocirc: "ô",
+  ouml: "ö",
+  uacute: "ú",
+  ugrave: "ù",
+  ucirc: "û",
+  uuml: "ü",
+  ccedil: "ç",
+  oelig: "œ",
+  aelig: "æ",
+  // Punctuation
+  ndash: "\u2013",
+  mdash: "\u2014",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  hellip: "\u2026",
+  laquo: "\u00AB",
+  raquo: "\u00BB",
+};
+
+function decodeHtmlEntities(text: string): string {
+  return (
+    text
+      // Decode numeric entities (decimal): &#123;
+      .replace(/&#(\d+);/g, (_, code) =>
+        String.fromCharCode(parseInt(code, 10)),
+      )
+      // Decode numeric entities (hex): &#x7B;
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, code) =>
+        String.fromCharCode(parseInt(code, 16)),
+      )
+      // Decode named entities: &amp;
+      .replace(/&([a-zA-Z]+);/g, (match, name) => HTML_ENTITIES[name] || match)
+  );
+}
+
 function stripHtmlTags(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8216;/g, "'")
-    .replace(/&#8220;/g, '"')
-    .replace(/&#8221;/g, '"')
-    .replace(/&#8211;/g, "–")
-    .replace(/&#8212;/g, "—")
-    .replace(/&#8230;/g, "…")
-    .trim();
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, "")).trim();
 }
 
 function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/?(p|div)[^>]*>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8216;/g, "'")
-    .replace(/&#8220;/g, '"')
-    .replace(/&#8221;/g, '"')
-    .replace(/&#8211;/g, "–")
-    .replace(/&#8212;/g, "—")
-    .replace(/&#8230;/g, "…")
+  return decodeHtmlEntities(
+    html
+      .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?(p|div)[^>]*>/gi, "\n")
+      .replace(/<[^>]*>/g, ""),
+  )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
