@@ -139,18 +139,31 @@ export default function AppView(params: { post?: Post }) {
 
   const stagesRef = useRef([]);
   const handleDownload = async () => {
-    const zip = new JSZip();
-    await Promise.all(
-      stagesRef.current.map(async (stage, i) => {
-        zip.file(`${i}.png`, (await stage.toBlob({ pixelRatio: 2 })) as Blob);
-      }),
-    );
-    zip.generateAsync({ type: "blob" }).then((content) => {
+    const isSingleSlide = slidesContent.length === 0 && !subForMore;
+
+    if (isSingleSlide) {
+      // Single slide: export as PNG directly
+      const stage = stagesRef.current[0];
+      const blob = await stage.toBlob({ pixelRatio: 2 });
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(content);
-      link.download = "slides.zip";
+      link.href = URL.createObjectURL(blob as Blob);
+      link.download = "slide.png";
       link.click();
-    });
+    } else {
+      // Multiple slides: export as ZIP of PNGs
+      const zip = new JSZip();
+      await Promise.all(
+        stagesRef.current.map(async (stage, i) => {
+          zip.file(`${i}.png`, (await stage.toBlob({ pixelRatio: 2 })) as Blob);
+        }),
+      );
+      zip.generateAsync({ type: "blob" }).then((content) => {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(content);
+        link.download = "slides.zip";
+        link.click();
+      });
+    }
   };
 
   const handleWordPressImport = async () => {
