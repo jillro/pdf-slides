@@ -131,6 +131,7 @@ export default function AppView(params: { post?: Post }) {
   const [wpUrl, setWpUrl] = useState("");
   const [wpLoading, setWpLoading] = useState(false);
   const [wpError, setWpError] = useState<string | null>(null);
+  const [importWithContent, setImportWithContent] = useState(true);
 
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
@@ -177,7 +178,9 @@ export default function AppView(params: { post?: Post }) {
     } = result.data;
 
     setTitle(importedTitle);
-    setSlidesContent([content]);
+    if (importWithContent) {
+      setSlidesContent([content]);
+    }
 
     if (importedRubrique) {
       setRubrique(importedRubrique);
@@ -299,6 +302,17 @@ export default function AppView(params: { post?: Post }) {
               </button>
             </div>
             {wpError && <div className={styles.importError}>{wpError}</div>}
+            <div className="input-group">
+              <label htmlFor="importWithContent">
+                <input
+                  type="checkbox"
+                  id="importWithContent"
+                  checked={importWithContent}
+                  onChange={(e) => setImportWithContent(e.target.checked)}
+                />
+                Importer le contenu de l&apos;article
+              </label>
+            </div>
           </div>
           <div className="input-group">
             <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
