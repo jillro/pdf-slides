@@ -60,16 +60,31 @@ npx prettier --write .  # Format entire codebase
 
 - Two-tier system: Redis → Memory fallback
 - Server-side functions: `getPost(id)`, `savePost(post)`, `newPost()`
-- Post data: `{ id, img, imgX, title, intro, rubrique, slidesContent[], position, subForMore, numero }`
+- Post data: `{ id, img, imgX, title, intro, rubrique, slidesContent[], position, subForMore, numero, format }`
 - Debounced client-side saves via `useInterval()`
 - Visual indicator (⏳) for unsaved changes
 
+**WordPress Import** (src/app/wordpress.tsx)
+
+- Server action to import articles from WordPress sites via REST API
+- Parses article URL to extract domain and slug
+- Fetches title, content, featured image, and category via WP REST API
+- Maps WordPress categories to app rubriques (actu, édito, ailleurs, etc.)
+- Decodes HTML entities including French accented characters
+- Attempts to fetch original unprocessed images (strips `-scaled` suffixes)
+
 **Slide Components**
 
-- Dynamic rendering via Konva Stage (1080×1350px, Instagram Stories ratio)
+- Dynamic rendering via Konva Stage (1080×1350px for post, 1080×1920px for story)
 - Responsive scaling based on container width
 - Shared features: Google Fonts (Rubik, Atkinson Hyperlegible), image filtering, text auto-scaling
 - No SSR (dynamic imports in AppView)
+
+**Format Selection** (src/lib/formats.ts)
+
+- Two canvas formats: `post` (1080×1350px) and `story` (1080×1920px)
+- Story format adds 100px extra margin at top/bottom to accommodate Instagram UI overlay
+- Format stored in post data and persisted with other fields
 
 ### Data Persistence Pattern
 
@@ -117,6 +132,8 @@ experimental: {
 | `src/app/page.tsx`                   | Home route; generates random ID and redirects         |
 | `src/app/[id]/page.tsx`              | Dynamic post editor page; fetches post from storage   |
 | `src/app/storage.tsx`                | Server-side data access layer (Redis/Memory)          |
+| `src/app/wordpress.tsx`              | WordPress article import via REST API                 |
+| `src/lib/formats.ts`                 | Canvas format definitions (post/story dimensions)     |
 | `src/components/AppView.tsx`         | Main client editor, state management, slide rendering |
 | `src/components/FirstSlide.tsx`      | Konva stage for title slide                           |
 | `src/components/ContentSlide.tsx`    | Konva stage for body slides                           |
