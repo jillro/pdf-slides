@@ -14,6 +14,9 @@ export default function CutCopyMode({
 }: CutCopyModeProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
+  const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Parse text into sections based on cut positions
@@ -93,6 +96,51 @@ export default function CutCopyMode({
     [cutPositions, onCutPositionsChange],
   );
 
+  // Touch detection handler
+  const handleTouchStart = useCallback(() => {
+    if (!isTouchDevice) setIsTouchDevice(true);
+  }, [isTouchDevice]);
+
+  // Character tap handler (mobile)
+  const handleCharClick = useCallback(
+    (e: React.MouseEvent, globalIndex: number) => {
+      if (!isTouchDevice) return;
+      e.stopPropagation();
+
+      if (globalIndex <= 0 || globalIndex >= fullText.length) {
+        setSelectedPosition(null);
+        setTooltipAnchor(null);
+        return;
+      }
+
+      const target = e.currentTarget as HTMLElement;
+      setSelectedPosition(globalIndex);
+      setTooltipAnchor(target.getBoundingClientRect());
+    },
+    [isTouchDevice, fullText.length],
+  );
+
+  // Tooltip cut confirmation handler
+  const handleTooltipCut = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (selectedPosition !== null) {
+        addCut(selectedPosition);
+      }
+      setSelectedPosition(null);
+      setTooltipAnchor(null);
+    },
+    [selectedPosition, addCut],
+  );
+
+  // Tooltip dismissal handler
+  const handleContainerClick = useCallback(() => {
+    if (isTouchDevice && selectedPosition !== null) {
+      setSelectedPosition(null);
+      setTooltipAnchor(null);
+    }
+  }, [isTouchDevice, selectedPosition]);
+
   if (!fullText.trim()) {
     return (
       <div className={styles.cutCopyContainer}>
@@ -105,7 +153,12 @@ export default function CutCopyMode({
 
   return (
     <>
-      <div className={styles.cutCopyContainer} ref={containerRef}>
+      <div
+        className={styles.cutCopyContainer}
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onClick={handleContainerClick}
+      >
         {sections.map((section, sectionIndex) => {
           const sectionStart = getSectionStart(cutPositions, sectionIndex);
           return (
@@ -134,8 +187,13 @@ export default function CutCopyMode({
                   {section.split("").map((char, charIndex) => {
                     const globalIndex = sectionStart + charIndex;
                     return (
-                      <span key={charIndex} data-char-index={globalIndex}>
-                        {hoverPosition === globalIndex && (
+                      <span
+                        key={charIndex}
+                        data-char-index={globalIndex}
+                        onClick={(e) => handleCharClick(e, globalIndex)}
+                      >
+                        {(hoverPosition === globalIndex ||
+                          selectedPosition === globalIndex) && (
                           <span className={styles.cutCursor} />
                         )}
                         {char}
@@ -149,8 +207,26 @@ export default function CutCopyMode({
         })}
       </div>
       <p className={styles.hint}>
-        Clic gauche : copier | Clic droit : couper ici
+        {isTouchDevice
+          ? 'Touchez pour placer le curseur, puis "Couper ici"'
+          : "Clic gauche : copier | Clic droit : couper ici"}
       </p>
+      {isTouchDevice && selectedPosition !== null && tooltipAnchor && (
+        <div
+          className={styles.cutTooltip}
+          style={{
+            left: tooltipAnchor.left + tooltipAnchor.width / 2,
+            top: tooltipAnchor.top - 8,
+          }}
+        >
+          <button
+            className={styles.cutTooltipButton}
+            onClick={handleTooltipCut}
+          >
+            Couper ici
+          </button>
+        </div>
+      )}
       {toast && <div className={styles.toast}>{toast}</div>}
     </>
   );

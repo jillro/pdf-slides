@@ -233,3 +233,39 @@
     opacity: 0;
   }
 }
+
+/* Mobile cut tooltip */
+.cutTooltip {
+  position: fixed;
+  z-index: 1001;
+  transform: translateX(-50%) translateY(-100%);
+  padding-bottom: 8px;
+}
+
+.cutTooltipButton {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.cutTooltipButton:active {
+  background-color: var(--bg-tertiary);
+}
+
+/* Arrow pointing down */
+.cutTooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-secondary);
+}
