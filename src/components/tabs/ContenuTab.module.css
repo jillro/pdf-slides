@@ -1,0 +1,109 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unsaved {
+  font-size: 0.9rem;
+}
+
+.importRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.urlInput {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.importButton {
+  min-height: var(--touch-target-min);
+  min-width: 80px;
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.importButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.importError {
+  color: #dc3545;
+  font-size: 0.85rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  min-height: var(--touch-target-min);
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.select {
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.textInput {
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.textarea {
+  min-height: 100px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+}

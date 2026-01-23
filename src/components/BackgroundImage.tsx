@@ -2,49 +2,55 @@
 
 import { Image as KImage } from "react-konva";
 
-export default function BackgroundImage(
-  props: React.ComponentProps<typeof KImage> & {
-    image: HTMLImageElement;
-    x: number;
-    canvasWidth: number;
-    canvasHeight: number;
-    onCoordinateChange?: (x: number) => void;
-  },
-) {
+export default function BackgroundImage({
+  image,
+  x,
+  canvasWidth,
+  canvasHeight,
+  onCoordinateChange,
+}: {
+  image: HTMLImageElement;
+  x: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  onCoordinateChange?: (x: number) => void;
+}) {
   const imgScale =
-    props.image.width / props.image.height >
-    props.canvasWidth / props.canvasHeight
-      ? props.canvasHeight / props.image.height
-      : props.canvasWidth / props.image.width;
+    image.width / image.height > canvasWidth / canvasHeight
+      ? canvasHeight / image.height
+      : canvasWidth / image.width;
 
   return (
     <KImage
-      x={props.x ?? 0}
+      image={image}
+      x={x ?? 0}
       y={0}
       scaleY={imgScale}
       scaleX={imgScale}
       draggable
+      onTouchStart={(e) => {
+        e.evt.preventDefault();
+      }}
       onDragMove={(e) => {
-        const x = Math.max(
-          Math.min(e.target.x() + e.evt.movementX, 0),
-          props.canvasWidth - props.image.width * imgScale,
+        const newX = Math.max(
+          Math.min(e.target.x(), 0),
+          canvasWidth - image.width * imgScale,
         );
-        e.target.x(x);
+        e.target.x(newX);
         e.target.y(
           Math.max(
-            Math.min(e.target.y() + e.evt.movementY, 0),
-            props.canvasHeight - props.image.height * imgScale,
+            Math.min(e.target.y(), 0),
+            canvasHeight - image.height * imgScale,
           ),
         );
       }}
       onDragEnd={(e) => {
-        const x = Math.max(
-          Math.min(e.target.x() + e.evt.movementX, 0),
-          props.canvasWidth - props.image.width * imgScale,
+        const newX = Math.max(
+          Math.min(e.target.x(), 0),
+          canvasWidth - image.width * imgScale,
         );
-        props.onCoordinateChange?.(isNaN(x) ? 0 : x);
+        onCoordinateChange?.(isNaN(newX) ? 0 : newX);
       }}
-      {...props}
     />
   );
 }

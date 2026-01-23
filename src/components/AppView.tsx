@@ -9,11 +9,12 @@ import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
 import LegendGenerator from "./LegendGenerator";
 import JSZip from "jszip";
 import useImage from "use-image";
-import { useInterval, useResizeObserver } from "usehooks-ts";
+import { useInterval, useResizeObserver, useMediaQuery } from "usehooks-ts";
 
 import { Post, savePost } from "../app/storage";
 import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
+import MobileLayout from "./mobile/MobileLayout";
 
 const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
   ssr: false,
@@ -83,6 +84,9 @@ export default function AppView(params: { post?: Post }) {
   const id = params.post.id;
   const ref = useRef<HTMLDivElement>(null);
 
+  // Mobile detection
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   const { width: colWidth } = useResizeObserver({
     ref,
     box: "content-box",
@@ -148,6 +152,7 @@ export default function AppView(params: { post?: Post }) {
   const scale = colWidth ? colWidth / canvasWidth : 0;
 
   const stagesRef = useRef([]);
+
   const handleDownload = async () => {
     const isSingleSlide = slidesContent.length === 0 && !subForMore;
 
@@ -229,6 +234,71 @@ export default function AppView(params: { post?: Post }) {
     setWpUrl("");
   };
 
+  const handleImageUpload = async (file: File) => {
+    setImgDataUrl(await resizeImage(file));
+  };
+
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <>
+        <div className={styles.header}>
+          <ThemeToggle />
+        </div>
+        <MobileLayout
+          img={img}
+          imgX={imgX}
+          setImgX={setImgX}
+          position={position}
+          setPosition={setPosition}
+          unsavedPosition={unsavedPosition}
+          rubrique={rubrique}
+          setRubrique={setRubrique}
+          unsavedRubrique={unsavedRubrique}
+          title={title}
+          setTitle={setTitle}
+          unsavedTitle={unsavedTitle}
+          intro={intro}
+          setIntro={setIntro}
+          unsavedIntro={unsavedIntro}
+          format={format}
+          setFormat={setFormat}
+          unsavedFormat={unsavedFormat}
+          slidesContent={slidesContent}
+          setSlidesContent={setSlidesContent}
+          unsavedSlidesContent={unsavedSlidesContent}
+          subForMore={subForMore}
+          setSubForMore={setSubForMore}
+          unsavedSubForMore={unsavedSubForMore}
+          numero={numero}
+          setNumero={setNumero}
+          unsavedNumero={unsavedNumero}
+          legendContent={legendContent}
+          setLegendContent={setLegendContent}
+          unsavedLegendContent={unsavedLegendContent}
+          imageCaption={imageCaption}
+          setImageCaption={setImageCaption}
+          unsavedImageCaption={unsavedImageCaption}
+          articleUrl={articleUrl}
+          wpUrl={wpUrl}
+          setWpUrl={setWpUrl}
+          wpLoading={wpLoading}
+          wpError={wpError}
+          setWpError={setWpError}
+          importWithContent={importWithContent}
+          setImportWithContent={setImportWithContent}
+          onWordPressImport={handleWordPressImport}
+          onImageUpload={handleImageUpload}
+          onDownload={handleDownload}
+          currentSlide={currentSlide}
+          setCurrentSlide={setCurrentSlide}
+          stagesRef={stagesRef}
+        />
+      </>
+    );
+  }
+
+  // Desktop layout
   return (
     <>
       <div className={styles.header}>

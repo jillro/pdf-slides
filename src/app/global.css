@@ -20,6 +20,13 @@
   --toast-bg: #fff;
   --toast-text: #333;
 
+  /* Mobile layout */
+  --tab-height: 60px;
+  --preview-height: 200px;
+  --touch-target-min: 44px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -71,6 +78,28 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Fix Firefox mobile address bar viewport height issue */
+@media (max-width: 767px) {
+  body {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    min-height: 100%;
+    height: 100%;
+    /* Override desktop centering for mobile */
+    display: block;
+    place-items: unset;
+  }
+
+  /* Ensure full height propagates through the DOM tree */
+  #root {
+    height: 100%;
+  }
 }
 
 h1 {

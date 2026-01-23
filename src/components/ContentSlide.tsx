@@ -21,6 +21,7 @@ export default function ContentSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   last?: boolean;
+  previewMode?: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
@@ -82,8 +83,8 @@ export default function ContentSlide(props: {
             x={props.imgX}
             canvasWidth={props.canvasWidth}
             canvasHeight={props.canvasHeight}
-            filters={[Blur]}
-            blurRadius={100}
+            filters={props.previewMode ? undefined : [Blur]}
+            blurRadius={props.previewMode ? 0 : 100}
             ref={imgRef}
           />
         )}

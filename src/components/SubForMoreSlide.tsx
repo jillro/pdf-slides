@@ -19,6 +19,7 @@ export default function SubForMoreSlide(props: {
   canvasHeight: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
+  previewMode?: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
@@ -61,8 +62,8 @@ export default function SubForMoreSlide(props: {
             x={props.imgX}
             canvasWidth={props.canvasWidth}
             canvasHeight={props.canvasHeight}
-            filters={[Blur]}
-            blurRadius={100}
+            filters={props.previewMode ? undefined : [Blur]}
+            blurRadius={props.previewMode ? 0 : 100}
             ref={imgRef}
           />
         )}

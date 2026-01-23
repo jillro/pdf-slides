@@ -23,6 +23,7 @@ export default function FirstSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   onImgXChange: (x: number) => void;
+  previewMode?: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [titleHeight, setTitleHeight] = useState<number>(0);
@@ -77,26 +78,30 @@ export default function FirstSlide(props: {
             onCoordinateChange={props.onImgXChange}
           />
         )}
-        <Gradient
-          position={props.position}
-          height={titleHeight + introHeight + 400 + storyMargin}
-          maxOpacity={gradientOpacity}
-          canvasHeight={props.canvasHeight}
-        />
-        <KImage
-          image={logo}
-          x={150}
-          y={
-            props.position === "top"
-              ? 70 + storyMargin
-              : props.canvasHeight -
-                250 -
-                introHeight -
-                titleHeight -
-                storyMargin
-          }
-          width={80}
-        />
+        {!props.previewMode && (
+          <>
+            <Gradient
+              position={props.position}
+              height={titleHeight + introHeight + 400 + storyMargin}
+              maxOpacity={gradientOpacity}
+              canvasHeight={props.canvasHeight}
+            />
+            <KImage
+              image={logo}
+              x={150}
+              y={
+                props.position === "top"
+                  ? 70 + storyMargin
+                  : props.canvasHeight -
+                    250 -
+                    introHeight -
+                    titleHeight -
+                    storyMargin
+              }
+              width={80}
+            />
+          </>
+        )}
         <Text
           text={props.rubrique}
           x={260}
