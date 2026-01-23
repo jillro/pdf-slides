@@ -14,6 +14,7 @@ import { useInterval, useResizeObserver, useMediaQuery } from "usehooks-ts";
 import { Post, savePost } from "../app/storage";
 import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
+import { createBlurredImage } from "../lib/blur";
 import MobileLayout from "./mobile/MobileLayout";
 
 const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
@@ -128,6 +129,17 @@ export default function AppView(params: { post?: Post }) {
   const [articleUrl, , setArticleUrl] = useSavedState("articleUrl", null);
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
+  const [blurredImg, setBlurredImg] = useState<HTMLImageElement | null>(null);
+
+  // Generate blurred image when original image loads
+  useEffect(() => {
+    if (img) {
+      createBlurredImage(img, 100).then(setBlurredImg);
+    } else {
+      setBlurredImg(null);
+    }
+  }, [img]);
+
   useEffect(() => {
     // This is only for saving the image
     (async () => {
@@ -247,6 +259,7 @@ export default function AppView(params: { post?: Post }) {
         </div>
         <MobileLayout
           img={img}
+          blurredImg={blurredImg}
           imgX={imgX}
           setImgX={setImgX}
           position={position}
@@ -347,7 +360,8 @@ export default function AppView(params: { post?: Post }) {
             {slidesContent.map((content, i) => (
               <ContentSlide
                 key={i}
-                img={img}
+                backgroundImg={blurredImg}
+                originalImg={img}
                 imgX={imgX}
                 rubrique={rubrique}
                 content={content}
@@ -366,7 +380,8 @@ export default function AppView(params: { post?: Post }) {
             ))}
             {subForMore ? (
               <SubForMoreSlide
-                img={img}
+                backgroundImg={blurredImg}
+                originalImg={img}
                 imgX={imgX}
                 numero={numero}
                 scale={scale}

@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
-import { Blur } from "konva/lib/filters/Blur";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 
 export default function ContentSlide(props: {
-  img?: HTMLImageElement;
+  backgroundImg?: HTMLImageElement; // Pre-blurred image for background
+  originalImg?: HTMLImageElement; // Original image for luminosity calculation
   imgX: number;
   rubrique: string;
   content: string;
@@ -21,49 +21,83 @@ export default function ContentSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   last?: boolean;
-  previewMode?: boolean;
+  // Optional external state management for shared measurements
+  fontSize?: number;
+  onFontSizeChange?: (size: number) => void;
 }) {
+  const {
+    originalImg,
+    rubrique,
+    content,
+    canvasHeight,
+    fontSize: externalFontSize,
+    onFontSizeChange,
+  } = props;
+
   const [logo] = useImage(logoUrl.src, "anonymous");
+
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [contentHeight, setContentHeight] = useState<number>(0);
-  const [fontSize, setFontSize] = useState<number>(58);
+  const [localFontSize, setLocalFontSize] = useState<number>(58);
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
-  const imgRef = useRef<Konva.Image>(null);
+  // Use external fontSize if provided, otherwise use local state
+  const fontSize = externalFontSize ?? localFontSize;
+
   const rubriqueRef = useRef<Konva.Text>(null);
   const contentRef = useRef<Konva.Text>(null);
 
+  // Calculate overlay opacity based on original image luminosity
   useEffect(() => {
-    imgRef.current?.cache();
-    if (props.img) {
-      const luminosity = getImageLuminosity(props.img);
+    if (originalImg) {
+      const luminosity = getImageLuminosity(originalImg);
       const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
       setOverlayOpacity(opacity);
     } else {
       setOverlayOpacity(0.61); // Default opacity when no image
     }
-  }, [props.img]);
+  }, [originalImg]);
 
   useEffect(() => {
     setRubriqueWidth(rubriqueRef.current?.width() || 0);
-  }, [props.rubrique]);
+  }, [rubrique]);
 
   useEffect(() => {
     setContentHeight(contentRef.current?.height() || 0);
-  }, [fontSize, props.content]);
+  }, [fontSize, content]);
 
+  // Only run auto-sizing when external fontSize is not provided
   useEffect(() => {
-    const maxContentHeight = props.canvasHeight * 0.74;
-    const minContentHeight = props.canvasHeight * 0.67;
+    if (externalFontSize !== undefined) return;
 
-    if ((contentRef.current?.height() || 0) > maxContentHeight) {
-      setFontSize(Math.min(58, fontSize - 1));
+    const maxContentHeight = canvasHeight * 0.74;
+    const minContentHeight = canvasHeight * 0.67;
+    const currentHeight = contentRef.current?.height() || 0;
+
+    let newFontSize = localFontSize;
+    if (currentHeight > maxContentHeight) {
+      newFontSize = Math.min(58, localFontSize - 1);
+    } else if (currentHeight < minContentHeight) {
+      newFontSize = Math.min(58, localFontSize + 1);
     }
 
-    if ((contentRef.current?.height() || 0) < minContentHeight) {
-      setFontSize(Math.min(58, fontSize + 1));
+    if (newFontSize !== localFontSize) {
+      setLocalFontSize(newFontSize);
+      onFontSizeChange?.(newFontSize);
+    } else if (
+      currentHeight >= minContentHeight &&
+      currentHeight <= maxContentHeight
+    ) {
+      // Font size has settled - notify parent
+      onFontSizeChange?.(localFontSize);
     }
-  }, [contentHeight, fontSize, props.canvasHeight]);
+  }, [
+    contentHeight,
+    localFontSize,
+    canvasHeight,
+    externalFontSize,
+    onFontSizeChange,
+  ]);
 
   return (
     <Stage
@@ -77,15 +111,12 @@ export default function ContentSlide(props: {
       style={{ display: props.display ? "block" : "none" }}
     >
       <Layer background={"white"}>
-        {props.img && (
+        {props.backgroundImg && (
           <BackgroundImage
-            image={props.img}
+            image={props.backgroundImg}
             x={props.imgX}
             canvasWidth={props.canvasWidth}
             canvasHeight={props.canvasHeight}
-            filters={props.previewMode ? undefined : [Blur]}
-            blurRadius={props.previewMode ? 0 : 100}
-            ref={imgRef}
           />
         )}
         <Rect

@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./CanvasFocusMode.module.css";
-import { useRef, useState, MutableRefObject } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useResizeObserver } from "usehooks-ts";
 import dynamicImport from "next/dynamic";
@@ -17,6 +17,7 @@ const SubForMoreSlide = dynamicImport(() => import("../SubForMoreSlide"), {
 
 interface CanvasFocusModeProps {
   img: HTMLImageElement | undefined;
+  blurredImg: HTMLImageElement | null;
   imgX: number;
   position: "top" | "bottom";
   rubrique: string;
@@ -30,11 +31,18 @@ interface CanvasFocusModeProps {
   onSlideChange: (slide: number) => void;
   onImgXChange: (x: number) => void;
   onClose: () => void;
-  stagesRef: MutableRefObject<unknown[]>;
+  // Shared text measurement state
+  titleHeight: number;
+  introHeight: number;
+  onTitleHeightChange: (height: number) => void;
+  onIntroHeightChange: (height: number) => void;
+  contentFontSizes: number[];
+  onContentFontSizeChange: (index: number, size: number) => void;
 }
 
 export default function CanvasFocusMode({
   img,
+  blurredImg,
   imgX,
   position,
   rubrique,
@@ -48,7 +56,12 @@ export default function CanvasFocusMode({
   onSlideChange,
   onImgXChange,
   onClose,
-  stagesRef,
+  titleHeight,
+  introHeight,
+  onTitleHeightChange,
+  onIntroHeightChange,
+  contentFontSizes,
+  onContentFontSizeChange,
 }: CanvasFocusModeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useResizeObserver({
@@ -62,6 +75,9 @@ export default function CanvasFocusMode({
 
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
+
+  // No-op ref for display-only stages (export handled by ExportRenderer)
+  const noopRef = useCallback(() => {}, []);
 
   // Calculate scale to fit canvas in viewport
   const fitScale =
@@ -88,7 +104,13 @@ export default function CanvasFocusMode({
 
   const bind = useGesture(
     {
-      onDrag: ({ movement: [mx, my], direction: [dx], velocity: [vx, vy], last, cancel }) => {
+      onDrag: ({
+        movement: [mx, my],
+        direction: [dx],
+        velocity: [vx, vy],
+        last,
+        cancel,
+      }) => {
         // Only allow vertical drag when not zoomed
         if (scale > 1) {
           cancel?.();
@@ -164,16 +186,19 @@ export default function CanvasFocusMode({
             width={fitScale * canvasWidth}
             canvasWidth={canvasWidth}
             canvasHeight={canvasHeight}
-            ref={(el) => {
-              if (el) stagesRef.current[0] = el;
-            }}
+            ref={noopRef}
             display={currentSlide === 0}
             onImgXChange={onImgXChange}
+            titleHeight={titleHeight}
+            introHeight={introHeight}
+            onTitleHeightChange={onTitleHeightChange}
+            onIntroHeightChange={onIntroHeightChange}
           />
           {slidesContent.map((content, i) => (
             <ContentSlide
               key={i}
-              img={img}
+              backgroundImg={blurredImg || undefined}
+              originalImg={img}
               imgX={imgX}
               rubrique={rubrique}
               content={content}
@@ -181,25 +206,24 @@ export default function CanvasFocusMode({
               width={fitScale * canvasWidth}
               canvasWidth={canvasWidth}
               canvasHeight={canvasHeight}
-              ref={(el) => {
-                if (el) stagesRef.current[i + 1] = el;
-              }}
+              ref={noopRef}
               display={i + 1 === currentSlide}
               last={i + 1 === slidesContent.length}
+              fontSize={contentFontSizes[i]}
+              onFontSizeChange={(size) => onContentFontSizeChange(i, size)}
             />
           ))}
           {subForMore && (
             <SubForMoreSlide
-              img={img}
+              backgroundImg={blurredImg || undefined}
+              originalImg={img}
               imgX={imgX}
               numero={numero}
               scale={fitScale}
               width={fitScale * canvasWidth}
               canvasWidth={canvasWidth}
               canvasHeight={canvasHeight}
-              ref={(el) => {
-                if (el) stagesRef.current[slidesContent.length + 1] = el;
-              }}
+              ref={noopRef}
               display={currentSlide === slidesContent.length + 1}
             />
           )}
@@ -226,9 +250,7 @@ export default function CanvasFocusMode({
         </button>
       </div>
 
-      <div className={styles.gestureHint}>
-        Glisser vers le bas pour fermer
-      </div>
+      <div className={styles.gestureHint}>Glisser vers le bas pour fermer</div>
     </div>
   );
 }

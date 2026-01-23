@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
-import { Blur } from "konva/lib/filters/Blur";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 
 export default function SubForMoreSlide(props: {
-  img?: HTMLImageElement;
+  backgroundImg?: HTMLImageElement; // Pre-blurred image for background
+  originalImg?: HTMLImageElement; // Original image for luminosity calculation
   imgX: number;
   numero: number;
   scale: number;
@@ -19,24 +19,22 @@ export default function SubForMoreSlide(props: {
   canvasHeight: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
-  previewMode?: boolean;
 }) {
   const [logo] = useImage(logoUrl.src, "anonymous");
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
-  const imgRef = useRef<Konva.Image>(null);
   const contentRef = useRef<Konva.Text>(null);
 
+  // Calculate overlay opacity based on original image luminosity
   useEffect(() => {
-    imgRef.current?.cache();
-    if (props.img) {
-      const luminosity = getImageLuminosity(props.img);
+    if (props.originalImg) {
+      const luminosity = getImageLuminosity(props.originalImg);
       const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
       setOverlayOpacity(opacity);
     } else {
       setOverlayOpacity(0.61); // Default opacity when no image
     }
-  }, [props.img]);
+  }, [props.originalImg]);
 
   // Calculate vertical offset to center content in story format
   // Original content spans from y=200 to y=1180 in 1350px canvas (980px height)
@@ -56,15 +54,12 @@ export default function SubForMoreSlide(props: {
       style={{ display: props.display ? "block" : "none" }}
     >
       <Layer background={"white"}>
-        {props.img && (
+        {props.backgroundImg && (
           <BackgroundImage
-            image={props.img}
+            image={props.backgroundImg}
             x={props.imgX}
             canvasWidth={props.canvasWidth}
             canvasHeight={props.canvasHeight}
-            filters={props.previewMode ? undefined : [Blur]}
-            blurRadius={props.previewMode ? 0 : 100}
-            ref={imgRef}
           />
         )}
         <Rect

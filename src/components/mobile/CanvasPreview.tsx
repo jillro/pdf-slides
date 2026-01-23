@@ -16,6 +16,7 @@ const SubForMoreSlide = dynamicImport(() => import("../SubForMoreSlide"), {
 
 interface CanvasPreviewProps {
   img: HTMLImageElement | undefined;
+  blurredImg: HTMLImageElement | null;
   imgX: number;
   position: "top" | "bottom";
   rubrique: string;
@@ -27,10 +28,18 @@ interface CanvasPreviewProps {
   numero: number;
   currentSlide: number;
   onTap: () => void;
+  // Shared text measurement state
+  titleHeight: number;
+  introHeight: number;
+  onTitleHeightChange: (height: number) => void;
+  onIntroHeightChange: (height: number) => void;
+  contentFontSizes: number[];
+  onContentFontSizeChange: (index: number, size: number) => void;
 }
 
 export default function CanvasPreview({
   img,
+  blurredImg,
   imgX,
   position,
   rubrique,
@@ -42,6 +51,12 @@ export default function CanvasPreview({
   numero,
   currentSlide,
   onTap,
+  titleHeight,
+  introHeight,
+  onTitleHeightChange,
+  onIntroHeightChange,
+  contentFontSizes,
+  onContentFontSizeChange,
 }: CanvasPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth } = useResizeObserver({
@@ -87,11 +102,16 @@ export default function CanvasPreview({
             onImgXChange={() => {}}
             ref={noopRef}
             previewMode={true}
+            titleHeight={titleHeight}
+            introHeight={introHeight}
+            onTitleHeightChange={onTitleHeightChange}
+            onIntroHeightChange={onIntroHeightChange}
           />
         )}
         {isContentSlide && (
           <ContentSlide
-            img={img}
+            backgroundImg={blurredImg || undefined}
+            originalImg={img}
             imgX={imgX}
             rubrique={rubrique}
             content={slidesContent[contentSlideIndex]}
@@ -102,12 +122,16 @@ export default function CanvasPreview({
             display={true}
             last={contentSlideIndex === slidesContent.length - 1}
             ref={noopRef}
-            previewMode={true}
+            fontSize={contentFontSizes[contentSlideIndex]}
+            onFontSizeChange={(size) =>
+              onContentFontSizeChange(contentSlideIndex, size)
+            }
           />
         )}
         {isSubForMoreSlide && (
           <SubForMoreSlide
-            img={img}
+            backgroundImg={blurredImg || undefined}
+            originalImg={img}
             imgX={imgX}
             numero={numero}
             scale={scale}
@@ -116,7 +140,6 @@ export default function CanvasPreview({
             canvasHeight={canvasHeight}
             display={true}
             ref={noopRef}
-            previewMode={true}
           />
         )}
       </div>

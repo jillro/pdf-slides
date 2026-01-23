@@ -2,19 +2,21 @@
 
 import { Image as KImage } from "react-konva";
 
+interface BackgroundImageProps {
+  image: HTMLImageElement;
+  x: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  onCoordinateChange?: (x: number) => void;
+}
+
 export default function BackgroundImage({
   image,
   x,
   canvasWidth,
   canvasHeight,
   onCoordinateChange,
-}: {
-  image: HTMLImageElement;
-  x: number;
-  canvasWidth: number;
-  canvasHeight: number;
-  onCoordinateChange?: (x: number) => void;
-}) {
+}: BackgroundImageProps) {
   const imgScale =
     image.width / image.height > canvasWidth / canvasHeight
       ? canvasHeight / image.height

@@ -1,11 +1,12 @@
 "use client";
 
 import styles from "./MobileLayout.module.css";
-import { useState, MutableRefObject } from "react";
+import { useState, useRef, useCallback, MutableRefObject } from "react";
 import TabNavigation, { TabId } from "./TabNavigation";
 import TabPanel from "./TabPanel";
 import CanvasPreview from "./CanvasPreview";
 import CanvasFocusMode from "./CanvasFocusMode";
+import ExportRenderer from "./ExportRenderer";
 import ContenuTab from "../tabs/ContenuTab";
 import SlidesTab from "../tabs/SlidesTab";
 import ImageTab from "../tabs/ImageTab";
@@ -15,6 +16,7 @@ import { Format } from "../../lib/formats";
 interface MobileLayoutProps {
   // Canvas props
   img: HTMLImageElement | undefined;
+  blurredImg: HTMLImageElement | null;
   imgX: number;
   setImgX: (x: number) => void;
   position: "top" | "bottom";
@@ -77,6 +79,7 @@ interface MobileLayoutProps {
 
 export default function MobileLayout({
   img,
+  blurredImg,
   imgX,
   setImgX,
   position,
@@ -126,6 +129,44 @@ export default function MobileLayout({
 }: MobileLayoutProps) {
   const [activeTab, setActiveTab] = useState<TabId>("contenu");
   const [focusModeOpen, setFocusModeOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportReadyResolveRef = useRef<(() => void) | null>(null);
+
+  // Shared text measurement state (calculated by preview, used by export)
+  const [titleHeight, setTitleHeight] = useState<number>(0);
+  const [introHeight, setIntroHeight] = useState<number>(0);
+  const [contentFontSizes, setContentFontSizes] = useState<number[]>([]);
+
+  const handleContentFontSizeChange = useCallback(
+    (index: number, size: number) => {
+      setContentFontSizes((prev) => {
+        const next = [...prev];
+        next[index] = size;
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handleDownload = useCallback(() => {
+    // Don't export if measurements haven't been calculated
+    if (titleHeight === 0 && title.length > 0) {
+      console.warn("Export blocked: measurements not ready");
+      return;
+    }
+    setExporting(true);
+    new Promise<void>((resolve) => {
+      exportReadyResolveRef.current = resolve;
+    }).then(() => {
+      onDownload();
+      setExporting(false);
+    });
+  }, [onDownload, titleHeight, title.length]);
+
+  const handleExportReady = useCallback(() => {
+    exportReadyResolveRef.current?.();
+    exportReadyResolveRef.current = null;
+  }, []);
 
   const unsavedByTab: Record<TabId, boolean> = {
     contenu: unsavedTitle || unsavedIntro || unsavedRubrique,
@@ -142,6 +183,7 @@ export default function MobileLayout({
     <div className={styles.mobileLayout}>
       <CanvasPreview
         img={img}
+        blurredImg={blurredImg}
         imgX={imgX}
         position={position}
         rubrique={rubrique}
@@ -153,6 +195,12 @@ export default function MobileLayout({
         numero={numero}
         currentSlide={currentSlide}
         onTap={() => setFocusModeOpen(true)}
+        titleHeight={titleHeight}
+        introHeight={introHeight}
+        onTitleHeightChange={setTitleHeight}
+        onIntroHeightChange={setIntroHeight}
+        contentFontSizes={contentFontSizes}
+        onContentFontSizeChange={handleContentFontSizeChange}
       />
 
       <TabPanel>
@@ -213,7 +261,8 @@ export default function MobileLayout({
             setImageCaption={setImageCaption}
             unsavedImageCaption={unsavedImageCaption}
             articleUrl={articleUrl}
-            onDownload={onDownload}
+            onDownload={handleDownload}
+            exporting={exporting}
           />
         )}
       </TabPanel>
@@ -227,6 +276,7 @@ export default function MobileLayout({
       {focusModeOpen && (
         <CanvasFocusMode
           img={img}
+          blurredImg={blurredImg}
           imgX={imgX}
           position={position}
           rubrique={rubrique}
@@ -240,7 +290,33 @@ export default function MobileLayout({
           onSlideChange={setCurrentSlide}
           onImgXChange={setImgX}
           onClose={() => setFocusModeOpen(false)}
+          titleHeight={titleHeight}
+          introHeight={introHeight}
+          onTitleHeightChange={setTitleHeight}
+          onIntroHeightChange={setIntroHeight}
+          contentFontSizes={contentFontSizes}
+          onContentFontSizeChange={handleContentFontSizeChange}
+        />
+      )}
+
+      {exporting && (
+        <ExportRenderer
+          img={img}
+          blurredImg={blurredImg}
+          imgX={imgX}
+          position={position}
+          rubrique={rubrique}
+          title={title}
+          intro={intro}
+          format={format}
+          slidesContent={slidesContent}
+          subForMore={subForMore}
+          numero={numero}
           stagesRef={stagesRef}
+          onReady={handleExportReady}
+          titleHeight={titleHeight}
+          introHeight={introHeight}
+          contentFontSizes={contentFontSizes}
         />
       )}
     </div>
