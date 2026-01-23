@@ -1,0 +1,79 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.header label {
+  cursor: pointer;
+}
+
+.toggle {
+  font-size: 0.8em;
+  transition: transform 0.2s;
+}
+
+.toggle.open {
+  transform: rotate(90deg);
+}
+
+.captions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--border-color);
+}
+
+.captionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.captionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.networkName {
+  font-weight: 500;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.copyButton {
+  padding: 0.3em 0.6em;
+  font-size: 0.75em;
+}
+
+.copyButton.copied {
+  background-color: var(--accent);
+  color: #333;
+}
+
+.captionPreview {
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 100px;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+.empty {
+  color: var(--text-secondary);
+  font-style: italic;
+}

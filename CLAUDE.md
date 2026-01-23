@@ -52,7 +52,7 @@ npx prettier --write .  # Format entire codebase
   - **FirstSlide**: Title slide with logo, rubrique, title, intro, gradient, draggable background image
   - **ContentSlide**: Body slides with blurred background, content text, continue indicator
   - **SubForMoreSlide**: Call-to-action slide with magazine issue number, website URL
-- Left panel: controls for rubrique, image upload, title/intro, position toggle, subscription number
+- Left panel: controls for rubrique, image upload, title/intro, position toggle, subscription number, legend content, image caption, and social media caption generator
 - Right panel: editable text areas for slide content
 - Handles image resizing, canvas export to ZIP download
 
@@ -60,7 +60,7 @@ npx prettier --write .  # Format entire codebase
 
 - Two-tier system: Redis → Memory fallback
 - Server-side functions: `getPost(id)`, `savePost(post)`, `newPost()`
-- Post data: `{ id, img, imgX, title, intro, rubrique, slidesContent[], position, subForMore, numero, format }`
+- Post data: `{ id, img, imgX, title, intro, rubrique, slidesContent[], position, subForMore, numero, format, legendContent, imageCaption, articleUrl }`
 - Debounced client-side saves via `useInterval()`
 - Visual indicator (⏳) for unsaved changes
 
@@ -72,6 +72,7 @@ npx prettier --write .  # Format entire codebase
 - Maps WordPress categories to app rubriques (actu, édito, ailleurs, etc.)
 - Decodes HTML entities including French accented characters
 - Attempts to fetch original unprocessed images (strips `-scaled` suffixes)
+- Extracts excerpt (→ legendContent), article link (→ articleUrl), and image caption (→ imageCaption)
 
 **Slide Components**
 
@@ -85,6 +86,17 @@ npx prettier --write .  # Format entire codebase
 - Two canvas formats: `post` (1080×1350px) and `story` (1080×1920px)
 - Story format adds 100px extra margin at top/bottom to accommodate Instagram UI overlay
 - Format stored in post data and persisted with other fields
+
+**Legend Generator** (src/components/LegendGenerator.tsx)
+
+- Generates copy-paste captions for social networks based on shared legend content
+- Collapsible UI section with network-specific formatted captions
+- Supported networks and formats:
+  - **Instagram**: `{legendContent}` + `\n\n{imageCaption}` (if present)
+  - **WhatsApp**: `Nouvel article !\n\n{legendContent}\n\nA lire sur notre site : {articleUrl}`
+  - **Bluesky/Mastodon**: `{legendContent}\n\nA lire sur notre site : {articleUrl}`
+- One-click copy button for each network caption
+- Fields populated automatically from WordPress import (excerpt, link, image caption)
 
 ### Data Persistence Pattern
 
@@ -140,6 +152,7 @@ experimental: {
 | `src/components/SubForMoreSlide.tsx` | Konva stage for subscription CTA                      |
 | `src/components/BackgroundImage.tsx` | Draggable image component (saves imgX position)       |
 | `src/components/Gradient.tsx`        | Gradient overlay component                            |
+| `src/components/LegendGenerator.tsx` | Social media caption generator with copy buttons      |
 | `src/app/global.css`                 | Global styles, font imports                           |
 | `src/app/layout.tsx`                 | Root HTML scaffold                                    |
 

@@ -41,12 +41,17 @@ export type Post = {
   subForMore: boolean;
   numero: number;
   format: Format;
+  legendContent: string;
+  imageCaption: string | null;
+  articleUrl: string | null;
 };
 
 type RedisPost = Partial<
-  Omit<Post, "slidesContent" | "subForMore"> & {
+  Omit<Post, "slidesContent" | "subForMore" | "imageCaption" | "articleUrl"> & {
     slidesContent: string;
     subForMore: "true" | "false";
+    imageCaption: string;
+    articleUrl: string;
     // serialized array
   }
 >;
@@ -66,6 +71,15 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
     : {}),
   ...(post.numero != undefined ? { numero: post.numero } : {}),
   ...(post.format != undefined ? { format: post.format } : {}),
+  ...(post.legendContent != undefined
+    ? { legendContent: post.legendContent }
+    : {}),
+  ...(post.imageCaption != undefined
+    ? { imageCaption: post.imageCaption ?? "" }
+    : {}),
+  ...(post.articleUrl != undefined
+    ? { articleUrl: post.articleUrl ?? "" }
+    : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
@@ -73,6 +87,8 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
   ...post,
   slidesContent: post.slidesContent ? JSON.parse(post.slidesContent) : [],
   subForMore: post.subForMore === "true",
+  imageCaption: post.imageCaption || null,
+  articleUrl: post.articleUrl || null,
 });
 
 const newPost = (id: string): Post => ({
@@ -87,6 +103,9 @@ const newPost = (id: string): Post => ({
   subForMore: false,
   numero: 1,
   format: "post",
+  legendContent: "",
+  imageCaption: null,
+  articleUrl: null,
 });
 
 const memory: { [key: string]: Post } = {};

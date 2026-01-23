@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import dynamicImport from "next/dynamic";
 import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
+import LegendGenerator from "./LegendGenerator";
 import JSZip from "jszip";
 import useImage from "use-image";
 import { useInterval, useResizeObserver } from "usehooks-ts";
@@ -112,6 +113,15 @@ export default function AppView(params: { post?: Post }) {
     "format",
     "post" as Format,
   );
+  const [legendContent, unsavedLegendContent, setLegendContent] = useSavedState(
+    "legendContent",
+    "",
+  );
+  const [imageCaption, unsavedImageCaption, setImageCaption] = useSavedState(
+    "imageCaption",
+    null,
+  );
+  const [articleUrl, , setArticleUrl] = useSavedState("articleUrl", null);
   const [imgDataUrl, setImgDataUrl] = useState<string>(init.img || "");
   const [img] = useImage(imgDataUrl, "anonymous");
   useEffect(() => {
@@ -188,6 +198,9 @@ export default function AppView(params: { post?: Post }) {
       content,
       imageDataUrl,
       rubrique: importedRubrique,
+      legendContent: importedLegendContent,
+      articleUrl: importedArticleUrl,
+      imageCaption: importedImageCaption,
     } = result.data;
 
     setTitle(importedTitle);
@@ -198,6 +211,11 @@ export default function AppView(params: { post?: Post }) {
     if (importedRubrique) {
       setRubrique(importedRubrique);
     }
+
+    // Set legend-related fields
+    setLegendContent(importedLegendContent);
+    setArticleUrl(importedArticleUrl || null);
+    setImageCaption(importedImageCaption);
 
     if (imageDataUrl) {
       // Convert base64 to blob and resize using existing resizeImage function
@@ -444,6 +462,35 @@ export default function AppView(params: { post?: Post }) {
               />
             </div>
           ) : null}
+          <div className="input-group">
+            <label htmlFor="legendContent">
+              Légende {unsavedLegendContent ? "⏳" : null}
+            </label>
+            <textarea
+              rows={3}
+              name="legendContent"
+              value={legendContent}
+              className={unsavedLegendContent ? styles.unsavedInput : ""}
+              onChange={(e) => setLegendContent(e.target.value)}
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="imageCaption">
+              Crédit image {unsavedImageCaption ? "⏳" : null}
+            </label>
+            <input
+              type="text"
+              name="imageCaption"
+              value={imageCaption || ""}
+              className={unsavedImageCaption ? styles.unsavedInput : ""}
+              onChange={(e) => setImageCaption(e.target.value || null)}
+            />
+          </div>
+          <LegendGenerator
+            legendContent={legendContent}
+            imageCaption={imageCaption}
+            articleUrl={articleUrl}
+          />
         </div>
         <div className={styles.col + " " + styles.controls}>
           <SlideContentEditor

@@ -8,6 +8,9 @@ export type WordPressImportResult =
         content: string;
         imageDataUrl: string | null;
         rubrique: string | null;
+        legendContent: string;
+        articleUrl: string;
+        imageCaption: string | null;
       };
     }
   | { success: false; error: string };
@@ -170,9 +173,11 @@ export async function importFromWordPress(
     };
   }
 
-  // 3. Extract title and content
+  // 3. Extract title, content, excerpt, and link
   const title = stripHtmlTags(postData.title?.rendered || "");
   const content = htmlToPlainText(postData.content?.rendered || "");
+  const legendContent = stripHtmlTags(postData.excerpt?.rendered || "");
+  const articleUrl = postData.link || "";
 
   // 4. Fetch category and map to rubrique
   let rubrique: string | null = null;
@@ -192,8 +197,9 @@ export async function importFromWordPress(
     }
   }
 
-  // 5. Fetch featured image
+  // 5. Fetch featured image and caption
   let imageDataUrl: string | null = null;
+  let imageCaption: string | null = null;
   if (postData.featured_media) {
     try {
       const mediaResponse = await fetch(
@@ -201,6 +207,10 @@ export async function importFromWordPress(
       );
       if (mediaResponse.ok) {
         const media = await mediaResponse.json();
+        // Extract image caption
+        if (media.caption?.rendered) {
+          imageCaption = stripHtmlTags(media.caption.rendered) || null;
+        }
         const sourceUrl = media.source_url;
         if (sourceUrl) {
           const imageUrl = await tryFetchOriginalImage(sourceUrl);
@@ -228,6 +238,9 @@ export async function importFromWordPress(
       content,
       imageDataUrl,
       rubrique,
+      legendContent,
+      articleUrl,
+      imageCaption,
     },
   };
 }
