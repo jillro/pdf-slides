@@ -1,19 +1,11 @@
 "use client";
 
 import styles from "./CanvasFocusMode.module.css";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useResizeObserver } from "usehooks-ts";
-import dynamicImport from "next/dynamic";
+import SlidesRenderer from "../SlidesRenderer";
 import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
-
-const FirstSlide = dynamicImport(() => import("../FirstSlide"), { ssr: false });
-const ContentSlide = dynamicImport(() => import("../ContentSlide"), {
-  ssr: false,
-});
-const SubForMoreSlide = dynamicImport(() => import("../SubForMoreSlide"), {
-  ssr: false,
-});
 
 interface CanvasFocusModeProps {
   img: HTMLImageElement | undefined;
@@ -31,13 +23,6 @@ interface CanvasFocusModeProps {
   onSlideChange: (slide: number) => void;
   onImgXChange: (x: number) => void;
   onClose: () => void;
-  // Shared text measurement state
-  titleHeight: number;
-  introHeight: number;
-  onTitleHeightChange: (height: number) => void;
-  onIntroHeightChange: (height: number) => void;
-  contentFontSizes: number[];
-  onContentFontSizeChange: (index: number, size: number) => void;
 }
 
 export default function CanvasFocusMode({
@@ -56,12 +41,6 @@ export default function CanvasFocusMode({
   onSlideChange,
   onImgXChange,
   onClose,
-  titleHeight,
-  introHeight,
-  onTitleHeightChange,
-  onIntroHeightChange,
-  contentFontSizes,
-  onContentFontSizeChange,
 }: CanvasFocusModeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useResizeObserver({
@@ -75,9 +54,6 @@ export default function CanvasFocusMode({
 
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
-
-  // No-op ref for display-only stages (export handled by ExportRenderer)
-  const noopRef = useCallback(() => {}, []);
 
   // Calculate scale to fit canvas in viewport
   const fitScale =
@@ -175,58 +151,23 @@ export default function CanvasFocusMode({
             transition: isDragging ? "none" : "transform 0.2s",
           }}
         >
-          <FirstSlide
+          <SlidesRenderer
             img={img}
+            blurredImg={blurredImg}
             imgX={imgX}
             position={position}
             rubrique={rubrique}
             title={title}
             intro={intro}
+            format={format}
+            slidesContent={slidesContent}
+            subForMore={subForMore}
+            numero={numero}
+            currentSlide={currentSlide}
             scale={fitScale}
             width={fitScale * canvasWidth}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            ref={noopRef}
-            display={currentSlide === 0}
             onImgXChange={onImgXChange}
-            titleHeight={titleHeight}
-            introHeight={introHeight}
-            onTitleHeightChange={onTitleHeightChange}
-            onIntroHeightChange={onIntroHeightChange}
           />
-          {slidesContent.map((content, i) => (
-            <ContentSlide
-              key={i}
-              backgroundImg={blurredImg || undefined}
-              originalImg={img}
-              imgX={imgX}
-              rubrique={rubrique}
-              content={content}
-              scale={fitScale}
-              width={fitScale * canvasWidth}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
-              ref={noopRef}
-              display={i + 1 === currentSlide}
-              last={i + 1 === slidesContent.length}
-              fontSize={contentFontSizes[i]}
-              onFontSizeChange={(size) => onContentFontSizeChange(i, size)}
-            />
-          ))}
-          {subForMore && (
-            <SubForMoreSlide
-              backgroundImg={blurredImg || undefined}
-              originalImg={img}
-              imgX={imgX}
-              numero={numero}
-              scale={fitScale}
-              width={fitScale * canvasWidth}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
-              ref={noopRef}
-              display={currentSlide === slidesContent.length + 1}
-            />
-          )}
         </div>
       </div>
 

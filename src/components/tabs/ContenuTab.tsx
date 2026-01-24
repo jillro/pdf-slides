@@ -82,7 +82,8 @@ export default function ContenuTab({
 
       <div className={styles.section}>
         <label htmlFor="rubrique" className={styles.sectionTitle}>
-          Rubrique {unsavedRubrique && <span className={styles.unsaved}>⏳</span>}
+          Rubrique{" "}
+          {unsavedRubrique && <span className={styles.unsaved}>⏳</span>}
         </label>
         <select
           id="rubrique"

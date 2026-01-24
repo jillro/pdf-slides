@@ -1,18 +1,10 @@
 "use client";
 
 import styles from "./CanvasPreview.module.css";
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
-import dynamicImport from "next/dynamic";
+import SlidesRenderer from "../SlidesRenderer";
 import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
-
-const FirstSlide = dynamicImport(() => import("../FirstSlide"), { ssr: false });
-const ContentSlide = dynamicImport(() => import("../ContentSlide"), {
-  ssr: false,
-});
-const SubForMoreSlide = dynamicImport(() => import("../SubForMoreSlide"), {
-  ssr: false,
-});
 
 interface CanvasPreviewProps {
   img: HTMLImageElement | undefined;
@@ -27,14 +19,8 @@ interface CanvasPreviewProps {
   subForMore: boolean;
   numero: number;
   currentSlide: number;
+  totalSlides: number;
   onTap: () => void;
-  // Shared text measurement state
-  titleHeight: number;
-  introHeight: number;
-  onTitleHeightChange: (height: number) => void;
-  onIntroHeightChange: (height: number) => void;
-  contentFontSizes: number[];
-  onContentFontSizeChange: (index: number, size: number) => void;
 }
 
 export default function CanvasPreview({
@@ -50,13 +36,8 @@ export default function CanvasPreview({
   subForMore,
   numero,
   currentSlide,
+  totalSlides,
   onTap,
-  titleHeight,
-  introHeight,
-  onTitleHeightChange,
-  onIntroHeightChange,
-  contentFontSizes,
-  onContentFontSizeChange,
 }: CanvasPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth } = useResizeObserver({
@@ -64,84 +45,30 @@ export default function CanvasPreview({
     box: "content-box",
   });
 
-  const { width: canvasWidth, height: canvasHeight } =
-    FORMAT_DIMENSIONS[format];
+  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
 
   // Scale to fit container width while maintaining aspect ratio
   const scale = containerWidth ? containerWidth / canvasWidth : 0;
 
-  const totalSlides = 1 + slidesContent.length + (subForMore ? 1 : 0);
-
-  // No-op ref for preview (we don't need export functionality here)
-  const noopRef = useCallback(() => {}, []);
-
-  // Determine which slide to render (only render the current one)
-  const isFirstSlide = currentSlide === 0;
-  const contentSlideIndex = currentSlide - 1;
-  const isContentSlide =
-    contentSlideIndex >= 0 && contentSlideIndex < slidesContent.length;
-  const isSubForMoreSlide =
-    subForMore && currentSlide === slidesContent.length + 1;
-
   return (
     <div className={styles.container} onClick={onTap}>
       <div className={styles.canvasWrapper} ref={containerRef}>
-        {isFirstSlide && (
-          <FirstSlide
-            img={img}
-            imgX={imgX}
-            position={position}
-            rubrique={rubrique}
-            title={title}
-            intro={intro}
-            scale={scale}
-            width={containerWidth || 0}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            display={true}
-            onImgXChange={() => {}}
-            ref={noopRef}
-            previewMode={true}
-            titleHeight={titleHeight}
-            introHeight={introHeight}
-            onTitleHeightChange={onTitleHeightChange}
-            onIntroHeightChange={onIntroHeightChange}
-          />
-        )}
-        {isContentSlide && (
-          <ContentSlide
-            backgroundImg={blurredImg || undefined}
-            originalImg={img}
-            imgX={imgX}
-            rubrique={rubrique}
-            content={slidesContent[contentSlideIndex]}
-            scale={scale}
-            width={containerWidth || 0}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            display={true}
-            last={contentSlideIndex === slidesContent.length - 1}
-            ref={noopRef}
-            fontSize={contentFontSizes[contentSlideIndex]}
-            onFontSizeChange={(size) =>
-              onContentFontSizeChange(contentSlideIndex, size)
-            }
-          />
-        )}
-        {isSubForMoreSlide && (
-          <SubForMoreSlide
-            backgroundImg={blurredImg || undefined}
-            originalImg={img}
-            imgX={imgX}
-            numero={numero}
-            scale={scale}
-            width={containerWidth || 0}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            display={true}
-            ref={noopRef}
-          />
-        )}
+        <SlidesRenderer
+          img={img}
+          blurredImg={blurredImg}
+          imgX={imgX}
+          position={position}
+          rubrique={rubrique}
+          title={title}
+          intro={intro}
+          format={format}
+          slidesContent={slidesContent}
+          subForMore={subForMore}
+          numero={numero}
+          currentSlide={currentSlide}
+          scale={scale}
+          width={containerWidth || 0}
+        />
       </div>
       <div className={styles.slideIndicator}>
         {currentSlide + 1} / {totalSlides}

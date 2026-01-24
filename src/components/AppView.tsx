@@ -4,9 +4,9 @@ import styles from "./AppView.module.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
-import dynamicImport from "next/dynamic";
 import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
 import LegendGenerator from "./LegendGenerator";
+import SlidesRenderer from "./SlidesRenderer";
 import JSZip from "jszip";
 import useImage from "use-image";
 import { useInterval, useResizeObserver, useMediaQuery } from "usehooks-ts";
@@ -16,17 +16,6 @@ import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 import { createBlurredImage } from "../lib/blur";
 import MobileLayout from "./mobile/MobileLayout";
-
-const FirstSlide = dynamicImport(() => import("../components/FirstSlide"), {
-  ssr: false,
-});
-const ContentSlide = dynamicImport(() => import("../components/ContentSlide"), {
-  ssr: false,
-});
-const SubForMoreSlide = dynamicImport(
-  () => import("../components/SubForMoreSlide"),
-  { ssr: false },
-);
 
 async function resizeImage(imgBlob: Blob): Promise<string> {
   // Get image current height
@@ -159,8 +148,7 @@ export default function AppView(params: { post?: Post }) {
   const [wpError, setWpError] = useState<string | null>(null);
   const [importWithContent, setImportWithContent] = useState(true);
 
-  const { width: canvasWidth, height: canvasHeight } =
-    FORMAT_DIMENSIONS[format];
+  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
   const scale = colWidth ? colWidth / canvasWidth : 0;
 
   const stagesRef = useRef([]);
@@ -338,64 +326,24 @@ export default function AppView(params: { post?: Post }) {
               </button>
             ) : null}
 
-            <FirstSlide
+            <SlidesRenderer
               img={img}
+              blurredImg={blurredImg}
               imgX={imgX}
               position={position}
               rubrique={rubrique}
               title={title}
               intro={intro}
+              format={format}
+              slidesContent={slidesContent}
+              subForMore={subForMore}
+              numero={numero}
+              currentSlide={currentSlide}
               scale={scale}
               width={colWidth}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
-              ref={(el) => {
-                if (el) {
-                  stagesRef.current[0] = el;
-                }
-              }}
-              display={currentSlide === 0}
               onImgXChange={setImgX}
+              stagesRef={stagesRef}
             />
-            {slidesContent.map((content, i) => (
-              <ContentSlide
-                key={i}
-                backgroundImg={blurredImg}
-                originalImg={img}
-                imgX={imgX}
-                rubrique={rubrique}
-                content={content}
-                scale={scale}
-                width={colWidth}
-                canvasWidth={canvasWidth}
-                canvasHeight={canvasHeight}
-                ref={(el) => {
-                  if (el) {
-                    stagesRef.current[i + 1] = el;
-                  }
-                }}
-                display={i + 1 === currentSlide}
-                last={i + 1 === slidesContent.length}
-              />
-            ))}
-            {subForMore ? (
-              <SubForMoreSlide
-                backgroundImg={blurredImg}
-                originalImg={img}
-                imgX={imgX}
-                numero={numero}
-                scale={scale}
-                width={colWidth}
-                canvasWidth={canvasWidth}
-                canvasHeight={canvasHeight}
-                ref={(el) => {
-                  if (el) {
-                    stagesRef.current[slidesContent.length + 1] = el;
-                  }
-                }}
-                display={currentSlide === slidesContent.length + 1}
-              />
-            ) : null}
           </div>
 
           <button onClick={handleDownload}>Télécharger</button>

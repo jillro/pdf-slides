@@ -1,17 +1,18 @@
 "use client";
 
 import styles from "./MobileLayout.module.css";
+import exportStyles from "../SlidesRenderer.module.css";
 import { useState, useRef, useCallback, MutableRefObject } from "react";
 import TabNavigation, { TabId } from "./TabNavigation";
 import TabPanel from "./TabPanel";
 import CanvasPreview from "./CanvasPreview";
 import CanvasFocusMode from "./CanvasFocusMode";
-import ExportRenderer from "./ExportRenderer";
+import SlidesRenderer from "../SlidesRenderer";
 import ContenuTab from "../tabs/ContenuTab";
 import SlidesTab from "../tabs/SlidesTab";
 import ImageTab from "../tabs/ImageTab";
 import PartagerTab from "../tabs/PartagerTab";
-import { Format } from "../../lib/formats";
+import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
 
 interface MobileLayoutProps {
   // Canvas props
@@ -132,28 +133,9 @@ export default function MobileLayout({
   const [exporting, setExporting] = useState(false);
   const exportReadyResolveRef = useRef<(() => void) | null>(null);
 
-  // Shared text measurement state (calculated by preview, used by export)
-  const [titleHeight, setTitleHeight] = useState<number>(0);
-  const [introHeight, setIntroHeight] = useState<number>(0);
-  const [contentFontSizes, setContentFontSizes] = useState<number[]>([]);
-
-  const handleContentFontSizeChange = useCallback(
-    (index: number, size: number) => {
-      setContentFontSizes((prev) => {
-        const next = [...prev];
-        next[index] = size;
-        return next;
-      });
-    },
-    [],
-  );
+  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
 
   const handleDownload = useCallback(() => {
-    // Don't export if measurements haven't been calculated
-    if (titleHeight === 0 && title.length > 0) {
-      console.warn("Export blocked: measurements not ready");
-      return;
-    }
     setExporting(true);
     new Promise<void>((resolve) => {
       exportReadyResolveRef.current = resolve;
@@ -161,7 +143,7 @@ export default function MobileLayout({
       onDownload();
       setExporting(false);
     });
-  }, [onDownload, titleHeight, title.length]);
+  }, [onDownload]);
 
   const handleExportReady = useCallback(() => {
     exportReadyResolveRef.current?.();
@@ -179,6 +161,9 @@ export default function MobileLayout({
       unsavedImageCaption,
   };
 
+  // Total number of slides for preview
+  const totalSlides = 1 + slidesContent.length + (subForMore ? 1 : 0);
+
   return (
     <div className={styles.mobileLayout}>
       <CanvasPreview
@@ -194,13 +179,8 @@ export default function MobileLayout({
         subForMore={subForMore}
         numero={numero}
         currentSlide={currentSlide}
+        totalSlides={totalSlides}
         onTap={() => setFocusModeOpen(true)}
-        titleHeight={titleHeight}
-        introHeight={introHeight}
-        onTitleHeightChange={setTitleHeight}
-        onIntroHeightChange={setIntroHeight}
-        contentFontSizes={contentFontSizes}
-        onContentFontSizeChange={handleContentFontSizeChange}
       />
 
       <TabPanel>
@@ -290,34 +270,31 @@ export default function MobileLayout({
           onSlideChange={setCurrentSlide}
           onImgXChange={setImgX}
           onClose={() => setFocusModeOpen(false)}
-          titleHeight={titleHeight}
-          introHeight={introHeight}
-          onTitleHeightChange={setTitleHeight}
-          onIntroHeightChange={setIntroHeight}
-          contentFontSizes={contentFontSizes}
-          onContentFontSizeChange={handleContentFontSizeChange}
         />
       )}
 
       {exporting && (
-        <ExportRenderer
-          img={img}
-          blurredImg={blurredImg}
-          imgX={imgX}
-          position={position}
-          rubrique={rubrique}
-          title={title}
-          intro={intro}
-          format={format}
-          slidesContent={slidesContent}
-          subForMore={subForMore}
-          numero={numero}
-          stagesRef={stagesRef}
-          onReady={handleExportReady}
-          titleHeight={titleHeight}
-          introHeight={introHeight}
-          contentFontSizes={contentFontSizes}
-        />
+        <div className={exportStyles.exportContainer}>
+          <SlidesRenderer
+            img={img}
+            blurredImg={blurredImg}
+            imgX={imgX}
+            position={position}
+            rubrique={rubrique}
+            title={title}
+            intro={intro}
+            format={format}
+            slidesContent={slidesContent}
+            subForMore={subForMore}
+            numero={numero}
+            currentSlide={0}
+            scale={1}
+            width={canvasWidth}
+            stagesRef={stagesRef}
+            onReady={handleExportReady}
+            showAllSlides
+          />
+        </div>
       )}
     </div>
   );
