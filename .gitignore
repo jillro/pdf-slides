@@ -27,3 +27,8 @@ dist-ssr
 .next
 next-env.d.ts
 .env
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
