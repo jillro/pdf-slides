@@ -35,7 +35,12 @@ async function resizeImage(imgBlob: Blob): Promise<string> {
 
 function useSavedPost(id: string, init: Post) {
   const [scheduledChanges, setScheduledChanges] = useState<Partial<Post>>({});
+  // Use a ref to capture changes atomically, avoiding stale closure issues
+  const pendingChangesRef = useRef<Partial<Post>>({});
+
   const scheduleSave = <K extends keyof Post>(key: K, value: Post[K]) => {
+    // Update both ref (for immediate access in interval) and state (for UI)
+    pendingChangesRef.current = { ...pendingChangesRef.current, [key]: value };
     setScheduledChanges((prev) => ({
       ...prev,
       [key]: value,
@@ -43,8 +48,11 @@ function useSavedPost(id: string, init: Post) {
   };
 
   useInterval(async () => {
-    if (Object.keys(scheduledChanges).length === 0) return;
-    await savePost({ ...scheduledChanges, id });
+    const changes = pendingChangesRef.current;
+    if (Object.keys(changes).length === 0) return;
+    // Clear ref immediately to capture any new changes during save
+    pendingChangesRef.current = {};
+    await savePost({ ...changes, id });
     setScheduledChanges({});
   }, 1000);
 

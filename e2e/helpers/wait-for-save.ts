@@ -9,16 +9,13 @@ export async function waitForSave(page: Page) {
 
 // Wait for the unsaved indicator (⏳) to disappear
 export async function waitForSaveComplete(page: Page) {
-  // First wait for potential indicator to appear
-  await page.waitForTimeout(100);
+  // The app uses a 1s interval to check for changes and save them.
+  // We must wait for at least one full interval cycle to ensure the save triggers.
+  await page.waitForTimeout(1200);
 
-  // Wait for all unsaved indicators to disappear, or timeout
-  await page
-    .waitForFunction(() => !document.body.textContent?.includes("⏳"), {
-      timeout: 5000,
-    })
-    .catch(() => {
-      // If still showing after timeout, the save might still be pending
-      // Continue anyway as the data might have been saved
-    });
+  // Then wait for any ⏳ indicators to disappear (save completed)
+  await page.waitForFunction(
+    () => !document.body.textContent?.includes("⏳"),
+    { timeout: 5000 },
+  );
 }

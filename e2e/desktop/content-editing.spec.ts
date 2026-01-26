@@ -61,9 +61,8 @@ test.describe("Content Editing", () => {
     await page.waitForTimeout(100);
     await app.setRubrique("ailleurs");
 
-    // Wait for save cycle (2s debounce + extra buffer)
-    await app.waitForSave();
-    await page.waitForTimeout(500);
+    // Wait for save to complete (watch for ⏳ indicator to disappear)
+    await app.waitForSaveComplete();
 
     // Reload and verify all fields
     await page.reload();
