@@ -143,7 +143,7 @@ export default function SlidesRenderer({
           originalImg={img}
           imgX={imgX}
           rubrique={applyFrenchTypography(rubrique)}
-          content={applyFrenchTypography(content)}
+          content={applyFrenchTypography(content.trim())}
           scale={scale}
           width={width}
           canvasWidth={canvasWidth}

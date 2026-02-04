@@ -32,7 +32,7 @@ export default function CutCopyMode({
   const handleSectionClick = useCallback(
     async (sectionText: string) => {
       try {
-        await navigator.clipboard.writeText(sectionText);
+        await navigator.clipboard.writeText(sectionText.trim());
         showToast("Copié !");
       } catch {
         showToast("Erreur de copie");
@@ -184,22 +184,28 @@ export default function CutCopyMode({
               >
                 <span className={styles.sectionBadge}>{sectionIndex + 1}</span>
                 <span className={styles.sectionText}>
-                  {section.split("").map((char, charIndex) => {
-                    const globalIndex = sectionStart + charIndex;
-                    return (
-                      <span
-                        key={charIndex}
-                        data-char-index={globalIndex}
-                        onClick={(e) => handleCharClick(e, globalIndex)}
-                      >
-                        {(hoverPosition === globalIndex ||
-                          selectedPosition === globalIndex) && (
-                          <span className={styles.cutCursor} />
-                        )}
-                        {char}
-                      </span>
-                    );
-                  })}
+                  {section
+                    .trim()
+                    .split("")
+                    .map((char, charIndex) => {
+                      const trimOffset =
+                        section.length - section.trimStart().length;
+                      const globalIndex =
+                        sectionStart + trimOffset + charIndex;
+                      return (
+                        <span
+                          key={charIndex}
+                          data-char-index={globalIndex}
+                          onClick={(e) => handleCharClick(e, globalIndex)}
+                        >
+                          {(hoverPosition === globalIndex ||
+                            selectedPosition === globalIndex) && (
+                            <span className={styles.cutCursor} />
+                          )}
+                          {char}
+                        </span>
+                      );
+                    })}
                 </span>
               </div>
             </div>
