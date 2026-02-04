@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./LegendGenerator.module.css";
+import { applyFrenchTypography } from "../lib/french-typography";
 
 type Props = {
   legendContent: string;
@@ -17,12 +18,13 @@ function generateCaption(
   imageCaption: string | null,
   articleUrl: string | null,
 ): string {
-  const content = legendContent.trim();
+  const content = applyFrenchTypography(legendContent.trim());
+  const caption = imageCaption ? applyFrenchTypography(imageCaption) : null;
 
   switch (type) {
     case "instagram": {
-      if (imageCaption) {
-        return `${content}\n\n${imageCaption}`;
+      if (caption) {
+        return `${content}\n\n${caption}`;
       }
       return content;
     }

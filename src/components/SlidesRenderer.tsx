@@ -4,6 +4,7 @@ import { MutableRefObject, useCallback, useEffect, useRef } from "react";
 import dynamicImport from "next/dynamic";
 import type Konva from "konva";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
+import { applyFrenchTypography } from "../lib/french-typography";
 
 const FirstSlide = dynamicImport(() => import("./FirstSlide"), { ssr: false });
 const ContentSlide = dynamicImport(() => import("./ContentSlide"), {
@@ -124,9 +125,9 @@ export default function SlidesRenderer({
         img={img}
         imgX={imgX}
         position={position}
-        rubrique={rubrique}
-        title={title}
-        intro={intro}
+        rubrique={applyFrenchTypography(rubrique)}
+        title={applyFrenchTypography(title)}
+        intro={applyFrenchTypography(intro)}
         scale={scale}
         width={width}
         canvasWidth={canvasWidth}
@@ -141,8 +142,8 @@ export default function SlidesRenderer({
           backgroundImg={blurredImg || undefined}
           originalImg={img}
           imgX={imgX}
-          rubrique={rubrique}
-          content={content}
+          rubrique={applyFrenchTypography(rubrique)}
+          content={applyFrenchTypography(content)}
           scale={scale}
           width={width}
           canvasWidth={canvasWidth}

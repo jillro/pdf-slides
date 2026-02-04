@@ -1,5 +1,7 @@
 "use server";
 
+import { applyFrenchTypography } from "../lib/french-typography";
+
 export type WordPressImportResult =
   | {
       success: true;
@@ -174,9 +176,15 @@ export async function importFromWordPress(
   }
 
   // 3. Extract title, content, excerpt, and link
-  const title = stripHtmlTags(postData.title?.rendered || "");
-  const content = htmlToPlainText(postData.content?.rendered || "");
-  const legendContent = stripHtmlTags(postData.excerpt?.rendered || "");
+  const title = applyFrenchTypography(
+    stripHtmlTags(postData.title?.rendered || ""),
+  );
+  const content = applyFrenchTypography(
+    htmlToPlainText(postData.content?.rendered || ""),
+  );
+  const legendContent = applyFrenchTypography(
+    stripHtmlTags(postData.excerpt?.rendered || ""),
+  );
   const articleUrl = postData.link || "";
 
   // 4. Fetch category and map to rubrique
@@ -209,7 +217,8 @@ export async function importFromWordPress(
         const media = await mediaResponse.json();
         // Extract image caption
         if (media.caption?.rendered) {
-          imageCaption = stripHtmlTags(media.caption.rendered) || null;
+          const rawCaption = stripHtmlTags(media.caption.rendered);
+          imageCaption = rawCaption ? applyFrenchTypography(rawCaption) : null;
         }
         const sourceUrl = media.source_url;
         if (sourceUrl) {
