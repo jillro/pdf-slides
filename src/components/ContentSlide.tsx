@@ -21,6 +21,7 @@ export default function ContentSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   last?: boolean;
+  onLogoLoaded?: () => void;
   // Optional external state management for shared measurements
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
@@ -32,9 +33,14 @@ export default function ContentSlide(props: {
     canvasHeight,
     fontSize: externalFontSize,
     onFontSizeChange,
+    onLogoLoaded,
   } = props;
 
   const [logo] = useImage(logoUrl.src, "anonymous");
+
+  useEffect(() => {
+    if (logo) onLogoLoaded?.();
+  }, [logo, onLogoLoaded]);
 
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [contentHeight, setContentHeight] = useState<number>(0);

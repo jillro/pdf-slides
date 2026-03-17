@@ -19,8 +19,14 @@ export default function SubForMoreSlide(props: {
   canvasHeight: number;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
+  onLogoLoaded?: () => void;
 }) {
+  const { onLogoLoaded } = props;
   const [logo] = useImage(logoUrl.src, "anonymous");
+
+  useEffect(() => {
+    if (logo) onLogoLoaded?.();
+  }, [logo, onLogoLoaded]);
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
   const contentRef = useRef<Konva.Text>(null);
