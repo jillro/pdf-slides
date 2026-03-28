@@ -1,7 +1,6 @@
 "use client";
 
-import useImage from "use-image";
-import logoUrl from "../assets/logo.svg";
+import { useLogoImage } from "../lib/useLogoImage";
 import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Stage, Text } from "react-konva";
@@ -41,7 +40,7 @@ export default function FirstSlide(props: {
     onLogoLoaded,
   } = props;
 
-  const [logo] = useImage(logoUrl.src, "anonymous");
+  const [logo] = useLogoImage();
 
   useEffect(() => {
     if (logo) onLogoLoaded?.();
