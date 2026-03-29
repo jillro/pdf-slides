@@ -10,7 +10,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload the page
-    await page.reload();
+    await app.reload();
 
     // Title should persist
     await expect(page.locator('input[name="title"]')).toHaveValue(
@@ -26,7 +26,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload the page
-    await page.reload();
+    await app.reload();
 
     // Intro should persist
     await expect(page.locator('textarea[name="intro"]')).toHaveValue(
@@ -45,7 +45,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload the page
-    await page.reload();
+    await app.reload();
 
     // Rubrique should persist
     await expect(page.locator('select[name="rubrique"]')).toHaveValue("actu");
@@ -65,8 +65,7 @@ test.describe("Content Editing", () => {
     await app.waitForSaveComplete();
 
     // Reload and verify all fields
-    await page.reload();
-    await page.waitForLoadState("networkidle");
+    await app.reload();
 
     await expect(page.locator('input[name="title"]')).toHaveValue(
       "Batch Test Title",
@@ -103,7 +102,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload
-    await page.reload();
+    await app.reload();
 
     // Should persist
     await expect(page.locator('textarea[name="legendContent"]')).toHaveValue(
@@ -119,7 +118,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload
-    await page.reload();
+    await app.reload();
 
     // Should persist
     await expect(page.locator('input[name="imageCaption"]')).toHaveValue(
@@ -138,7 +137,7 @@ test.describe("Content Editing", () => {
     await app.waitForSave();
 
     // Reload
-    await page.reload();
+    await app.reload();
 
     // Should persist
     await expect(page.locator("input#bottom")).toBeChecked();

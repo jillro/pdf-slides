@@ -32,6 +32,9 @@ export interface AppHelpers {
     tab: "contenu" | "slides" | "image" | "partager",
   ) => Promise<void>;
 
+  // Page helpers
+  reload: () => Promise<void>;
+
   // Wait helpers
   waitForSave: () => Promise<void>;
   waitForSaveComplete: () => Promise<void>;
@@ -149,6 +152,11 @@ export const test = base.extend<{ app: AppHelpers }>({
           partager: selectors.mobile.tabPartager,
         };
         await page.locator(tabSelectors[tab]).click();
+      },
+
+      reload: async () => {
+        await page.reload();
+        await page.waitForLoadState("networkidle");
       },
 
       waitForSave: async () => {
