@@ -1,6 +1,6 @@
 "use client";
 
-import { MutableRefObject, useCallback, useEffect, useRef } from "react";
+import { MutableRefObject, useCallback, useEffect } from "react";
 import dynamicImport from "next/dynamic";
 import type Konva from "konva";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
@@ -41,9 +41,6 @@ export interface SlidesRendererProps {
   // Export refs (optional) - uses unknown[] for compatibility with parent refs
   stagesRef?: MutableRefObject<unknown[]>;
 
-  // Callback when all stages are mounted (optional, for export)
-  onReady?: () => void;
-
   // When true, all slides display={true} (for export). Default false.
   showAllSlides?: boolean;
 }
@@ -65,15 +62,11 @@ export default function SlidesRenderer({
   width,
   onImgXChange,
   stagesRef,
-  onReady,
   showAllSlides = false,
 }: SlidesRendererProps) {
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
 
-  // Track stages that have been registered for onReady callback
-  const stagesReadyRef = useRef(0);
-  const hasCalledOnReady = useRef(false);
   const expectedStages = 1 + slidesContent.length + (subForMore ? 1 : 0);
 
   // Reset refs when component mounts or slide count changes
@@ -81,29 +74,15 @@ export default function SlidesRenderer({
     if (stagesRef) {
       stagesRef.current = [];
     }
-    stagesReadyRef.current = 0;
-    hasCalledOnReady.current = false;
   }, [stagesRef, expectedStages]);
 
   const handleStageRef = useCallback(
     (index: number) => (el: Konva.Stage | null) => {
-      if (el) {
-        if (stagesRef) {
-          stagesRef.current[index] = el;
-        }
-
-        // Track for onReady callback
-        if (onReady && !hasCalledOnReady.current) {
-          stagesReadyRef.current++;
-          if (stagesReadyRef.current === expectedStages) {
-            hasCalledOnReady.current = true;
-            // Small delay for Konva to finish painting
-            setTimeout(() => onReady(), 50);
-          }
-        }
+      if (el && stagesRef) {
+        stagesRef.current[index] = el;
       }
     },
-    [stagesRef, onReady, expectedStages],
+    [stagesRef],
   );
 
   // No-op ref for when stagesRef is not provided
@@ -111,12 +90,12 @@ export default function SlidesRenderer({
 
   const getRef = useCallback(
     (index: number) => {
-      if (stagesRef || onReady) {
+      if (stagesRef) {
         return handleStageRef(index);
       }
       return noopRef;
     },
-    [stagesRef, onReady, handleStageRef, noopRef],
+    [stagesRef, handleStageRef, noopRef],
   );
 
   return (

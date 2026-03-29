@@ -1,18 +1,16 @@
 "use client";
 
 import styles from "./MobileLayout.module.css";
-import exportStyles from "../SlidesRenderer.module.css";
-import { useState, useRef, useCallback, MutableRefObject } from "react";
+import { useState, MutableRefObject } from "react";
 import TabNavigation, { TabId } from "./TabNavigation";
 import TabPanel from "./TabPanel";
 import CanvasPreview from "./CanvasPreview";
 import CanvasFocusMode from "./CanvasFocusMode";
-import SlidesRenderer from "../SlidesRenderer";
 import ContenuTab from "../tabs/ContenuTab";
 import SlidesTab from "../tabs/SlidesTab";
 import ImageTab from "../tabs/ImageTab";
 import PartagerTab from "../tabs/PartagerTab";
-import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
+import { Format } from "../../lib/formats";
 
 interface MobileLayoutProps {
   // Canvas props
@@ -130,25 +128,6 @@ export default function MobileLayout({
 }: MobileLayoutProps) {
   const [activeTab, setActiveTab] = useState<TabId>("contenu");
   const [focusModeOpen, setFocusModeOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const exportReadyResolveRef = useRef<(() => void) | null>(null);
-
-  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
-
-  const handleDownload = useCallback(() => {
-    setExporting(true);
-    new Promise<void>((resolve) => {
-      exportReadyResolveRef.current = resolve;
-    }).then(() => {
-      onDownload();
-      setExporting(false);
-    });
-  }, [onDownload]);
-
-  const handleExportReady = useCallback(() => {
-    exportReadyResolveRef.current?.();
-    exportReadyResolveRef.current = null;
-  }, []);
 
   const unsavedByTab: Record<TabId, boolean> = {
     contenu: unsavedTitle || unsavedIntro || unsavedRubrique,
@@ -181,6 +160,7 @@ export default function MobileLayout({
         currentSlide={currentSlide}
         totalSlides={totalSlides}
         onTap={() => setFocusModeOpen(true)}
+        stagesRef={stagesRef}
       />
 
       <TabPanel>
@@ -241,8 +221,7 @@ export default function MobileLayout({
             setImageCaption={setImageCaption}
             unsavedImageCaption={unsavedImageCaption}
             articleUrl={articleUrl}
-            onDownload={handleDownload}
-            exporting={exporting}
+            onDownload={onDownload}
           />
         )}
       </TabPanel>
@@ -273,29 +252,6 @@ export default function MobileLayout({
         />
       )}
 
-      {exporting && (
-        <div className={exportStyles.exportContainer}>
-          <SlidesRenderer
-            img={img}
-            blurredImg={blurredImg}
-            imgX={imgX}
-            position={position}
-            rubrique={rubrique}
-            title={title}
-            intro={intro}
-            format={format}
-            slidesContent={slidesContent}
-            subForMore={subForMore}
-            numero={numero}
-            currentSlide={0}
-            scale={1}
-            width={canvasWidth}
-            stagesRef={stagesRef}
-            onReady={handleExportReady}
-            showAllSlides
-          />
-        </div>
-      )}
     </div>
   );
 }
