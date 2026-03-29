@@ -73,7 +73,6 @@ export default function SlidesRenderer({
 
   // Track stages that have been registered for onReady callback
   const stagesReadyRef = useRef(0);
-  const logosReadyRef = useRef(0);
   const hasCalledOnReady = useRef(false);
   const expectedStages = 1 + slidesContent.length + (subForMore ? 1 : 0);
 
@@ -83,26 +82,8 @@ export default function SlidesRenderer({
       stagesRef.current = [];
     }
     stagesReadyRef.current = 0;
-    logosReadyRef.current = 0;
     hasCalledOnReady.current = false;
   }, [stagesRef, expectedStages]);
-
-  const checkReady = useCallback(() => {
-    if (
-      !hasCalledOnReady.current &&
-      onReady &&
-      stagesReadyRef.current === expectedStages &&
-      logosReadyRef.current === expectedStages
-    ) {
-      hasCalledOnReady.current = true;
-      onReady();
-    }
-  }, [onReady, expectedStages]);
-
-  const handleLogoLoaded = useCallback(() => {
-    logosReadyRef.current++;
-    checkReady();
-  }, [checkReady]);
 
   const handleStageRef = useCallback(
     (index: number) => (el: Konva.Stage | null) => {
@@ -114,11 +95,15 @@ export default function SlidesRenderer({
         // Track for onReady callback
         if (onReady && !hasCalledOnReady.current) {
           stagesReadyRef.current++;
-          checkReady();
+          if (stagesReadyRef.current === expectedStages) {
+            hasCalledOnReady.current = true;
+            // Small delay for Konva to finish painting
+            setTimeout(() => onReady(), 50);
+          }
         }
       }
     },
-    [stagesRef, onReady, checkReady],
+    [stagesRef, onReady, expectedStages],
   );
 
   // No-op ref for when stagesRef is not provided
@@ -149,7 +134,6 @@ export default function SlidesRenderer({
         canvasHeight={canvasHeight}
         display={showAllSlides || currentSlide === 0}
         onImgXChange={onImgXChange || (() => {})}
-        onLogoLoaded={onReady ? handleLogoLoaded : undefined}
         ref={getRef(0)}
       />
       {slidesContent.map((content, i) => (
@@ -166,7 +150,6 @@ export default function SlidesRenderer({
           canvasHeight={canvasHeight}
           display={showAllSlides || i + 1 === currentSlide}
           last={i === slidesContent.length - 1}
-          onLogoLoaded={onReady ? handleLogoLoaded : undefined}
           ref={getRef(i + 1)}
         />
       ))}
@@ -181,7 +164,6 @@ export default function SlidesRenderer({
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           display={showAllSlides || currentSlide === slidesContent.length + 1}
-          onLogoLoaded={onReady ? handleLogoLoaded : undefined}
           ref={getRef(slidesContent.length + 1)}
         />
       )}

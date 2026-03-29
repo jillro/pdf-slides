@@ -22,7 +22,6 @@ export default function FirstSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   onImgXChange: (x: number) => void;
-  onLogoLoaded?: () => void;
   previewMode?: boolean;
   // Optional external state management for shared measurements
   titleHeight?: number;
@@ -37,14 +36,9 @@ export default function FirstSlide(props: {
     introHeight: externalIntroHeight,
     onTitleHeightChange,
     onIntroHeightChange,
-    onLogoLoaded,
   } = props;
 
   const [logo] = useLogoImage();
-
-  useEffect(() => {
-    if (logo) onLogoLoaded?.();
-  }, [logo, onLogoLoaded]);
 
   const [localTitleHeight, setLocalTitleHeight] = useState<number>(0);
   const [localIntroHeight, setLocalIntroHeight] = useState<number>(0);
