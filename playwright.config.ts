@@ -31,6 +31,13 @@ export default defineConfig({
       name: "Mobile Safari",
       use: { ...devices["iPhone 13"] },
     },
+    {
+      name: "Mobile Firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        viewport: { width: 393, height: 851 },
+      },
+    },
   ],
   webServer: {
     command: `npm run dev -- --port ${PORT}`,
