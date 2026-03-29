@@ -19,7 +19,7 @@ test.describe("Format Selection", () => {
     await app.waitForSave();
 
     // Reload
-    await page.reload();
+    await app.reload();
 
     // Should persist
     await expect(page.locator('select[name="format"]')).toHaveValue("story");
@@ -40,7 +40,7 @@ test.describe("Format Selection", () => {
     await app.waitForSave();
 
     // Reload
-    await page.reload();
+    await app.reload();
 
     // Should be post
     await expect(page.locator('select[name="format"]')).toHaveValue("post");

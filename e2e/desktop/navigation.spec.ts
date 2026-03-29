@@ -26,7 +26,7 @@ test.describe("Navigation", () => {
     await page.waitForURL(/\/[a-z0-9]+$/i);
 
     // Now navigate directly to the original ID
-    await page.goto(`/${id}`);
+    await app.goto(id);
 
     // Should load successfully (page contains the editor)
     await expect(page.locator('input[name="title"]')).toBeVisible();
@@ -67,7 +67,7 @@ test.describe("Navigation", () => {
     await expect(page.locator('input[name="title"]')).toHaveValue("");
 
     // Go back to first post
-    await page.goto(`/${id1}`);
+    await app.goto(id1);
     await expect(page.locator('input[name="title"]')).toHaveValue(
       "First Post Title",
     );

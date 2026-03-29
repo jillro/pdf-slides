@@ -112,7 +112,7 @@ test.describe("Download", () => {
     await app.waitForSave();
 
     // Reload and verify
-    await page.reload();
+    await app.reload();
     await expect(page.locator("input#numero")).toHaveValue("42");
   });
 });

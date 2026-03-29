@@ -15,7 +15,7 @@ test.describe("Slides Editor", () => {
     await app.waitForSave();
 
     // Reload and verify
-    await page.reload();
+    await app.reload();
     await page.locator('button:has-text("Modifier")').click();
 
     await expect(
@@ -90,7 +90,7 @@ test.describe("Slides Editor", () => {
     await app.waitForSave();
 
     // Reload and verify content is still there
-    await page.reload();
+    await app.reload();
     await page.locator('button:has-text("Modifier")').click();
 
     await expect(
