@@ -12,7 +12,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify (mobile uses id="title")
-    await page.reload();
+    await app.reload();
     await expect(page.locator("input#title")).toHaveValue("Mobile Title Test");
   });
 
@@ -23,7 +23,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify (mobile uses id="intro")
-    await page.reload();
+    await app.reload();
     await expect(page.locator("textarea#intro")).toHaveValue(
       "Mobile intro text for testing.",
     );
@@ -36,7 +36,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify (mobile uses id="rubrique")
-    await page.reload();
+    await app.reload();
     await expect(page.locator("select#rubrique")).toHaveValue("pop !");
   });
 
@@ -51,7 +51,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify - check the Story button has active class
-    await page.reload();
+    await app.reload();
     await app.switchToTab("image");
     await expect(page.locator('button:has-text("Story (9:16)")')).toHaveClass(
       /active/,
@@ -93,7 +93,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify
-    await page.reload();
+    await app.reload();
     await app.switchToTab("partager");
     await expect(checkbox).toBeChecked();
   });
@@ -111,7 +111,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify
-    await page.reload();
+    await app.reload();
     await app.switchToTab("slides");
     await page.locator('button:has-text("Modifier")').click();
     await expect(page.locator("textarea")).toHaveValue(
@@ -149,7 +149,7 @@ test.describe("Mobile Content Editing", () => {
     await app.waitForSave();
 
     // Reload and verify both
-    await page.reload();
+    await app.reload();
 
     // Check Contenu tab (mobile uses id="title")
     await expect(page.locator("input#title")).toHaveValue("Multi-tab Test");
