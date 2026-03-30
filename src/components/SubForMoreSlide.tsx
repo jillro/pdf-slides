@@ -142,6 +142,7 @@ export default function SubForMoreSlide(props: {
           x={(props.canvasWidth - 90) / 2}
           y={950 + yOffset}
           width={90}
+          height={67.5}
         />
         <Text
           text={"Soutiens la presse féministe et indépendante !"}
