@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./CanvasPreview.module.css";
-import { useRef } from "react";
+import { MutableRefObject, useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import SlidesRenderer from "../SlidesRenderer";
 import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
@@ -21,6 +21,7 @@ interface CanvasPreviewProps {
   currentSlide: number;
   totalSlides: number;
   onTap: () => void;
+  stagesRef?: MutableRefObject<unknown[]>;
 }
 
 export default function CanvasPreview({
@@ -38,6 +39,7 @@ export default function CanvasPreview({
   currentSlide,
   totalSlides,
   onTap,
+  stagesRef,
 }: CanvasPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth } = useResizeObserver({
@@ -68,6 +70,7 @@ export default function CanvasPreview({
           currentSlide={currentSlide}
           scale={scale}
           width={containerWidth || 0}
+          stagesRef={stagesRef}
         />
       </div>
       <div className={styles.slideIndicator}>

@@ -23,7 +23,6 @@ interface PartagerTabProps {
   articleUrl: string | null;
 
   onDownload: () => void;
-  exporting?: boolean;
 }
 
 export default function PartagerTab({
@@ -41,7 +40,6 @@ export default function PartagerTab({
   unsavedImageCaption,
   articleUrl,
   onDownload,
-  exporting = false,
 }: PartagerTabProps) {
   return (
     <div className={styles.container}>
@@ -112,12 +110,8 @@ export default function PartagerTab({
         articleUrl={articleUrl}
       />
 
-      <button
-        onClick={onDownload}
-        className={styles.downloadButton}
-        disabled={exporting}
-      >
-        {exporting ? "Préparation..." : "Télécharger les slides"}
+      <button onClick={onDownload} className={styles.downloadButton}>
+        Télécharger les slides
       </button>
     </div>
   );

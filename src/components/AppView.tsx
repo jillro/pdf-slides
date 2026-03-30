@@ -164,10 +164,13 @@ export default function AppView(params: { post?: Post }) {
   const handleDownload = async () => {
     const isSingleSlide = slidesContent.length === 0 && !subForMore;
 
+    // Export at 2x the original canvas resolution regardless of display scale
+    const getPixelRatio = (stage) => 2 / (stage.scaleX() || 1);
+
     if (isSingleSlide) {
       // Single slide: export as PNG directly
       const stage = stagesRef.current[0];
-      const blob = await stage.toBlob({ pixelRatio: 2 });
+      const blob = await stage.toBlob({ pixelRatio: getPixelRatio(stage) });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob as Blob);
       link.download = "slide.png";
@@ -177,7 +180,10 @@ export default function AppView(params: { post?: Post }) {
       const zip = new JSZip();
       await Promise.all(
         stagesRef.current.map(async (stage, i) => {
-          zip.file(`${i}.png`, (await stage.toBlob({ pixelRatio: 2 })) as Blob);
+          zip.file(
+            `${i}.png`,
+            (await stage.toBlob({ pixelRatio: getPixelRatio(stage) })) as Blob,
+          );
         }),
       );
       zip.generateAsync({ type: "blob" }).then((content) => {
