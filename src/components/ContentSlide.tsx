@@ -130,6 +130,7 @@ export default function ContentSlide(props: {
           x={props.canvasWidth - 150 - rubriqueWidth}
           y={37}
           width={60}
+          height={45}
         />
         <Text
           text={props.rubrique}

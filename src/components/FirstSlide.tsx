@@ -125,6 +125,7 @@ export default function FirstSlide(props: {
                     storyMargin
               }
               width={80}
+              height={60}
             />
           </>
         )}
