@@ -117,9 +117,9 @@ export default function FirstSlide(props: {
               x={150}
               y={
                 props.position === "top"
-                  ? 70 + storyMargin
+                  ? 87 + storyMargin
                   : props.canvasHeight -
-                    250 -
+                    233 -
                     introHeight -
                     titleHeight -
                     storyMargin
