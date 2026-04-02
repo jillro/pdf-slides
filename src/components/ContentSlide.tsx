@@ -128,7 +128,7 @@ export default function ContentSlide(props: {
         <KImage
           image={logo}
           x={props.canvasWidth - 150 - rubriqueWidth}
-          y={37}
+          y={62}
           width={60}
           height={45}
         />
