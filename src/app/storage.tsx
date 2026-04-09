@@ -48,11 +48,10 @@ export type Post = {
 
 type RedisPost = Partial<
   Omit<Post, "slidesContent" | "subForMore" | "imageCaption" | "articleUrl"> & {
-    slidesContent: string;
+    slidesContent: string; // serialized array
     subForMore: "true" | "false";
     imageCaption: string;
     articleUrl: string;
-    // serialized array
   }
 >;
 

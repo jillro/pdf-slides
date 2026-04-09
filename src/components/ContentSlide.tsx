@@ -1,18 +1,23 @@
 "use client";
 
 import { useLogoImage } from "../lib/useLogoImage";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
+import RichContentRenderer, { computeTextHeight } from "./RichContentRenderer";
+import type { TextSegment } from "../lib/rich-text-parser";
+
+const CONTENT_MARGIN = 80;
+const ACCENT_COLOR = "#ffd9af";
 
 export default function ContentSlide(props: {
-  backgroundImg?: HTMLImageElement; // Pre-blurred image for background
-  originalImg?: HTMLImageElement; // Original image for luminosity calculation
+  backgroundImg?: HTMLImageElement;
+  originalImg?: HTMLImageElement;
   imgX: number;
   rubrique: string;
-  content: string;
+  segments: TextSegment[];
   scale: number;
   width: number;
   canvasWidth: number;
@@ -20,14 +25,14 @@ export default function ContentSlide(props: {
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   last?: boolean;
-  // Optional external state management for shared measurements
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
 }) {
   const {
     originalImg,
     rubrique,
-    content,
+    segments,
+    canvasWidth,
     canvasHeight,
     fontSize: externalFontSize,
     onFontSizeChange,
@@ -36,24 +41,36 @@ export default function ContentSlide(props: {
   const [logo] = useLogoImage();
 
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
-  const [contentHeight, setContentHeight] = useState<number>(0);
   const [localFontSize, setLocalFontSize] = useState<number>(58);
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
-  // Use external fontSize if provided, otherwise use local state
   const fontSize = externalFontSize ?? localFontSize;
+  const lineHeight = 1.2 + (58 - fontSize) * 0.01;
+  const contentWidth = canvasWidth - CONTENT_MARGIN * 2;
+  const fontFamily = "Atkinson Hyperlegible";
 
   const rubriqueRef = useRef<Konva.Text>(null);
-  const contentRef = useRef<Konva.Text>(null);
 
-  // Calculate overlay opacity based on original image luminosity
+  // Compute content height synchronously — no render loops
+  const contentHeight = useMemo(
+    () =>
+      computeTextHeight(
+        segments,
+        contentWidth,
+        fontSize,
+        lineHeight,
+        fontFamily,
+      ),
+    [segments, contentWidth, fontSize, lineHeight],
+  );
+
   useEffect(() => {
     if (originalImg) {
       const luminosity = getImageLuminosity(originalImg);
       const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
       setOverlayOpacity(opacity);
     } else {
-      setOverlayOpacity(0.61); // Default opacity when no image
+      setOverlayOpacity(0.61);
     }
   }, [originalImg]);
 
@@ -61,22 +78,17 @@ export default function ContentSlide(props: {
     setRubriqueWidth(rubriqueRef.current?.width() || 0);
   }, [rubrique]);
 
-  useEffect(() => {
-    setContentHeight(contentRef.current?.height() || 0);
-  }, [fontSize, content]);
-
-  // Only run auto-sizing when external fontSize is not provided
+  // Auto-sizing
   useEffect(() => {
     if (externalFontSize !== undefined) return;
 
     const maxContentHeight = canvasHeight * 0.74;
     const minContentHeight = canvasHeight * 0.67;
-    const currentHeight = contentRef.current?.height() || 0;
 
     let newFontSize = localFontSize;
-    if (currentHeight > maxContentHeight) {
+    if (contentHeight > maxContentHeight) {
       newFontSize = Math.min(58, localFontSize - 1);
-    } else if (currentHeight < minContentHeight) {
+    } else if (contentHeight < minContentHeight) {
       newFontSize = Math.min(58, localFontSize + 1);
     }
 
@@ -84,10 +96,9 @@ export default function ContentSlide(props: {
       setLocalFontSize(newFontSize);
       onFontSizeChange?.(newFontSize);
     } else if (
-      currentHeight >= minContentHeight &&
-      currentHeight <= maxContentHeight
+      contentHeight >= minContentHeight &&
+      contentHeight <= maxContentHeight
     ) {
-      // Font size has settled - notify parent
       onFontSizeChange?.(localFontSize);
     }
   }, [
@@ -98,14 +109,14 @@ export default function ContentSlide(props: {
     onFontSizeChange,
   ]);
 
+  const contentY = (canvasHeight - contentHeight) / 2;
+
   return (
     <Stage
       scaleX={props.scale}
       scaleY={props.scale}
       width={props.width}
-      height={
-        props.width ? (props.width * props.canvasHeight) / props.canvasWidth : 0
-      }
+      height={props.width ? (props.width * canvasHeight) / canvasWidth : 0}
       ref={props.ref}
       style={{ display: props.display ? "block" : "none" }}
     >
@@ -114,55 +125,52 @@ export default function ContentSlide(props: {
           <BackgroundImage
             image={props.backgroundImg}
             x={props.imgX}
-            canvasWidth={props.canvasWidth}
-            canvasHeight={props.canvasHeight}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
           />
         )}
         <Rect
           x={0}
           y={0}
-          width={props.canvasWidth}
-          height={props.canvasHeight}
+          width={canvasWidth}
+          height={canvasHeight}
           fill={`rgba(17,17,17,${overlayOpacity})`}
         />
         <KImage
           image={logo}
-          x={props.canvasWidth - 150 - rubriqueWidth}
+          x={canvasWidth - 150 - rubriqueWidth}
           y={62}
           width={60}
           height={45}
         />
         <Text
           text={props.rubrique}
-          x={props.canvasWidth - 60 - rubriqueWidth}
+          x={canvasWidth - 60 - rubriqueWidth}
           y={60}
           ref={rubriqueRef}
-          fill={"#ffd9af"}
+          fill={ACCENT_COLOR}
           wrap={"word"}
           fontSize={(60 / 80) * 64}
           fontFamily={"Rubik"}
         />
 
-        <Text
-          text={props.content}
-          x={80}
-          y={(props.canvasHeight - contentHeight) / 2}
-          ref={contentRef}
-          width={props.canvasWidth - 80 * 2}
-          fill={"white"}
-          wrap={"word"}
+        <RichContentRenderer
+          segments={segments}
+          x={CONTENT_MARGIN}
+          y={contentY}
+          width={contentWidth}
           fontSize={fontSize}
-          lineHeight={1.2 + (58 - fontSize) * 0.01}
-          fontFamily={"Atkinson Hyperlegible"}
+          lineHeight={lineHeight}
+          fontFamily={fontFamily}
         />
 
         {!props.last ? (
           <Text
             text=">"
-            x={props.canvasWidth - 80}
-            y={props.canvasHeight - 207}
-            width={props.canvasWidth - 80 * 2}
-            fill={"#ffd9af"}
+            x={canvasWidth - CONTENT_MARGIN}
+            y={canvasHeight - 207}
+            width={contentWidth}
+            fill={ACCENT_COLOR}
             wrap={"word"}
             fontSize={108}
             fontFamily={"Rubik"}

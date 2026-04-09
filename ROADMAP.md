@@ -6,7 +6,8 @@ Recommendations based on visual review of generated slides (April 2026).
 
 ### Content slides — high impact
 
-- [ ] **Pull quotes / accent-colored key phrases**: Highlight a key sentence per slide in the brand gold/beige accent color to break up text walls and give the eye an anchor point.
+- [x] **Accent-colored key phrases**: Inline highlighting with `==text==` syntax renders phrases in the brand gold/beige accent color.
+- [ ] **Pull quotes**: Separate per-slide field for a key sentence rendered as a visually distinct block (larger, with separators) that splits content in two halves.
 - [ ] **Slide numbering**: Add a progress indicator (e.g. "2/5") so users know how many slides remain — encourages swiping through.
 - [ ] **Stronger continuation indicator**: The current ">" is too discreet. Use a more visible swipe cue (arrow icon, or the page number itself).
 - [ ] **Opening line emphasis**: Use a larger or bolder style for the first line of each content slide to create a visual hook.
