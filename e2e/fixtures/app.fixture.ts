@@ -20,6 +20,7 @@ export interface AppHelpers {
 
   // Slide content
   setSlideContent: (value: string) => Promise<void>;
+  setSlideContents: (slides: string[]) => Promise<void>;
 
   // Image upload
   uploadImage: (path: string) => Promise<void>;
@@ -125,6 +126,25 @@ export const test = base.extend<{ app: AppHelpers }>({
         // Ensure we're in edit mode
         await page.locator(selectors.desktop.editModeButton).click();
         await page.locator(selectors.desktop.slideTextarea).fill(value);
+      },
+
+      setSlideContents: async (slides: string[]) => {
+        // Fill textarea with concatenated text
+        const fullText = slides.join("");
+        await page.locator(selectors.desktop.editModeButton).click();
+        await page.locator(selectors.desktop.slideTextarea).fill(fullText);
+
+        if (slides.length <= 1) return;
+
+        // Switch to cut/copy mode and add cuts at slide boundaries
+        await page.locator(selectors.desktop.cutCopyModeButton).click();
+
+        let position = 0;
+        for (let i = 0; i < slides.length - 1; i++) {
+          position += slides[i].length;
+          const charSpan = page.locator(`[data-char-index="${position}"]`);
+          await charSpan.click({ button: "right" });
+        }
       },
 
       uploadImage: async (path: string) => {
