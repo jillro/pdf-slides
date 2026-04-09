@@ -10,6 +10,8 @@ Recommendations based on visual review of generated slides (April 2026).
 - [ ] **Slide numbering**: Add a progress indicator (e.g. "2/5") so users know how many slides remain — encourages swiping through.
 - [ ] **Stronger continuation indicator**: The current ">" is too discreet. Use a more visible swipe cue (arrow icon, or the page number itself).
 - [ ] **Opening line emphasis**: Use a larger or bolder style for the first line of each content slide to create a visual hook.
+- [ ] **Reduce side/top margins**: Text block sits too compact in the center of the slide with a lot of empty space around it — reducing margins would let the text breathe and fill the slide better.
+- [ ] **Adjust line height based on font size**: When font size scales down to fit more text, line height should scale proportionally to keep the slide readable and avoid it looking cramped.
 - [ ] **Vary content slide backgrounds**: Slightly shift the background tint per slide (warmer, cooler) or add a subtle accent stripe to prevent the "every slide looks the same" feeling.
 
 ### Title slide (slide-0)
