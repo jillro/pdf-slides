@@ -41,6 +41,7 @@ function getFixtures(): { slug: string; fixture: PostFixture }[] {
 const fixtures = getFixtures();
 
 test.describe("Visual rendering of post slides", () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, "Desktop only");
   test.setTimeout(60000);
 
   for (const { slug, fixture } of fixtures) {
