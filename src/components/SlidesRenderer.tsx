@@ -5,6 +5,7 @@ import dynamicImport from "next/dynamic";
 import type Konva from "konva";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
 import { applyFrenchTypography } from "../lib/french-typography";
+import { parseHighlights, type TextSegment } from "../lib/rich-text-parser";
 
 const FirstSlide = dynamicImport(() => import("./FirstSlide"), { ssr: false });
 const ContentSlide = dynamicImport(() => import("./ContentSlide"), {
@@ -115,23 +116,32 @@ export default function SlidesRenderer({
         onImgXChange={onImgXChange || (() => {})}
         ref={getRef(0)}
       />
-      {slidesContent.map((content, i) => (
-        <ContentSlide
-          key={i}
-          backgroundImg={blurredImg || undefined}
-          originalImg={img}
-          imgX={imgX}
-          rubrique={applyFrenchTypography(rubrique)}
-          content={applyFrenchTypography(content.trim())}
-          scale={scale}
-          width={width}
-          canvasWidth={canvasWidth}
-          canvasHeight={canvasHeight}
-          display={showAllSlides || i + 1 === currentSlide}
-          last={i === slidesContent.length - 1}
-          ref={getRef(i + 1)}
-        />
-      ))}
+      {slidesContent.map((content, i) => {
+        // Parse highlight markers and apply French typography per segment
+        const segments: TextSegment[] = parseHighlights(content.trim()).map(
+          (seg) => ({
+            ...seg,
+            text: applyFrenchTypography(seg.text),
+          }),
+        );
+        return (
+          <ContentSlide
+            key={i}
+            backgroundImg={blurredImg || undefined}
+            originalImg={img}
+            imgX={imgX}
+            rubrique={applyFrenchTypography(rubrique)}
+            segments={segments}
+            scale={scale}
+            width={width}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            display={showAllSlides || i + 1 === currentSlide}
+            last={i === slidesContent.length - 1}
+            ref={getRef(i + 1)}
+          />
+        );
+      })}
       {subForMore && (
         <SubForMoreSlide
           backgroundImg={blurredImg || undefined}

@@ -269,3 +269,15 @@
   border: 6px solid transparent;
   border-top-color: var(--bg-secondary);
 }
+
+/* Highlight markers in CutCopyMode */
+.highlightedText {
+  background-color: rgba(255, 217, 175, 0.2);
+  border-radius: 2px;
+}
+
+.highlightMarker {
+  color: var(--text-secondary);
+  font-size: 0.75em;
+  opacity: 0.5;
+}

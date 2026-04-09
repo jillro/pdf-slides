@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import styles from "./SlideContentEditor.module.css";
 
 interface CutCopyModeProps {
@@ -184,28 +184,14 @@ export default function CutCopyMode({
               >
                 <span className={styles.sectionBadge}>{sectionIndex + 1}</span>
                 <span className={styles.sectionText}>
-                  {section
-                    .trim()
-                    .split("")
-                    .map((char, charIndex) => {
-                      const trimOffset =
-                        section.length - section.trimStart().length;
-                      const globalIndex =
-                        sectionStart + trimOffset + charIndex;
-                      return (
-                        <span
-                          key={charIndex}
-                          data-char-index={globalIndex}
-                          onClick={(e) => handleCharClick(e, globalIndex)}
-                        >
-                          {(hoverPosition === globalIndex ||
-                            selectedPosition === globalIndex) && (
-                            <span className={styles.cutCursor} />
-                          )}
-                          {char}
-                        </span>
-                      );
-                    })}
+                  {renderSectionChars(
+                    section,
+                    sectionStart,
+                    hoverPosition,
+                    selectedPosition,
+                    handleCharClick,
+                    styles,
+                  )}
                 </span>
               </div>
             </div>
@@ -242,6 +228,82 @@ export default function CutCopyMode({
 function getSectionStart(cutPositions: number[], sectionIndex: number): number {
   if (sectionIndex === 0) return 0;
   return cutPositions[sectionIndex - 1];
+}
+
+// Helper: render section characters with highlight marker visualization
+function renderSectionChars(
+  section: string,
+  sectionStart: number,
+  hoverPosition: number | null,
+  selectedPosition: number | null,
+  handleCharClick: (e: React.MouseEvent, globalIndex: number) => void,
+  styles: Record<string, string>,
+) {
+  const trimmed = section.trim();
+  const trimOffset = section.length - section.trimStart().length;
+
+  // Parse highlight markers within the trimmed text
+  const parts: { text: string; isMarker: boolean; isHighlighted: boolean }[] =
+    [];
+  const regex = /==([^=]*)==/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(trimmed)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({
+        text: trimmed.slice(lastIndex, match.index),
+        isMarker: false,
+        isHighlighted: false,
+      });
+    }
+    // Opening ==
+    parts.push({ text: "==", isMarker: true, isHighlighted: false });
+    // Highlighted content
+    parts.push({ text: match[1], isMarker: false, isHighlighted: true });
+    // Closing ==
+    parts.push({ text: "==", isMarker: true, isHighlighted: false });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < trimmed.length) {
+    parts.push({
+      text: trimmed.slice(lastIndex),
+      isMarker: false,
+      isHighlighted: false,
+    });
+  }
+
+  const elements: React.ReactNode[] = [];
+  let charOffset = 0;
+
+  for (const part of parts) {
+    for (let i = 0; i < part.text.length; i++) {
+      const charIndex = charOffset + i;
+      const globalIndex = sectionStart + trimOffset + charIndex;
+      const char = part.text[i];
+
+      let className = "";
+      if (part.isMarker) className = styles.highlightMarker;
+      else if (part.isHighlighted) className = styles.highlightedText;
+
+      elements.push(
+        <span
+          key={charIndex}
+          data-char-index={globalIndex}
+          onClick={(e) => handleCharClick(e, globalIndex)}
+          className={className || undefined}
+        >
+          {(hoverPosition === globalIndex ||
+            selectedPosition === globalIndex) && (
+            <span className={styles.cutCursor} />
+          )}
+          {char}
+        </span>,
+      );
+    }
+    charOffset += part.text.length;
+  }
+
+  return elements;
 }
 
 // Helper: split text into sections based on cut positions

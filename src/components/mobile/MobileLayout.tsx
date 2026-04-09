@@ -251,7 +251,6 @@ export default function MobileLayout({
           onClose={() => setFocusModeOpen(false)}
         />
       )}
-
     </div>
   );
 }
