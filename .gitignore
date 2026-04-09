@@ -33,3 +33,6 @@ playwright-report/
 test-results/
 playwright/.cache/
 tsconfig.tsbuildinfo
+
+# Visual test output
+e2e/visual-output/
