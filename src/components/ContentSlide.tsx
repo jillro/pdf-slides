@@ -145,22 +145,23 @@ export default function ContentSlide(props: {
 
         <Text
           text={props.content}
-          x={150}
+          x={80}
           y={(props.canvasHeight - contentHeight) / 2}
           ref={contentRef}
-          width={props.canvasWidth - 150 * 2}
+          width={props.canvasWidth - 80 * 2}
           fill={"white"}
           wrap={"word"}
           fontSize={fontSize}
+          lineHeight={1.2 + (58 - fontSize) * 0.01}
           fontFamily={"Atkinson Hyperlegible"}
         />
 
         {!props.last ? (
           <Text
             text=">"
-            x={props.canvasWidth - 150}
+            x={props.canvasWidth - 80}
             y={props.canvasHeight - 207}
-            width={props.canvasWidth - 150 * 2}
+            width={props.canvasWidth - 80 * 2}
             fill={"#ffd9af"}
             wrap={"word"}
             fontSize={108}
