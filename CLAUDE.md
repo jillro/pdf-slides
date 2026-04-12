@@ -22,9 +22,9 @@ npm run build           # Build for production
 npm run start           # Run production server
 
 # Code quality
-npx eslint .            # Lint all code
-npx eslint src --fix    # Fix linting errors automatically
-npx prettier --write .  # Format entire codebase
+npm run lint            # Lint all code
+npm run lint:fix        # Fix linting errors automatically
+npm run format          # Format entire codebase
 ```
 
 ## Architecture Overview
