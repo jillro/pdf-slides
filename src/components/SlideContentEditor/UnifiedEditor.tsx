@@ -13,22 +13,44 @@ interface UnifiedEditorProps {
 
 interface Section {
   id: number;
-  text: string;
+  // Hidden leading/trailing whitespace, preserved in memory so that removing
+  // a cut restores the original interior whitespace between sections.
+  // Never sent to onChange and never shown in the textarea.
+  leading: string;
+  body: string;
+  trailing: string;
 }
 
 let nextSectionId = 0;
 
-function makeSection(text: string): Section {
-  return { id: nextSectionId++, text };
+function splitWhitespace(text: string): {
+  leading: string;
+  body: string;
+  trailing: string;
+} {
+  const leading = text.match(/^\s*/)?.[0] ?? "";
+  const rest = text.slice(leading.length);
+  const trailing = rest.match(/\s*$/)?.[0] ?? "";
+  const body = rest.slice(0, rest.length - trailing.length);
+  return { leading, body, trailing };
+}
+
+function makeSectionFromText(text: string): Section {
+  return { id: nextSectionId++, ...splitWhitespace(text) };
+}
+
+function sectionFullText(s: Section): string {
+  return s.leading + s.body + s.trailing;
 }
 
 function fromValue(slides: string[]): Section[] {
-  if (slides.length === 0) return [makeSection("")];
-  return slides.map(makeSection);
+  if (slides.length === 0) return [makeSectionFromText("")];
+  return slides.map(makeSectionFromText);
 }
 
+// Saved slides are always trimmed — hidden whitespace stays internal only.
 function toValue(sections: Section[]): string[] {
-  return sections.map((s) => s.text).filter((t) => t.trim().length > 0);
+  return sections.map((s) => s.body.trim()).filter((t) => t.length > 0);
 }
 
 export default function UnifiedEditor({
@@ -77,10 +99,10 @@ export default function UnifiedEditor({
   }, []);
 
   const handleSectionChange = useCallback(
-    (index: number, newText: string) => {
+    (index: number, newBody: string) => {
       setSections((prev) => {
         const next = [...prev];
-        next[index] = { ...next[index], text: newText };
+        next[index] = { ...next[index], body: newBody };
         onChange(toValue(next));
         return next;
       });
@@ -91,9 +113,33 @@ export default function UnifiedEditor({
   const handleSplit = useCallback(
     (index: number, cursorPos: number) => {
       setSections((prev) => {
-        const text = prev[index].text;
-        const before = { ...prev[index], text: text.slice(0, cursorPos) };
-        const after = makeSection(text.slice(cursorPos));
+        const current = prev[index];
+        const bodyBefore = current.body.slice(0, cursorPos);
+        const bodyAfter = current.body.slice(cursorPos);
+
+        // Trim whitespace at the new internal boundary: move trailing
+        // whitespace of bodyBefore into section A's trailing, and leading
+        // whitespace of bodyAfter into section B's leading.
+        const aBodyTrimmed = bodyBefore.trimEnd();
+        const aExtraTrailing = bodyBefore.slice(aBodyTrimmed.length);
+        const bBodyTrimmed = bodyAfter.trimStart();
+        const bExtraLeading = bodyAfter.slice(
+          0,
+          bodyAfter.length - bBodyTrimmed.length,
+        );
+
+        const before: Section = {
+          ...current,
+          body: aBodyTrimmed,
+          trailing: aExtraTrailing,
+        };
+        const after: Section = {
+          id: nextSectionId++,
+          leading: bExtraLeading,
+          body: bBodyTrimmed,
+          trailing: current.trailing,
+        };
+
         const next = [...prev];
         next.splice(index, 1, before, after);
         onChange(toValue(next));
@@ -110,17 +156,27 @@ export default function UnifiedEditor({
       setSections((prev) => {
         const prevSection = prev[index - 1];
         const curSection = prev[index];
-        const merged = {
-          ...prevSection,
-          text: prevSection.text + curSection.text,
+        // Concatenate full text (with hidden whitespace) and re-derive
+        // leading/body/trailing. The previously-hidden boundary whitespace
+        // becomes interior whitespace of the merged body, making it visible.
+        const mergedFull =
+          sectionFullText(prevSection) + sectionFullText(curSection);
+        const parts = splitWhitespace(mergedFull);
+        const merged: Section = {
+          id: prevSection.id,
+          ...parts,
         };
+
+        // Cursor = position in new body corresponding to the old end of
+        // prevSection.body in the merged full text.
+        const oldEndInFull =
+          prevSection.leading.length + prevSection.body.length;
+        const cursorPos = Math.max(0, oldEndInFull - parts.leading.length);
+
         const next = [...prev];
         next.splice(index - 1, 2, merged);
         onChange(toValue(next));
-        pendingFocus.current = {
-          index: index - 1,
-          cursorPos: prevSection.text.length,
-        };
+        pendingFocus.current = { index: index - 1, cursorPos };
         return next;
       });
     },
@@ -139,7 +195,7 @@ export default function UnifiedEditor({
 
   const handleCopy = useCallback(
     async (index: number) => {
-      const text = sections[index]?.text.trim();
+      const text = sections[index]?.body.trim();
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
@@ -162,7 +218,7 @@ export default function UnifiedEditor({
           {i > 0 && <CutMarker onRemove={() => handleRemoveCut(i - 1)} />}
           <SectionTextarea
             index={i}
-            value={section.text}
+            value={section.body}
             onChange={(newText) => handleSectionChange(i, newText)}
             onSplit={(cursorPos) => handleSplit(i, cursorPos)}
             onMergeWithPrevious={() => handleMergeWithPrevious(i)}
@@ -172,15 +228,22 @@ export default function UnifiedEditor({
             }}
             isFirst={i === 0}
             isTouchDevice={isTouchDevice}
-            unsaved={unsaved}
           />
         </div>
       ))}
-      <p className={styles.hint}>
-        {isTouchDevice
-          ? "Touchez pour placer le curseur, puis « Couper ici »"
-          : "Clic droit : couper ici"}
-      </p>
+      <div className={styles.hintRow}>
+        <p className={styles.hint}>
+          {isTouchDevice
+            ? "Touchez pour placer le curseur, puis « Couper ici »"
+            : "Clic droit : couper ici"}
+        </p>
+        {unsaved && (
+          <span
+            className={styles.unsavedDot}
+            aria-label="Modifications non enregistrées"
+          />
+        )}
+      </div>
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>
   );

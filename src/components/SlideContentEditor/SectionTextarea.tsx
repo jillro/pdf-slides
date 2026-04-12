@@ -14,7 +14,6 @@ interface SectionTextareaProps {
   textareaRef: (el: HTMLTextAreaElement | null) => void;
   isFirst: boolean;
   isTouchDevice: boolean;
-  unsaved: boolean;
 }
 
 export default function SectionTextarea({
@@ -27,7 +26,6 @@ export default function SectionTextarea({
   textareaRef,
   isFirst,
   isTouchDevice,
-  unsaved,
 }: SectionTextareaProps) {
   const localRef = useRef<HTMLTextAreaElement | null>(null);
   const [showMobileCut, setShowMobileCut] = useState(false);
@@ -136,7 +134,7 @@ export default function SectionTextarea({
         />
         <textarea
           ref={setRef}
-          className={`${styles.sectionTextarea} ${unsaved ? styles.unsaved : ""}`}
+          className={styles.sectionTextarea}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onContextMenu={handleContextMenu}
