@@ -28,10 +28,9 @@ export const selectors = {
     canvasPrev: 'button[class*="canvasPrev"]',
     canvasNext: 'button[class*="canvasNext"]',
 
-    // Slide content editor
-    editModeButton: 'button:has-text("Modifier")',
-    cutCopyModeButton: 'button:has-text("Couper/Copier")',
+    // Slide content editor (unified: one textarea per section)
     slideTextarea: '[class*="SlideContentEditor"] textarea',
+    slideSectionTextarea: '[class*="sectionTextarea"]',
 
     // Unsaved indicator
     unsavedIndicator: ':has-text("⏳")',
