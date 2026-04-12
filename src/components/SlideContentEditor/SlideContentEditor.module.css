@@ -1,101 +1,45 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.modeToggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.modeButton {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: none;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
-}
-
-.modeButton:not(:last-child) {
-  border-right: 1px solid var(--border-color);
-}
-
-.modeButton:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.modeButton.active {
-  background-color: var(--accent);
-  color: #213547;
-  font-weight: bold;
-}
-
-/* Edit Mode */
-.editTextarea {
-  width: 100%;
-  min-height: 200px;
-  padding: 0.75rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  resize: vertical;
-  box-sizing: border-box;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.editTextarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-/* Cut/Copy Mode */
-.cutCopyContainer {
+/* Unified Editor Container */
+.unifiedContainer {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
-.section {
-  position: relative;
-  padding: 0.75rem;
-  padding-left: 2.5rem;
-  cursor: pointer;
-  transition: background-color 0.15s;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--text-primary);
+/* Section Wrapper */
+.sectionWrapper {
+  display: flex;
+  flex-direction: column;
 }
 
-.section:nth-child(odd of .section) {
+.sectionWrapper:focus-within {
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 2px;
+}
+
+.sectionWrapper:nth-child(odd of .sectionWrapper) {
   background-color: var(--bg-secondary);
 }
 
-.section:nth-child(even of .section) {
+.sectionWrapper:nth-child(even of .sectionWrapper) {
   background-color: var(--bg-primary);
 }
 
+/* Section Header */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0 0.5rem;
+}
+
 .sectionBadge {
-  position: absolute;
-  left: 0.5rem;
-  top: 0.75rem;
   width: 1.5rem;
   height: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   background-color: var(--accent);
   color: #213547;
   border-radius: 50%;
@@ -103,8 +47,79 @@
   font-weight: bold;
 }
 
-.sectionText {
-  /* Wrapper for section text content */
+.copyButton {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.copyButton:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.mobileCutButton {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.mobileCutButton:active {
+  background-color: var(--bg-tertiary);
+}
+
+/* Textarea + Mirror overlay */
+.textareaWrapper {
+  position: relative;
+}
+
+.mirror {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  padding: 0.25rem 0.75rem 2.25rem 2.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: transparent;
+}
+
+.sectionTextarea {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.25rem 0.75rem 2.25rem 2.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border: none;
+  resize: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.sectionTextarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 /* Cut Marker */
@@ -176,108 +191,35 @@
   }
 }
 
-/* Unsaved indicator */
-.unsaved {
-  background: linear-gradient(
-    -45deg,
-    var(--unsaved-gradient-1),
-    var(--unsaved-gradient-2),
-    var(--unsaved-gradient-1)
-  );
-  background-size: 400% 400%;
-  animation: gradient 1s ease infinite;
+/* Hint row + unsaved indicator */
+.hintRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0.5rem 0;
 }
 
-@keyframes gradient {
-  0% {
-    background-position: 0 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
-}
-
-/* Hint text */
 .hint {
   font-size: 0.8rem;
   color: var(--text-secondary);
   font-style: italic;
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
-/* Cut cursor preview */
-.cutCursor {
-  position: relative;
-  display: inline-block;
-  width: 0;
-  height: 1.2em;
-  vertical-align: text-bottom;
+.unsavedDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: unsavedPulse 1.2s ease-in-out infinite;
 }
 
-.cutCursor::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 2px;
-  height: 100%;
-  background-color: #ff6b00;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
+@keyframes unsavedPulse {
+  0%,
+  100% {
+    opacity: 0.3;
   }
-}
-
-/* Mobile cut tooltip */
-.cutTooltip {
-  position: fixed;
-  z-index: 1001;
-  transform: translateX(-50%) translateY(-100%);
-  padding-bottom: 8px;
-}
-
-.cutTooltipButton {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  cursor: pointer;
-  white-space: nowrap;
-  min-height: 44px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.cutTooltipButton:active {
-  background-color: var(--bg-tertiary);
-}
-
-/* Arrow pointing down */
-.cutTooltip::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--bg-secondary);
-}
-
-/* Highlight markers in CutCopyMode */
-.highlightedText {
-  background-color: rgba(255, 217, 175, 0.2);
-  border-radius: 2px;
-}
-
-.highlightMarker {
-  color: var(--text-secondary);
-  font-size: 0.75em;
-  opacity: 0.5;
+  50% {
+    opacity: 1;
+  }
 }

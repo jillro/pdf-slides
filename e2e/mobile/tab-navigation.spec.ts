@@ -116,7 +116,9 @@ test.describe("Mobile Tab Navigation", () => {
 
     // Slides tab should show slide editor
     await app.switchToTab("slides");
-    await expect(page.locator('button:has-text("Modifier")')).toBeVisible();
+    await expect(
+      page.locator('[class*="SlideContentEditor"] textarea').first(),
+    ).toBeVisible();
 
     // Image tab should show format buttons (not select)
     await app.switchToTab("image");

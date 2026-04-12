@@ -104,19 +104,19 @@ test.describe("Mobile Content Editing", () => {
     // Switch to Slides tab
     await app.switchToTab("slides");
 
-    // Add content
-    await page.locator('button:has-text("Modifier")').click();
-    const textarea = page.locator("textarea");
+    // Add content in the unified section textarea
+    const textarea = page
+      .locator('[class*="SlideContentEditor"] textarea')
+      .first();
     await textarea.fill("Mobile slide content test.");
     await app.waitForSave();
 
     // Reload and verify
     await app.reload();
     await app.switchToTab("slides");
-    await page.locator('button:has-text("Modifier")').click();
-    await expect(page.locator("textarea")).toHaveValue(
-      "Mobile slide content test.",
-    );
+    await expect(
+      page.locator('[class*="SlideContentEditor"] textarea').first(),
+    ).toHaveValue("Mobile slide content test.");
   });
 
   test("changes on one tab persist when switching tabs", async ({

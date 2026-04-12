@@ -47,8 +47,9 @@ test.describe("Download", () => {
     await app.gotoNewPost();
 
     // Add slide content
-    await page.locator('button:has-text("Modifier")').click();
-    const textarea = page.locator('[class*="SlideContentEditor"] textarea');
+    const textarea = page
+      .locator('[class*="SlideContentEditor"] textarea')
+      .first();
     await textarea.fill("Content that creates additional slides.");
     await app.waitForSave();
 

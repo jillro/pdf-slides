@@ -123,27 +123,37 @@ export const test = base.extend<{ app: AppHelpers }>({
       },
 
       setSlideContent: async (value: string) => {
-        // Ensure we're in edit mode
-        await page.locator(selectors.desktop.editModeButton).click();
-        await page.locator(selectors.desktop.slideTextarea).fill(value);
+        await page.locator(selectors.desktop.slideTextarea).first().fill(value);
       },
 
       setSlideContents: async (slides: string[]) => {
-        // Fill textarea with concatenated text
+        // Fill the first (and only) section textarea with concatenated text
         const fullText = slides.join("");
-        await page.locator(selectors.desktop.editModeButton).click();
-        await page.locator(selectors.desktop.slideTextarea).fill(fullText);
+        await page
+          .locator(selectors.desktop.slideTextarea)
+          .first()
+          .fill(fullText);
 
         if (slides.length <= 1) return;
 
-        // Switch to cut/copy mode and add cuts at slide boundaries
-        await page.locator(selectors.desktop.cutCopyModeButton).click();
-
-        let position = 0;
-        for (let i = 0; i < slides.length - 1; i++) {
-          position += slides[i].length;
-          const charSpan = page.locator(`[data-char-index="${position}"]`);
-          await charSpan.click({ button: "right" });
+        // Split from the last cut to the first: each split keeps the earlier
+        // text in the first textarea so subsequent cut positions stay valid.
+        for (let i = slides.length - 1; i > 0; i--) {
+          const cutPos = slides.slice(0, i).reduce((a, s) => a + s.length, 0);
+          await page.evaluate((pos) => {
+            const ta = document.querySelector(
+              'textarea[class*="sectionTextarea"]',
+            ) as HTMLTextAreaElement | null;
+            if (!ta) return;
+            ta.focus();
+            ta.setSelectionRange(pos, pos);
+            ta.dispatchEvent(
+              new MouseEvent("contextmenu", {
+                bubbles: true,
+                cancelable: true,
+              }),
+            );
+          }, cutPos);
         }
       },
 
