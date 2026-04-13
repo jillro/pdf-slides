@@ -5,6 +5,7 @@ import { MutableRefObject, useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import SlidesRenderer from "../SlidesRenderer";
 import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
+import type { ContentBgThemeId } from "../../lib/contentBgThemes";
 
 interface CanvasPreviewProps {
   img: HTMLImageElement | undefined;
@@ -16,6 +17,7 @@ interface CanvasPreviewProps {
   intro: string;
   format: Format;
   slidesContent: string[];
+  slideThemes: ContentBgThemeId[];
   subForMore: boolean;
   numero: number;
   currentSlide: number;
@@ -34,6 +36,7 @@ export default function CanvasPreview({
   intro,
   format,
   slidesContent,
+  slideThemes,
   subForMore,
   numero,
   currentSlide,
@@ -65,6 +68,7 @@ export default function CanvasPreview({
           intro={intro}
           format={format}
           slidesContent={slidesContent}
+          slideThemes={slideThemes}
           subForMore={subForMore}
           numero={numero}
           currentSlide={currentSlide}

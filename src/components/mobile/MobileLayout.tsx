@@ -11,6 +11,7 @@ import SlidesTab from "../tabs/SlidesTab";
 import ImageTab from "../tabs/ImageTab";
 import PartagerTab from "../tabs/PartagerTab";
 import { Format } from "../../lib/formats";
+import type { ContentBgThemeId } from "../../lib/contentBgThemes";
 
 interface MobileLayoutProps {
   // Canvas props
@@ -34,7 +35,11 @@ interface MobileLayoutProps {
   setFormat: (value: Format) => void;
   unsavedFormat: boolean;
   slidesContent: string[];
-  setSlidesContent: (value: string[]) => void;
+  slideThemes: ContentBgThemeId[];
+  onSlidesAndThemesChange: (
+    value: string[],
+    themes: ContentBgThemeId[],
+  ) => void;
   unsavedSlidesContent: boolean;
   subForMore: boolean;
   setSubForMore: (value: boolean) => void;
@@ -97,7 +102,8 @@ export default function MobileLayout({
   setFormat,
   unsavedFormat,
   slidesContent,
-  setSlidesContent,
+  slideThemes,
+  onSlidesAndThemesChange,
   unsavedSlidesContent,
   subForMore,
   setSubForMore,
@@ -155,6 +161,7 @@ export default function MobileLayout({
         intro={intro}
         format={format}
         slidesContent={slidesContent}
+        slideThemes={slideThemes}
         subForMore={subForMore}
         numero={numero}
         currentSlide={currentSlide}
@@ -188,7 +195,8 @@ export default function MobileLayout({
         {activeTab === "slides" && (
           <SlidesTab
             slidesContent={slidesContent}
-            setSlidesContent={setSlidesContent}
+            slideThemes={slideThemes}
+            onSlidesAndThemesChange={onSlidesAndThemesChange}
             unsavedSlidesContent={unsavedSlidesContent}
           />
         )}
@@ -243,6 +251,7 @@ export default function MobileLayout({
           intro={intro}
           format={format}
           slidesContent={slidesContent}
+          slideThemes={slideThemes}
           subForMore={subForMore}
           numero={numero}
           currentSlide={currentSlide}

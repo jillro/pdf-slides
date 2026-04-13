@@ -6,6 +6,7 @@ import { useGesture } from "@use-gesture/react";
 import { useResizeObserver } from "usehooks-ts";
 import SlidesRenderer from "../SlidesRenderer";
 import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
+import type { ContentBgThemeId } from "../../lib/contentBgThemes";
 
 interface CanvasFocusModeProps {
   img: HTMLImageElement | undefined;
@@ -17,6 +18,7 @@ interface CanvasFocusModeProps {
   intro: string;
   format: Format;
   slidesContent: string[];
+  slideThemes: ContentBgThemeId[];
   subForMore: boolean;
   numero: number;
   currentSlide: number;
@@ -35,6 +37,7 @@ export default function CanvasFocusMode({
   intro,
   format,
   slidesContent,
+  slideThemes,
   subForMore,
   numero,
   currentSlide,
@@ -161,6 +164,7 @@ export default function CanvasFocusMode({
             intro={intro}
             format={format}
             slidesContent={slidesContent}
+            slideThemes={slideThemes}
             subForMore={subForMore}
             numero={numero}
             currentSlide={currentSlide}

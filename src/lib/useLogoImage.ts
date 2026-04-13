@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react";
 
-// Inline the SVG as a base64 data URL to avoid:
-// 1. Network/CORS issues on Firefox mobile
-// 2. use-image's img.decode() hanging on Firefox mobile for SVGs
-const LOGO_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTY2LjgwNSAzMS42NTQyTDkzLjEyMjIgMEw5OC44OTEyIDQuNzk2MzZMNzcuOTg0NSAyOS45NDI4TDExMC43NTQgMTQuNTcxNEwxMTcuNjIyIDI5LjIxMjVMMTA5Ljc0MyAzMi45MDg1QzEwOC4zNjkgMzMuNDQ4MyAxMDIuMjg2IDM1LjU1OSA5My4wMDIzIDM0LjcxNUM4OC45MTIzIDM0LjM0MzEgNzQuMDkxOCAzMi41NTYgNjYuODA1IDMxLjY1NDJaTTEwLjYzMTkgNzkuMzk4NkwzNy42NDUzIDY2LjcyNzNMMzcuNjM2MSA2Ni43Mzg0TDUwLjEyMzkgNjAuNzk3M0w1NS43MzAyIDYxLjYzNjlMNTUuNzE5MSA2MS42NDE4TDEyMy4zMzcgNzEuNzc0MkwxMjcuODUyIDQxLjY0NkwxMDAuNzgxIDM3LjU4OTRMMTAwLjc3OCAzNy41OTA4TDc4Ljg4NzggMzQuMzA4OEw0LjUxNDY0IDIzLjE2NDJMMCA1My4yOTI0TDIxLjM3NzMgNTYuNDk1N0wzLjc2NDIxIDY0Ljc1NzZMMTAuNjMxOSA3OS4zOTg2Wk01MC40NTc5IDYzLjA1MThDNDguNjkzNCA2My40MTk5IDQ2LjIxMzkgNjQuMDQ5NCA0My42MTUyIDY1LjA2NTZDNDIuMjY3NiA2NS41OTI2IDM4Ljk4ODMgNjcuMDgyNiAzNi4zMzI4IDY4LjMwNjFMMTcuNTcxOCA5MC44NzE3TDIzLjM0MDggOTUuNjY4MUw1MC40NTc5IDYzLjA1MThaIiBmaWxsPSIjRkZEOUFGIi8+Cjwvc3ZnPgo=";
+// Inline SVG source with a fill placeholder so the logo color can be
+// customized per theme. Avoids network/CORS issues on Firefox mobile and
+// the img.decode() hang that use-image hits on external SVGs.
+const LOGO_SVG_SOURCE = `<svg width="128" height="96" viewBox="0 0 128 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M66.805 31.6542L93.1222 0L98.8912 4.79636L77.9845 29.9428L110.754 14.5714L117.622 29.2125L109.743 32.9085C108.369 33.4483 102.286 35.559 93.0023 34.715C88.9123 34.3431 74.0918 32.556 66.805 31.6542ZM10.6319 79.3986L37.6453 66.7273L37.6361 66.7384L50.1239 60.7973L55.7302 61.6369L55.7191 61.6418L123.337 71.7742L127.852 41.646L100.781 37.5894L100.778 37.5908L78.8878 34.3088L4.51464 23.1642L0 53.2924L21.3773 56.4957L3.76421 64.7576L10.6319 79.3986ZM50.4579 63.0518C48.6934 63.4199 46.2139 64.0494 43.6152 65.0656C42.2676 65.5926 38.9883 67.0826 36.3328 68.3061L17.5718 90.8717L23.3408 95.6681L50.4579 63.0518Z" fill="__FILL__"/>
+</svg>`;
+
+const DEFAULT_LOGO_COLOR = "#FFD9AF";
 
 // SVG natural size is 128x96. Rasterize at 2x for crisp rendering.
 const RASTER_WIDTH = 256;
@@ -17,11 +20,18 @@ const RASTER_HEIGHT = 192;
  * Bypasses use-image to avoid img.decode() hanging on Firefox mobile,
  * and uses an inline data URL to avoid CORS/network issues.
  * Rasterizing to PNG avoids Firefox's SVG-to-canvas bug during Konva export.
+ *
+ * Pass `color` to recolor the logo fill per content-slide theme.
  */
-export function useLogoImage(): [HTMLImageElement | undefined] {
+export function useLogoImage(
+  color: string = DEFAULT_LOGO_COLOR,
+): [HTMLImageElement | undefined] {
   const [rasterImage, setRasterImage] = useState<HTMLImageElement>();
 
   useEffect(() => {
+    const svgSource = LOGO_SVG_SOURCE.replace("__FILL__", color);
+    const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgSource)}`;
+
     const svgImg = new Image();
     svgImg.onload = () => {
       try {
@@ -41,8 +51,8 @@ export function useLogoImage(): [HTMLImageElement | undefined] {
         setRasterImage(svgImg);
       }
     };
-    svgImg.src = LOGO_DATA_URL;
-  }, []);
+    svgImg.src = svgDataUrl;
+  }, [color]);
 
   return [rasterImage];
 }

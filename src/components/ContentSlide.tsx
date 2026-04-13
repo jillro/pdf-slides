@@ -8,9 +8,12 @@ import BackgroundImage from "./BackgroundImage";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import RichContentRenderer, { computeTextHeight } from "./RichContentRenderer";
 import type { TextSegment } from "../lib/rich-text-parser";
+import {
+  CONTENT_BG_THEMES,
+  type ContentBgTheme,
+} from "../lib/contentBgThemes";
 
 const CONTENT_MARGIN = 80;
-const ACCENT_COLOR = "#ffd9af";
 
 export default function ContentSlide(props: {
   backgroundImg?: HTMLImageElement;
@@ -27,6 +30,7 @@ export default function ContentSlide(props: {
   last?: boolean;
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
+  theme?: ContentBgTheme;
 }) {
   const {
     originalImg,
@@ -38,7 +42,9 @@ export default function ContentSlide(props: {
     onFontSizeChange,
   } = props;
 
-  const [logo] = useLogoImage();
+  const theme = props.theme ?? CONTENT_BG_THEMES.blurred;
+
+  const [logo] = useLogoImage(theme.accentColor);
 
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [localFontSize, setLocalFontSize] = useState<number>(58);
@@ -60,8 +66,9 @@ export default function ContentSlide(props: {
         fontSize,
         lineHeight,
         fontFamily,
+        theme.highlightBold,
       ),
-    [segments, contentWidth, fontSize, lineHeight],
+    [segments, contentWidth, fontSize, lineHeight, theme.highlightBold],
   );
 
   useEffect(() => {
@@ -121,21 +128,32 @@ export default function ContentSlide(props: {
       style={{ display: props.display ? "block" : "none" }}
     >
       <Layer background={"white"}>
-        {props.backgroundImg && (
-          <BackgroundImage
-            image={props.backgroundImg}
-            x={props.imgX}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
+        {props.backgroundImg &&
+          (theme.id === "blurred" ? (
+            <BackgroundImage
+              image={props.backgroundImg}
+              x={props.imgX}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
+            />
+          ) : (
+            <KImage
+              image={props.backgroundImg}
+              x={0}
+              y={0}
+              width={canvasWidth}
+              height={canvasHeight}
+            />
+          ))}
+        {theme.drawOverlay && (
+          <Rect
+            x={0}
+            y={0}
+            width={canvasWidth}
+            height={canvasHeight}
+            fill={`rgba(17,17,17,${overlayOpacity})`}
           />
         )}
-        <Rect
-          x={0}
-          y={0}
-          width={canvasWidth}
-          height={canvasHeight}
-          fill={`rgba(17,17,17,${overlayOpacity})`}
-        />
         <KImage
           image={logo}
           x={canvasWidth - 150 - rubriqueWidth}
@@ -148,7 +166,7 @@ export default function ContentSlide(props: {
           x={canvasWidth - 60 - rubriqueWidth}
           y={60}
           ref={rubriqueRef}
-          fill={ACCENT_COLOR}
+          fill={theme.accentColor}
           wrap={"word"}
           fontSize={(60 / 80) * 64}
           fontFamily={"Rubik"}
@@ -162,6 +180,9 @@ export default function ContentSlide(props: {
           fontSize={fontSize}
           lineHeight={lineHeight}
           fontFamily={fontFamily}
+          normalColor={theme.textColor}
+          highlightColor={theme.highlightColor}
+          highlightBold={theme.highlightBold}
         />
 
         {!props.last ? (
@@ -170,7 +191,7 @@ export default function ContentSlide(props: {
             x={canvasWidth - CONTENT_MARGIN}
             y={canvasHeight - 207}
             width={contentWidth}
-            fill={ACCENT_COLOR}
+            fill={theme.accentColor}
             wrap={"word"}
             fontSize={108}
             fontFamily={"Rubik"}

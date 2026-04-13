@@ -47,8 +47,18 @@
   font-weight: bold;
 }
 
-.copyButton {
+.sectionThemeSelect {
   margin-left: auto;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.25rem;
+  cursor: pointer;
+}
+
+.copyButton {
   background: none;
   border: none;
   cursor: pointer;
