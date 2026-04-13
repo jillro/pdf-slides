@@ -3,9 +3,15 @@
 import { MutableRefObject, useCallback, useEffect } from "react";
 import dynamicImport from "next/dynamic";
 import type Konva from "konva";
+import useImage from "use-image";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
 import { applyFrenchTypography } from "../lib/french-typography";
 import { parseHighlights, type TextSegment } from "../lib/rich-text-parser";
+import {
+  CONTENT_BG_THEMES,
+  DEFAULT_CONTENT_BG_THEME,
+  type ContentBgThemeId,
+} from "../lib/contentBgThemes";
 
 const FirstSlide = dynamicImport(() => import("./FirstSlide"), { ssr: false });
 const ContentSlide = dynamicImport(() => import("./ContentSlide"), {
@@ -26,6 +32,7 @@ export interface SlidesRendererProps {
   intro: string;
   format: Format;
   slidesContent: string[];
+  slideThemes: ContentBgThemeId[];
   subForMore: boolean;
   numero: number;
 
@@ -56,6 +63,7 @@ export default function SlidesRenderer({
   intro,
   format,
   slidesContent,
+  slideThemes,
   subForMore,
   numero,
   currentSlide,
@@ -67,6 +75,20 @@ export default function SlidesRenderer({
 }: SlidesRendererProps) {
   const { width: canvasWidth, height: canvasHeight } =
     FORMAT_DIMENSIONS[format];
+
+  const [altBg1Img] = useImage(
+    CONTENT_BG_THEMES.alt_bg1.src ?? "",
+    "anonymous",
+  );
+  const [altBg2Img] = useImage(
+    CONTENT_BG_THEMES.alt_bg2.src ?? "",
+    "anonymous",
+  );
+  const themeImages: Record<ContentBgThemeId, HTMLImageElement | undefined> = {
+    blurred: blurredImg ?? undefined,
+    alt_bg1: altBg1Img,
+    alt_bg2: altBg2Img,
+  };
 
   const expectedStages = 1 + slidesContent.length + (subForMore ? 1 : 0);
 
@@ -124,10 +146,15 @@ export default function SlidesRenderer({
             text: applyFrenchTypography(seg.text),
           }),
         );
+        const themeId = slideThemes[i] ?? DEFAULT_CONTENT_BG_THEME;
+        const theme =
+          CONTENT_BG_THEMES[themeId] ??
+          CONTENT_BG_THEMES[DEFAULT_CONTENT_BG_THEME];
+        const backgroundImg = themeImages[themeId];
         return (
           <ContentSlide
             key={i}
-            backgroundImg={blurredImg || undefined}
+            backgroundImg={backgroundImg || undefined}
             originalImg={img}
             imgX={imgX}
             rubrique={applyFrenchTypography(rubrique)}
@@ -138,6 +165,7 @@ export default function SlidesRenderer({
             canvasHeight={canvasHeight}
             display={showAllSlides || i + 1 === currentSlide}
             last={i === slidesContent.length - 1}
+            theme={theme}
             ref={getRef(i + 1)}
           />
         );

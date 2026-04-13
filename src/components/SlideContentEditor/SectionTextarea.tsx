@@ -3,6 +3,11 @@
 import { useRef, useCallback, useState, useMemo } from "react";
 import styles from "./SlideContentEditor.module.css";
 import { useAutoResize } from "./useAutoResize";
+import {
+  CONTENT_BG_THEMES,
+  CONTENT_BG_THEME_IDS,
+  type ContentBgThemeId,
+} from "../../lib/contentBgThemes";
 
 interface SectionTextareaProps {
   index: number;
@@ -14,6 +19,8 @@ interface SectionTextareaProps {
   textareaRef: (el: HTMLTextAreaElement | null) => void;
   isFirst: boolean;
   isTouchDevice: boolean;
+  themeId: ContentBgThemeId;
+  onThemeChange: (themeId: ContentBgThemeId) => void;
 }
 
 export default function SectionTextarea({
@@ -26,6 +33,8 @@ export default function SectionTextarea({
   textareaRef,
   isFirst,
   isTouchDevice,
+  themeId,
+  onThemeChange,
 }: SectionTextareaProps) {
   const localRef = useRef<HTMLTextAreaElement | null>(null);
   const [showMobileCut, setShowMobileCut] = useState(false);
@@ -118,6 +127,19 @@ export default function SectionTextarea({
             Couper ici
           </button>
         )}
+        <select
+          className={styles.sectionThemeSelect}
+          value={themeId}
+          onChange={(e) => onThemeChange(e.target.value as ContentBgThemeId)}
+          title="Fond de la slide"
+          aria-label="Fond de la slide"
+        >
+          {CONTENT_BG_THEME_IDS.map((id) => (
+            <option key={id} value={id}>
+              {CONTENT_BG_THEMES[id].label}
+            </option>
+          ))}
+        </select>
         <button
           className={styles.copyButton}
           onClick={onCopy}

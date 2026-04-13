@@ -15,6 +15,7 @@ import { Post, savePost } from "../app/storage";
 import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 import { createBlurredImage } from "../lib/blur";
+import type { ContentBgThemeId } from "../lib/contentBgThemes";
 import MobileLayout from "./mobile/MobileLayout";
 
 async function resizeImage(imgBlob: Blob): Promise<string> {
@@ -100,6 +101,14 @@ export default function AppView(params: { post?: Post }) {
   const [slidesContent, unsavedSlidesContent, setSlidesContent] = useSavedState(
     "slidesContent",
     [],
+  );
+  const [slideThemes, , setSlideThemes] = useSavedState("slideThemes", []);
+  const handleSlidesAndThemesChange = useCallback(
+    (nextContent: string[], nextThemes: ContentBgThemeId[]) => {
+      setSlidesContent(nextContent);
+      setSlideThemes(nextThemes);
+    },
+    [setSlidesContent, setSlideThemes],
   );
   const [position, unsavedPosition, setPosition] = useSavedState(
     "position",
@@ -225,6 +234,7 @@ export default function AppView(params: { post?: Post }) {
     setTitle(importedTitle);
     if (importWithContent) {
       setSlidesContent([content]);
+      setSlideThemes([]);
     }
 
     if (importedRubrique) {
@@ -280,7 +290,8 @@ export default function AppView(params: { post?: Post }) {
           setFormat={setFormat}
           unsavedFormat={unsavedFormat}
           slidesContent={slidesContent}
-          setSlidesContent={setSlidesContent}
+          slideThemes={slideThemes}
+          onSlidesAndThemesChange={handleSlidesAndThemesChange}
           unsavedSlidesContent={unsavedSlidesContent}
           subForMore={subForMore}
           setSubForMore={setSubForMore}
@@ -350,6 +361,7 @@ export default function AppView(params: { post?: Post }) {
               intro={intro}
               format={format}
               slidesContent={slidesContent}
+              slideThemes={slideThemes}
               subForMore={subForMore}
               numero={numero}
               currentSlide={currentSlide}
@@ -542,7 +554,8 @@ export default function AppView(params: { post?: Post }) {
         <div className={styles.col + " " + styles.controls}>
           <SlideContentEditor
             value={slidesContent}
-            onChange={setSlidesContent}
+            slideThemes={slideThemes}
+            onChange={handleSlidesAndThemesChange}
             unsaved={unsavedSlidesContent}
           />
         </div>

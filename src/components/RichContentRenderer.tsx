@@ -14,6 +14,7 @@ interface RichContentRendererProps {
   fontFamily: string;
   normalColor?: string;
   highlightColor?: string;
+  highlightBold?: boolean;
 }
 
 type PositionedWord = {
@@ -21,6 +22,7 @@ type PositionedWord = {
   x: number;
   y: number;
   highlighted: boolean;
+  bold: boolean;
 };
 
 // Shared offscreen canvas for text measurement
@@ -36,23 +38,29 @@ function measureWord(
   word: string,
   fontSize: number,
   fontFamily: string,
+  bold: boolean,
 ): number {
   const ctx = getMeasureCtx();
-  ctx.font = `${fontSize}px ${fontFamily}`;
+  ctx.font = `${bold ? "bold " : ""}${fontSize}px ${fontFamily}`;
   return ctx.measureText(word).width;
 }
 
 type TaggedWord = {
   text: string;
   highlighted: boolean;
+  bold: boolean;
   isLineBreak: boolean;
 };
 
-function tokenize(segments: TextSegment[]): TaggedWord[] {
+function tokenize(
+  segments: TextSegment[],
+  highlightBold: boolean,
+): TaggedWord[] {
   const words: TaggedWord[] = [];
 
   for (const segment of segments) {
     if (!segment.text) continue;
+    const bold = segment.highlighted && highlightBold;
 
     // Split by newlines first, then by spaces
     const lines = segment.text.split("\n");
@@ -61,6 +69,7 @@ function tokenize(segments: TextSegment[]): TaggedWord[] {
         words.push({
           text: "",
           highlighted: segment.highlighted,
+          bold,
           isLineBreak: true,
         });
       }
@@ -70,6 +79,7 @@ function tokenize(segments: TextSegment[]): TaggedWord[] {
         words.push({
           text: w,
           highlighted: segment.highlighted,
+          bold,
           isLineBreak: false,
         });
       }
@@ -101,12 +111,12 @@ function layoutWords(
 
     // Whitespace-only tokens: just advance x
     if (/^\s+$/.test(word.text)) {
-      const spaceW = measureWord(word.text, fontSize, fontFamily);
+      const spaceW = measureWord(word.text, fontSize, fontFamily, word.bold);
       curX += spaceW;
       continue;
     }
 
-    const wordW = measureWord(word.text, fontSize, fontFamily);
+    const wordW = measureWord(word.text, fontSize, fontFamily, word.bold);
 
     // Wrap if this word exceeds the line width (but not if we're at position 0)
     if (curX > 0 && curX + wordW > width) {
@@ -119,6 +129,7 @@ function layoutWords(
       x: curX,
       y: curLine * lineHeightPx,
       highlighted: word.highlighted,
+      bold: word.bold,
     });
 
     curX += wordW;
@@ -138,8 +149,9 @@ export function computeTextHeight(
   fontSize: number,
   lineHeight: number,
   fontFamily: string,
+  highlightBold: boolean = false,
 ): number {
-  const words = tokenize(segments);
+  const words = tokenize(segments, highlightBold);
   const { totalHeight } = layoutWords(
     words,
     width,
@@ -160,11 +172,12 @@ export default function RichContentRenderer({
   fontFamily,
   normalColor = "white",
   highlightColor = "#ffd9af",
+  highlightBold = false,
 }: RichContentRendererProps) {
   const { positioned } = useMemo(() => {
-    const words = tokenize(segments);
+    const words = tokenize(segments, highlightBold);
     return layoutWords(words, width, fontSize, lineHeight, fontFamily);
-  }, [segments, width, fontSize, lineHeight, fontFamily]);
+  }, [segments, width, fontSize, lineHeight, fontFamily, highlightBold]);
 
   return (
     <Group x={x} y={y}>
@@ -177,6 +190,7 @@ export default function RichContentRenderer({
           fill={word.highlighted ? highlightColor : normalColor}
           fontSize={fontSize}
           fontFamily={fontFamily}
+          fontStyle={word.bold ? "bold" : "normal"}
         />
       ))}
     </Group>

@@ -28,6 +28,7 @@ async function getClient() {
 }
 
 import type { Format } from "../lib/formats";
+import type { ContentBgThemeId } from "../lib/contentBgThemes";
 
 export type Post = {
   id: string;
@@ -37,6 +38,7 @@ export type Post = {
   intro: string;
   rubrique: string;
   slidesContent: string[];
+  slideThemes: ContentBgThemeId[];
   position: "top" | "bottom";
   subForMore: boolean;
   numero: number;
@@ -47,8 +49,16 @@ export type Post = {
 };
 
 type RedisPost = Partial<
-  Omit<Post, "slidesContent" | "subForMore" | "imageCaption" | "articleUrl"> & {
+  Omit<
+    Post,
+    | "slidesContent"
+    | "slideThemes"
+    | "subForMore"
+    | "imageCaption"
+    | "articleUrl"
+  > & {
     slidesContent: string; // serialized array
+    slideThemes: string; // serialized array
     subForMore: "true" | "false";
     imageCaption: string;
     articleUrl: string;
@@ -63,6 +73,9 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.rubrique != undefined ? { rubrique: post.rubrique } : {}),
   ...(post.slidesContent != undefined
     ? { slidesContent: JSON.stringify(post.slidesContent) }
+    : {}),
+  ...(post.slideThemes != undefined
+    ? { slideThemes: JSON.stringify(post.slideThemes) }
     : {}),
   ...(post.position != undefined ? { position: post.position } : {}),
   ...(post.subForMore !== undefined
@@ -85,6 +98,7 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
   ...newPost(id),
   ...post,
   slidesContent: post.slidesContent ? JSON.parse(post.slidesContent) : [],
+  slideThemes: post.slideThemes ? JSON.parse(post.slideThemes) : [],
   subForMore: post.subForMore === "true",
   imageCaption: post.imageCaption || null,
   articleUrl: post.articleUrl || null,
@@ -98,6 +112,7 @@ const newPost = (id: string): Post => ({
   intro: "",
   rubrique: "",
   slidesContent: [],
+  slideThemes: [],
   position: "top",
   subForMore: false,
   numero: 1,
