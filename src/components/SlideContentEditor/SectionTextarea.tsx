@@ -100,18 +100,24 @@ export default function SectionTextarea({
     }
   }, [onSplit, value.length]);
 
-  // Build mirror HTML with highlight markers styled
+  // Build mirror HTML with rich-text markers styled
   const mirrorHtml = useMemo(() => {
     const escaped = value
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-    const highlighted = escaped.replace(
+    const dimMarker =
+      '<span style="color:var(--text-secondary);font-size:0.75em;opacity:0.5">';
+    const bolded = escaped.replace(
+      /\*\*([^*]*)\*\*/g,
+      `${dimMarker}**</span><span style="font-weight:bold;color:#E19B4C">$1</span>${dimMarker}**</span>`,
+    );
+    const withBg = bolded.replace(
       /==([^=]*)==/g,
-      '<span style="color:var(--text-secondary);font-size:0.75em;opacity:0.5">==</span><span style="background-color:rgba(255,217,175,0.2);border-radius:2px">$1</span><span style="color:var(--text-secondary);font-size:0.75em;opacity:0.5">==</span>',
+      `${dimMarker}==</span><span style="background-color:rgba(28,28,28,0.85);color:#fff;padding:0 0.2em;border-radius:2px">$1</span>${dimMarker}==</span>`,
     );
     // Trailing newline + space prevents height collapse when last line is empty
-    return highlighted + "\n ";
+    return withBg + "\n ";
   }, [value]);
 
   return (

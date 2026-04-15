@@ -1,44 +1,75 @@
+export type TextStyle = "normal" | "bold" | "bg";
+
 export type TextSegment = {
   text: string;
-  highlighted: boolean;
+  style: TextStyle;
+};
+
+type Marker = "**" | "==";
+
+const STYLE_FOR_MARKER: Record<Marker, TextStyle> = {
+  "**": "bold",
+  "==": "bg",
 };
 
 /**
- * Parse ==highlight== markers from content string.
- * Alternates between normal and highlighted segments.
- * Unclosed trailing == is treated as literal text.
+ * Parse **bold** and ==bg== markers from content.
+ * Markers are mutually exclusive: while one is open, the other is literal.
+ * Unclosed trailing markers are treated as literal text.
  */
-export function parseHighlights(content: string): TextSegment[] {
-  const parts = content.split("==");
+export function parseRichText(content: string): TextSegment[] {
   const segments: TextSegment[] = [];
+  let buffer = "";
+  let currentStyle: TextStyle = "normal";
+  let openMarker: Marker | null = null;
+  let i = 0;
 
-  // Odd number of parts means last == is unclosed
-  const hasUnclosed = parts.length > 1 && parts.length % 2 === 0;
+  const flush = (style: TextStyle) => {
+    if (buffer.length > 0) {
+      segments.push({ text: buffer, style });
+      buffer = "";
+    }
+  };
 
-  for (let i = 0; i < parts.length; i++) {
-    if (parts[i] === "") continue;
+  while (i < content.length) {
+    const two = content.slice(i, i + 2);
 
-    // If unclosed, rejoin the last two parts with the literal ==
-    if (hasUnclosed && i === parts.length - 2) {
-      segments.push({
-        text: parts[i] + "==" + parts[i + 1],
-        highlighted: i % 2 === 1,
-      });
-      break;
+    if (openMarker === null && (two === "**" || two === "==")) {
+      // Look ahead for a closing marker on the same kind
+      const closeIdx = content.indexOf(two, i + 2);
+      if (closeIdx === -1) {
+        // Unclosed: rest is literal
+        buffer += content.slice(i);
+        i = content.length;
+        break;
+      }
+      flush(currentStyle);
+      openMarker = two;
+      currentStyle = STYLE_FOR_MARKER[two];
+      i += 2;
+      continue;
     }
 
-    segments.push({
-      text: parts[i],
-      highlighted: i % 2 === 1,
-    });
+    if (openMarker !== null && two === openMarker) {
+      flush(currentStyle);
+      openMarker = null;
+      currentStyle = "normal";
+      i += 2;
+      continue;
+    }
+
+    buffer += content[i];
+    i++;
   }
 
-  return segments.length > 0 ? segments : [{ text: "", highlighted: false }];
+  flush(currentStyle);
+
+  return segments.length > 0 ? segments : [{ text: "", style: "normal" }];
 }
 
 /**
- * Strip ==highlight== markers, returning plain text.
+ * Strip **…** and ==…== markers, returning plain text.
  */
-export function stripHighlightMarkers(content: string): string {
-  return content.replace(/==/g, "");
+export function stripRichTextMarkers(content: string): string {
+  return content.replace(/\*\*/g, "").replace(/==/g, "");
 }
