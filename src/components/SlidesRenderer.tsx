@@ -6,7 +6,7 @@ import type Konva from "konva";
 import useImage from "use-image";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
 import { applyFrenchTypography } from "../lib/french-typography";
-import { parseHighlights, type TextSegment } from "../lib/rich-text-parser";
+import { parseRichText, type TextSegment } from "../lib/rich-text-parser";
 import {
   CONTENT_BG_THEMES,
   DEFAULT_CONTENT_BG_THEME,
@@ -140,7 +140,7 @@ export default function SlidesRenderer({
       />
       {slidesContent.map((content, i) => {
         // Parse highlight markers and apply French typography per segment
-        const segments: TextSegment[] = parseHighlights(content.trim()).map(
+        const segments: TextSegment[] = parseRichText(content.trim()).map(
           (seg) => ({
             ...seg,
             text: applyFrenchTypography(seg.text),

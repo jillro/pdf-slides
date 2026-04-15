@@ -8,10 +8,7 @@ import BackgroundImage from "./BackgroundImage";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import RichContentRenderer, { computeTextHeight } from "./RichContentRenderer";
 import type { TextSegment } from "../lib/rich-text-parser";
-import {
-  CONTENT_BG_THEMES,
-  type ContentBgTheme,
-} from "../lib/contentBgThemes";
+import { CONTENT_BG_THEMES, type ContentBgTheme } from "../lib/contentBgThemes";
 
 const CONTENT_MARGIN = 80;
 
@@ -66,9 +63,8 @@ export default function ContentSlide(props: {
         fontSize,
         lineHeight,
         fontFamily,
-        theme.highlightBold,
       ),
-    [segments, contentWidth, fontSize, lineHeight, theme.highlightBold],
+    [segments, contentWidth, fontSize, lineHeight],
   );
 
   useEffect(() => {
@@ -181,8 +177,8 @@ export default function ContentSlide(props: {
           lineHeight={lineHeight}
           fontFamily={fontFamily}
           normalColor={theme.textColor}
-          highlightColor={theme.highlightColor}
-          highlightBold={theme.highlightBold}
+          boldColor={theme.boldColor}
+          bgHighlightColor={theme.bgHighlightColor}
         />
 
         {!props.last ? (

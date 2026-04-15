@@ -8,8 +8,8 @@ export type ContentBgTheme = {
   label: string;
   src: string | null;
   textColor: string;
-  highlightColor: string;
-  highlightBold: boolean;
+  boldColor: string;
+  bgHighlightColor: string;
   accentColor: string;
   drawOverlay: boolean;
 };
@@ -20,8 +20,8 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     label: "Image floutée",
     src: null,
     textColor: "white",
-    highlightColor: "#ffd9af",
-    highlightBold: false,
+    boldColor: "#ffd9af",
+    bgHighlightColor: "#1C1C1C",
     accentColor: "#ffd9af",
     drawOverlay: true,
   },
@@ -30,8 +30,8 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     label: "Fond clair",
     src: altBg1.src,
     textColor: "#313131",
-    highlightColor: "#313131",
-    highlightBold: true,
+    boldColor: "#313131",
+    bgHighlightColor: "#FFFFFF",
     accentColor: "#E19B4C",
     drawOverlay: false,
   },
@@ -40,8 +40,8 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     label: "Fond alt 2",
     src: altBg2.src,
     textColor: "white",
-    highlightColor: "#ffd9af",
-    highlightBold: false,
+    boldColor: "#ffd9af",
+    bgHighlightColor: "#1C1C1C",
     accentColor: "#ffd9af",
     drawOverlay: false,
   },

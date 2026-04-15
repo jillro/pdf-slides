@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Group, Text } from "react-konva";
-import type { TextSegment } from "../lib/rich-text-parser";
+import { Group, Rect, Text } from "react-konva";
+import type { TextSegment, TextStyle } from "../lib/rich-text-parser";
 
 interface RichContentRendererProps {
   segments: TextSegment[];
@@ -13,16 +13,16 @@ interface RichContentRendererProps {
   lineHeight: number;
   fontFamily: string;
   normalColor?: string;
-  highlightColor?: string;
-  highlightBold?: boolean;
+  boldColor?: string;
+  bgHighlightColor?: string;
 }
 
 type PositionedWord = {
   text: string;
   x: number;
   y: number;
-  highlighted: boolean;
-  bold: boolean;
+  width: number;
+  style: TextStyle;
 };
 
 // Shared offscreen canvas for text measurement
@@ -47,41 +47,25 @@ function measureWord(
 
 type TaggedWord = {
   text: string;
-  highlighted: boolean;
-  bold: boolean;
+  style: TextStyle;
   isLineBreak: boolean;
 };
 
-function tokenize(
-  segments: TextSegment[],
-  highlightBold: boolean,
-): TaggedWord[] {
+function tokenize(segments: TextSegment[]): TaggedWord[] {
   const words: TaggedWord[] = [];
 
   for (const segment of segments) {
     if (!segment.text) continue;
-    const bold = segment.highlighted && highlightBold;
 
-    // Split by newlines first, then by spaces
     const lines = segment.text.split("\n");
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       if (lineIdx > 0) {
-        words.push({
-          text: "",
-          highlighted: segment.highlighted,
-          bold,
-          isLineBreak: true,
-        });
+        words.push({ text: "", style: segment.style, isLineBreak: true });
       }
       const lineWords = lines[lineIdx].split(/(\s+)/);
       for (const w of lineWords) {
         if (w === "") continue;
-        words.push({
-          text: w,
-          highlighted: segment.highlighted,
-          bold,
-          isLineBreak: false,
-        });
+        words.push({ text: w, style: segment.style, isLineBreak: false });
       }
     }
   }
@@ -109,14 +93,15 @@ function layoutWords(
       continue;
     }
 
+    const bold = word.style === "bold";
+
     // Whitespace-only tokens: just advance x
     if (/^\s+$/.test(word.text)) {
-      const spaceW = measureWord(word.text, fontSize, fontFamily, word.bold);
-      curX += spaceW;
+      curX += measureWord(word.text, fontSize, fontFamily, bold);
       continue;
     }
 
-    const wordW = measureWord(word.text, fontSize, fontFamily, word.bold);
+    const wordW = measureWord(word.text, fontSize, fontFamily, bold);
 
     // Wrap if this word exceeds the line width (but not if we're at position 0)
     if (curX > 0 && curX + wordW > width) {
@@ -128,8 +113,8 @@ function layoutWords(
       text: word.text,
       x: curX,
       y: curLine * lineHeightPx,
-      highlighted: word.highlighted,
-      bold: word.bold,
+      width: wordW,
+      style: word.style,
     });
 
     curX += wordW;
@@ -149,9 +134,8 @@ export function computeTextHeight(
   fontSize: number,
   lineHeight: number,
   fontFamily: string,
-  highlightBold: boolean = false,
 ): number {
-  const words = tokenize(segments, highlightBold);
+  const words = tokenize(segments);
   const { totalHeight } = layoutWords(
     words,
     width,
@@ -171,26 +155,43 @@ export default function RichContentRenderer({
   lineHeight,
   fontFamily,
   normalColor = "white",
-  highlightColor = "#ffd9af",
-  highlightBold = false,
+  boldColor = "#ffd9af",
+  bgHighlightColor = "#1C1C1C",
 }: RichContentRendererProps) {
   const { positioned } = useMemo(() => {
-    const words = tokenize(segments, highlightBold);
+    const words = tokenize(segments);
     return layoutWords(words, width, fontSize, lineHeight, fontFamily);
-  }, [segments, width, fontSize, lineHeight, fontFamily, highlightBold]);
+  }, [segments, width, fontSize, lineHeight, fontFamily]);
+
+  const bgPadX = fontSize * 0.12;
+  const bgPadY = fontSize * 0.14;
+  const bgRadius = fontSize * 0.08;
 
   return (
     <Group x={x} y={y}>
+      {positioned.map((word, i) =>
+        word.style === "bg" ? (
+          <Rect
+            key={`bg-${i}`}
+            x={word.x - bgPadX}
+            y={word.y - bgPadY}
+            width={word.width + bgPadX * 2}
+            height={fontSize + bgPadY * 2}
+            fill={bgHighlightColor}
+            cornerRadius={bgRadius}
+          />
+        ) : null,
+      )}
       {positioned.map((word, i) => (
         <Text
-          key={i}
+          key={`t-${i}`}
           text={word.text}
           x={word.x}
           y={word.y}
-          fill={word.highlighted ? highlightColor : normalColor}
+          fill={word.style === "bold" ? boldColor : normalColor}
           fontSize={fontSize}
           fontFamily={fontFamily}
-          fontStyle={word.bold ? "bold" : "normal"}
+          fontStyle={word.style === "bold" ? "bold" : "normal"}
         />
       ))}
     </Group>

@@ -6,7 +6,7 @@ Recommendations based on visual review of generated slides (April 2026).
 
 ### Content slides — high impact
 
-- [x] **Accent-colored key phrases**: Inline highlighting with `==text==` syntax renders phrases in the brand gold/beige accent color.
+- [x] **Markdown-style inline emphasis**: `**text**` renders bold in the theme's accent color (same-color bold on light themes); `==text==` renders an inline background pill (dark on dark themes, white on light themes). Mutually exclusive.
 - [ ] **Pull quotes**: Separate per-slide field for a key sentence rendered as a visually distinct block (larger, with separators) that splits content in two halves.
 - [ ] **Slide numbering**: Add a progress indicator (e.g. "2/5") so users know how many slides remain — encourages swiping through.
 - [ ] **Stronger continuation indicator**: The current ">" is too discreet. Use a more visible swipe cue (arrow icon, or the page number itself).
