@@ -11,6 +11,7 @@ export type ContentBgTheme = {
   boldColor: string;
   bgHighlightColor: string;
   accentColor: string;
+  fontWeight: string;
   drawOverlay: boolean;
 };
 
@@ -23,6 +24,7 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     boldColor: "#ffd9af",
     bgHighlightColor: "#1C1C1C",
     accentColor: "#ffd9af",
+    fontWeight: "500",
     drawOverlay: true,
   },
   alt_bg1: {
@@ -33,6 +35,7 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     boldColor: "#313131",
     bgHighlightColor: "#FFFFFF",
     accentColor: "#E19B4C",
+    fontWeight: "normal",
     drawOverlay: false,
   },
   alt_bg2: {
@@ -43,6 +46,7 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     boldColor: "#ffd9af",
     bgHighlightColor: "#1C1C1C",
     accentColor: "#ffd9af",
+    fontWeight: "500",
     drawOverlay: false,
   },
 };

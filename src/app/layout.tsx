@@ -3,7 +3,7 @@ import "./global.css";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { Rubik, Atkinson_Hyperlegible } from "next/font/google";
+import { Rubik, Atkinson_Hyperlegible_Next } from "next/font/google";
 import { ThemeProvider } from "../components/ThemeProvider";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12,9 +12,9 @@ const rubik = Rubik({
   display: "block",
 });
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const atkinson = Atkinson_Hyperlegible({
+const atkinson = Atkinson_Hyperlegible_Next({
   subsets: ["latin-ext"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "700"],
   display: "block",
 });
 

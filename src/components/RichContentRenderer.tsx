@@ -15,6 +15,7 @@ interface RichContentRendererProps {
   normalColor?: string;
   boldColor?: string;
   bgHighlightColor?: string;
+  fontWeight?: string;
 }
 
 type PositionedWord = {
@@ -39,9 +40,10 @@ function measureWord(
   fontSize: number,
   fontFamily: string,
   bold: boolean,
+  fontWeight: string = "500",
 ): number {
   const ctx = getMeasureCtx();
-  ctx.font = `${bold ? "bold " : ""}${fontSize}px ${fontFamily}`;
+  ctx.font = `${bold ? "bold" : fontWeight} ${fontSize}px ${fontFamily}`;
   return ctx.measureText(word).width;
 }
 
@@ -79,6 +81,7 @@ function layoutWords(
   fontSize: number,
   lineHeight: number,
   fontFamily: string,
+  fontWeight: string = "500",
 ): { positioned: PositionedWord[]; totalHeight: number } {
   const positioned: PositionedWord[] = [];
   const lineHeightPx = fontSize * lineHeight;
@@ -97,11 +100,11 @@ function layoutWords(
 
     // Whitespace-only tokens: just advance x
     if (/^\s+$/.test(word.text)) {
-      curX += measureWord(word.text, fontSize, fontFamily, bold);
+      curX += measureWord(word.text, fontSize, fontFamily, bold, fontWeight);
       continue;
     }
 
-    const wordW = measureWord(word.text, fontSize, fontFamily, bold);
+    const wordW = measureWord(word.text, fontSize, fontFamily, bold, fontWeight);
 
     // Wrap if this word exceeds the line width (but not if we're at position 0)
     if (curX > 0 && curX + wordW > width) {
@@ -134,6 +137,7 @@ export function computeTextHeight(
   fontSize: number,
   lineHeight: number,
   fontFamily: string,
+  fontWeight: string = "500",
 ): number {
   const words = tokenize(segments);
   const { totalHeight } = layoutWords(
@@ -142,6 +146,7 @@ export function computeTextHeight(
     fontSize,
     lineHeight,
     fontFamily,
+    fontWeight,
   );
   return totalHeight;
 }
@@ -157,11 +162,12 @@ export default function RichContentRenderer({
   normalColor = "white",
   boldColor = "#ffd9af",
   bgHighlightColor = "#1C1C1C",
+  fontWeight = "500",
 }: RichContentRendererProps) {
   const { positioned } = useMemo(() => {
     const words = tokenize(segments);
-    return layoutWords(words, width, fontSize, lineHeight, fontFamily);
-  }, [segments, width, fontSize, lineHeight, fontFamily]);
+    return layoutWords(words, width, fontSize, lineHeight, fontFamily, fontWeight);
+  }, [segments, width, fontSize, lineHeight, fontFamily, fontWeight]);
 
   const bgPadX = fontSize * 0.12;
   const bgPadY = fontSize * 0.14;
@@ -191,7 +197,7 @@ export default function RichContentRenderer({
           fill={word.style === "bold" ? boldColor : normalColor}
           fontSize={fontSize}
           fontFamily={fontFamily}
-          fontStyle={word.style === "bold" ? "bold" : "normal"}
+          fontStyle={word.style === "bold" ? "bold" : fontWeight}
         />
       ))}
     </Group>

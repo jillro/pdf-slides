@@ -79,8 +79,8 @@ export default function SubForMoreSlide(props: {
           fill={"white"}
           wrap={"word"}
           fontSize={82}
-          fontStyle={"normal"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontStyle={"500"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
 
         <Text
@@ -93,8 +93,8 @@ export default function SubForMoreSlide(props: {
           fill={"white"}
           wrap={"word"}
           fontSize={72}
-          fontStyle={"normal"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontStyle={"500"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
 
         <Line
@@ -121,8 +121,8 @@ export default function SubForMoreSlide(props: {
           fill={"white"}
           wrap={"word"}
           fontSize={72}
-          fontStyle={"normal"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontStyle={"500"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
         <Text
           text={"partidesfemmes.fr"}
@@ -135,7 +135,7 @@ export default function SubForMoreSlide(props: {
           wrap={"word"}
           fontSize={72}
           fontStyle={"bold"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
         <KImage
           image={logo}
@@ -155,8 +155,8 @@ export default function SubForMoreSlide(props: {
           lineHeight={1.1}
           wrap={"word"}
           fontSize={50}
-          fontStyle={"normal"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontStyle={"500"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
         <Text
           text={"Abonne-toi !"}
@@ -169,7 +169,7 @@ export default function SubForMoreSlide(props: {
           wrap={"word"}
           fontSize={50}
           fontStyle={"bold"}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontFamily={"Atkinson Hyperlegible Next"}
         />
       </Layer>
     </Stage>
