@@ -163,7 +163,7 @@ export default function FirstSlide(props: {
           fill={"white"}
           wrap={"word"}
           fontSize={80}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontFamily={"Atkinson Hyperlegible Next"}
           fontVariant={"bold"}
         />
 
@@ -180,7 +180,8 @@ export default function FirstSlide(props: {
           fill={"white"}
           wrap={"word"}
           fontSize={64}
-          fontFamily={"Atkinson Hyperlegible"}
+          fontFamily={"Atkinson Hyperlegible Next"}
+          fontStyle={"500"}
         />
       </Layer>
     </Stage>

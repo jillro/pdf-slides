@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useState, useMemo } from "react";
+import { useRef, useCallback, useState } from "react";
 import styles from "./SlideContentEditor.module.css";
 import { useAutoResize } from "./useAutoResize";
 import {
@@ -100,26 +100,6 @@ export default function SectionTextarea({
     }
   }, [onSplit, value.length]);
 
-  // Build mirror HTML with rich-text markers styled
-  const mirrorHtml = useMemo(() => {
-    const escaped = value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    const dimMarker =
-      '<span style="color:var(--text-secondary);font-size:0.75em;opacity:0.5">';
-    const bolded = escaped.replace(
-      /\*\*([^*]*)\*\*/g,
-      `${dimMarker}**</span><span style="font-weight:bold;color:#E19B4C">$1</span>${dimMarker}**</span>`,
-    );
-    const withBg = bolded.replace(
-      /==([^=]*)==/g,
-      `${dimMarker}==</span><span style="background-color:rgba(28,28,28,0.85);color:#fff;padding:0 0.2em;border-radius:2px">$1</span>${dimMarker}==</span>`,
-    );
-    // Trailing newline + space prevents height collapse when last line is empty
-    return withBg + "\n ";
-  }, [value]);
-
   return (
     <div className={styles.sectionWrapper}>
       <div className={styles.sectionHeader}>
@@ -155,11 +135,6 @@ export default function SectionTextarea({
         </button>
       </div>
       <div className={styles.textareaWrapper}>
-        <div
-          className={styles.mirror}
-          dangerouslySetInnerHTML={{ __html: mirrorHtml }}
-          aria-hidden
-        />
         <textarea
           ref={setRef}
           className={styles.sectionTextarea}

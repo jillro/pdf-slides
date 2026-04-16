@@ -95,20 +95,6 @@
   position: relative;
 }
 
-.mirror {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow: hidden;
-  padding: 0.25rem 0.75rem 2.25rem 2.75rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: transparent;
-}
-
 .sectionTextarea {
   position: relative;
   display: block;

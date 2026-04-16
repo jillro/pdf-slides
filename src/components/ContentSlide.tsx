@@ -50,7 +50,7 @@ export default function ContentSlide(props: {
   const fontSize = externalFontSize ?? localFontSize;
   const lineHeight = 1.2 + (58 - fontSize) * 0.01;
   const contentWidth = canvasWidth - CONTENT_MARGIN * 2;
-  const fontFamily = "Atkinson Hyperlegible";
+  const fontFamily = "Atkinson Hyperlegible Next";
 
   const rubriqueRef = useRef<Konva.Text>(null);
 
@@ -63,8 +63,9 @@ export default function ContentSlide(props: {
         fontSize,
         lineHeight,
         fontFamily,
+        theme.fontWeight,
       ),
-    [segments, contentWidth, fontSize, lineHeight],
+    [segments, contentWidth, fontSize, lineHeight, theme.fontWeight],
   );
 
   useEffect(() => {
@@ -179,6 +180,7 @@ export default function ContentSlide(props: {
           normalColor={theme.textColor}
           boldColor={theme.boldColor}
           bgHighlightColor={theme.bgHighlightColor}
+          fontWeight={theme.fontWeight}
         />
 
         {!props.last ? (
