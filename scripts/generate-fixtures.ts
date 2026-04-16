@@ -62,9 +62,7 @@ async function fetchArticles() {
   return response.json();
 }
 
-async function fetchCategory(
-  categoryId: number,
-): Promise<string | null> {
+async function fetchCategory(categoryId: number): Promise<string | null> {
   try {
     const response = await fetch(
       `${SITE_URL}/wp-json/wp/v2/categories/${categoryId}`,
@@ -83,9 +81,7 @@ async function fetchMediaAndSaveImage(
   slug: string,
 ): Promise<{ imageFile: string; imageCaption: string | null } | null> {
   try {
-    const response = await fetch(
-      `${SITE_URL}/wp-json/wp/v2/media/${mediaId}`,
-    );
+    const response = await fetch(`${SITE_URL}/wp-json/wp/v2/media/${mediaId}`);
     if (!response.ok) return null;
     const media = await response.json();
 

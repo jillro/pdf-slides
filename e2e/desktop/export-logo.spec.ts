@@ -6,9 +6,10 @@ const LOGO_R = 0xff;
 const LOGO_G = 0xd9;
 const LOGO_B = 0xaf;
 
-function countLogoPixels(
-  pngBuffer: Buffer,
-): { total: number; dimensions: string } {
+function countLogoPixels(pngBuffer: Buffer): {
+  total: number;
+  dimensions: string;
+} {
   const png = PNG.sync.read(pngBuffer);
   let matchingPixels = 0;
 

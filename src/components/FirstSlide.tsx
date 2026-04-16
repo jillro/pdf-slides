@@ -7,6 +7,7 @@ import { Image as KImage, Layer, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import Gradient from "./Gradient";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
+import { NEAR_WHITE, ACCENT } from "../lib/colors";
 
 export default function FirstSlide(props: {
   img?: HTMLImageElement;
@@ -141,10 +142,11 @@ export default function FirstSlide(props: {
                 titleHeight -
                 storyMargin
           }
-          fill={"#ffd9af"}
+          fill={ACCENT}
           wrap={"word"}
           fontSize={64}
           fontFamily={"Rubik"}
+          letterSpacing={-0.5}
         />
         <Text
           text={props.title}
@@ -160,11 +162,13 @@ export default function FirstSlide(props: {
           }
           ref={titleRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={80}
           fontFamily={"Atkinson Hyperlegible Next"}
           fontVariant={"bold"}
+          lineHeight={1.1}
+          letterSpacing={-1.5}
         />
 
         <Text
@@ -177,11 +181,13 @@ export default function FirstSlide(props: {
           }
           ref={introRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={64}
           fontFamily={"Atkinson Hyperlegible Next"}
           fontStyle={"500"}
+          lineHeight={1.15}
+          letterSpacing={-0.5}
         />
       </Layer>
     </Stage>
