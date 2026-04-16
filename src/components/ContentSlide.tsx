@@ -9,6 +9,7 @@ import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import RichContentRenderer, { computeTextHeight } from "./RichContentRenderer";
 import type { TextSegment } from "../lib/rich-text-parser";
 import { CONTENT_BG_THEMES, type ContentBgTheme } from "../lib/contentBgThemes";
+import { OVERLAY_COLOR } from "../lib/colors";
 
 const CONTENT_MARGIN = 80;
 
@@ -148,7 +149,7 @@ export default function ContentSlide(props: {
             y={0}
             width={canvasWidth}
             height={canvasHeight}
-            fill={`rgba(17,17,17,${overlayOpacity})`}
+            fill={`rgba(${OVERLAY_COLOR},${overlayOpacity})`}
           />
         )}
         <KImage
@@ -181,17 +182,18 @@ export default function ContentSlide(props: {
           boldColor={theme.boldColor}
           bgHighlightColor={theme.bgHighlightColor}
           fontWeight={theme.fontWeight}
+          letterSpacing={fontSize >= 56 ? 0 : 0.5}
         />
 
         {!props.last ? (
           <Text
             text=">"
             x={canvasWidth - CONTENT_MARGIN}
-            y={canvasHeight - 207}
+            y={canvasHeight - 185}
             width={contentWidth}
             fill={theme.accentColor}
             wrap={"word"}
-            fontSize={108}
+            fontSize={84}
             fontFamily={"Rubik"}
             fontVariant={"bold"}
           />

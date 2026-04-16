@@ -1,5 +1,12 @@
 import altBg1 from "../assets/alt_bg1.png";
 import altBg2 from "../assets/alt_bg2.png";
+import {
+  NEAR_WHITE,
+  ACCENT,
+  DARK_HIGHLIGHT,
+  DARK_TEXT,
+  ALT_ACCENT,
+} from "./colors";
 
 export type ContentBgThemeId = "blurred" | "alt_bg1" | "alt_bg2";
 
@@ -20,10 +27,10 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     id: "blurred",
     label: "Image floutée",
     src: null,
-    textColor: "white",
-    boldColor: "#ffd9af",
-    bgHighlightColor: "#1C1C1C",
-    accentColor: "#ffd9af",
+    textColor: NEAR_WHITE,
+    boldColor: ACCENT,
+    bgHighlightColor: DARK_HIGHLIGHT,
+    accentColor: ACCENT,
     fontWeight: "500",
     drawOverlay: true,
   },
@@ -31,10 +38,10 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     id: "alt_bg1",
     label: "Fond clair",
     src: altBg1.src,
-    textColor: "#313131",
-    boldColor: "#313131",
-    bgHighlightColor: "#FFFFFF",
-    accentColor: "#E19B4C",
+    textColor: DARK_TEXT,
+    boldColor: DARK_TEXT,
+    bgHighlightColor: NEAR_WHITE,
+    accentColor: ALT_ACCENT,
     fontWeight: "normal",
     drawOverlay: false,
   },
@@ -42,10 +49,10 @@ export const CONTENT_BG_THEMES: Record<ContentBgThemeId, ContentBgTheme> = {
     id: "alt_bg2",
     label: "Fond alt 2",
     src: altBg2.src,
-    textColor: "white",
-    boldColor: "#ffd9af",
-    bgHighlightColor: "#1C1C1C",
-    accentColor: "#ffd9af",
+    textColor: NEAR_WHITE,
+    boldColor: ACCENT,
+    bgHighlightColor: DARK_HIGHLIGHT,
+    accentColor: ACCENT,
     fontWeight: "500",
     drawOverlay: false,
   },

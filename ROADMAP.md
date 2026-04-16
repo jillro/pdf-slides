@@ -11,9 +11,9 @@ Recommendations based on visual review of generated slides (April 2026).
 - [ ] **Slide numbering**: Add a progress indicator (e.g. "2/5") so users know how many slides remain — encourages swiping through.
 - [ ] **Stronger continuation indicator**: The current ">" is too discreet. Use a more visible swipe cue (arrow icon, or the page number itself).
 - [ ] **Opening line emphasis**: Use a larger or bolder style for the first line of each content slide to create a visual hook.
-- [x] **Reduce side/top margins**: Margins reduced from 150px to 80px — text now fills the slide better. *(PR #13)*
-- [x] **Adjust line height based on font size**: Line height now scales proportionally (1.2 at 58px, increasing as font shrinks). *(PR #13)*
-- [x] **Vary content slide backgrounds**: Per-slide theme selector in the editor lets each content slide pick `Image floutée` (default blurred upload), `Fond clair`, or `Fond alt 2`, each with their own text/accent palette. *(PR #18)*
+- [x] **Reduce side/top margins**: Margins reduced from 150px to 80px — text now fills the slide better. _(PR #13)_
+- [x] **Adjust line height based on font size**: Line height now scales proportionally (1.2 at 58px, increasing as font shrinks). _(PR #13)_
+- [x] **Vary content slide backgrounds**: Per-slide theme selector in the editor lets each content slide pick `Image floutée` (default blurred upload), `Fond clair`, or `Fond alt 2`, each with their own text/accent palette. _(PR #18)_
 
 ### Title slide (slide-0)
 

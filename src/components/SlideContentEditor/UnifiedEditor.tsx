@@ -41,10 +41,7 @@ function splitWhitespace(text: string): {
   return { leading, body, trailing };
 }
 
-function makeSectionFromText(
-  text: string,
-  themeId: ContentBgThemeId,
-): Section {
+function makeSectionFromText(text: string, themeId: ContentBgThemeId): Section {
   return { id: nextSectionId++, ...splitWhitespace(text), themeId };
 }
 
@@ -52,10 +49,7 @@ function sectionFullText(s: Section): string {
   return s.leading + s.body + s.trailing;
 }
 
-function fromValue(
-  slides: string[],
-  themes: ContentBgThemeId[],
-): Section[] {
+function fromValue(slides: string[], themes: ContentBgThemeId[]): Section[] {
   if (slides.length === 0) {
     return [makeSectionFromText("", DEFAULT_CONTENT_BG_THEME)];
   }
@@ -66,9 +60,10 @@ function fromValue(
 
 // Saved slides are always trimmed — hidden whitespace stays internal only.
 // Empty bodies are dropped, and the themes array is filtered in lockstep.
-function toValueAndThemes(
-  sections: Section[],
-): { value: string[]; themes: ContentBgThemeId[] } {
+function toValueAndThemes(sections: Section[]): {
+  value: string[];
+  themes: ContentBgThemeId[];
+} {
   const value: string[] = [];
   const themes: ContentBgThemeId[] = [];
   for (const s of sections) {
@@ -216,8 +211,7 @@ export default function UnifiedEditor({
 
       // Cursor = position in new body corresponding to the old end of
       // prevSection.body in the merged full text.
-      const oldEndInFull =
-        prevSection.leading.length + prevSection.body.length;
+      const oldEndInFull = prevSection.leading.length + prevSection.body.length;
       const cursorPos = Math.max(0, oldEndInFull - parts.leading.length);
 
       const next = [...sections];

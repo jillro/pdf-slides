@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { TextSegment, TextStyle } from "../lib/rich-text-parser";
+import { NEAR_WHITE, ACCENT, DARK_HIGHLIGHT } from "../lib/colors";
 
 interface RichContentRendererProps {
   segments: TextSegment[];
@@ -16,6 +17,7 @@ interface RichContentRendererProps {
   boldColor?: string;
   bgHighlightColor?: string;
   fontWeight?: string;
+  letterSpacing?: number;
 }
 
 type PositionedWord = {
@@ -159,10 +161,11 @@ export default function RichContentRenderer({
   fontSize,
   lineHeight,
   fontFamily,
-  normalColor = "white",
-  boldColor = "#ffd9af",
-  bgHighlightColor = "#1C1C1C",
+  normalColor = NEAR_WHITE,
+  boldColor = ACCENT,
+  bgHighlightColor = DARK_HIGHLIGHT,
   fontWeight = "500",
+  letterSpacing = 0,
 }: RichContentRendererProps) {
   const { positioned } = useMemo(() => {
     const words = tokenize(segments);
@@ -198,6 +201,7 @@ export default function RichContentRenderer({
           fontSize={fontSize}
           fontFamily={fontFamily}
           fontStyle={word.style === "bold" ? "bold" : fontWeight}
+          letterSpacing={letterSpacing}
         />
       ))}
     </Group>

@@ -14,8 +14,7 @@ export async function waitForSaveComplete(page: Page) {
   await page.waitForTimeout(1200);
 
   // Then wait for any ⏳ indicators to disappear (save completed)
-  await page.waitForFunction(
-    () => !document.body.textContent?.includes("⏳"),
-    { timeout: 5000 },
-  );
+  await page.waitForFunction(() => !document.body.textContent?.includes("⏳"), {
+    timeout: 5000,
+  });
 }

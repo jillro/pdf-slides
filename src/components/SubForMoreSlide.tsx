@@ -6,6 +6,7 @@ import type Konva from "konva";
 import { Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
+import { NEAR_WHITE, ACCENT, OVERLAY_COLOR } from "../lib/colors";
 
 export default function SubForMoreSlide(props: {
   backgroundImg?: HTMLImageElement; // Pre-blurred image for background
@@ -66,7 +67,7 @@ export default function SubForMoreSlide(props: {
           y={0}
           width={props.canvasWidth}
           height={props.canvasHeight}
-          fill={`rgba(17,17,17,${overlayOpacity})`}
+          fill={`rgba(${OVERLAY_COLOR},${overlayOpacity})`}
         />
 
         <Text
@@ -76,11 +77,13 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={82}
           fontStyle={"500"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          lineHeight={1.1}
+          letterSpacing={-1.5}
         />
 
         <Text
@@ -90,16 +93,17 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={72}
           fontStyle={"500"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          letterSpacing={-1}
         />
 
         <Line
           points={[150, 565 + yOffset, 450, 565 + yOffset]}
-          stroke={"white"}
+          stroke={NEAR_WHITE}
         />
         <Line
           points={[
@@ -108,7 +112,7 @@ export default function SubForMoreSlide(props: {
             props.canvasWidth - 450,
             565 + yOffset,
           ]}
-          stroke={"white"}
+          stroke={NEAR_WHITE}
         />
 
         <Text
@@ -118,11 +122,12 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={72}
           fontStyle={"500"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          letterSpacing={-1}
         />
         <Text
           text={"partidesfemmes.fr"}
@@ -131,11 +136,12 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 150 * 2}
-          fill={"white"}
+          fill={NEAR_WHITE}
           wrap={"word"}
           fontSize={72}
           fontStyle={"bold"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          letterSpacing={-1}
         />
         <KImage
           image={logo}
@@ -151,12 +157,13 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 200 * 2}
-          fill={"#ffd9af"}
+          fill={ACCENT}
           lineHeight={1.1}
           wrap={"word"}
           fontSize={50}
           fontStyle={"500"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          letterSpacing={0.5}
         />
         <Text
           text={"Abonne-toi !"}
@@ -165,11 +172,12 @@ export default function SubForMoreSlide(props: {
           align={"center"}
           ref={contentRef}
           width={props.canvasWidth - 200 * 2}
-          fill={"#ffd9af"}
+          fill={ACCENT}
           wrap={"word"}
           fontSize={50}
           fontStyle={"bold"}
           fontFamily={"Atkinson Hyperlegible Next"}
+          letterSpacing={0.5}
         />
       </Layer>
     </Stage>

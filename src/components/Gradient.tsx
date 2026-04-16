@@ -1,6 +1,7 @@
 "use client";
 
 import { Rect } from "react-konva";
+import { GRADIENT_COLOR } from "../lib/colors";
 
 export default function Gradient(props: {
   position: "top" | "bottom";
@@ -10,8 +11,9 @@ export default function Gradient(props: {
 }) {
   const { position, height, maxOpacity = 1, canvasHeight } = props;
 
-  // Helper to create rgba with scaled opacity
-  const rgba = (opacity: number) => `rgba(0,0,0,${opacity * maxOpacity})`;
+  // Helper to create rgba with scaled opacity (warm-tinted near-black)
+  const rgba = (opacity: number) =>
+    `rgba(${GRADIENT_COLOR},${opacity * maxOpacity})`;
 
   return (
     <Rect
@@ -38,7 +40,7 @@ export default function Gradient(props: {
         0.95,
         rgba(0.1),
         1,
-        "rgba(0,0,0,0)",
+        `rgba(${GRADIENT_COLOR},0)`,
       ]}
     />
   );
