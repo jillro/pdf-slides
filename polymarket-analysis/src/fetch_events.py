@@ -80,6 +80,7 @@ def parse_market(m: dict) -> dict | None:
         "id": m["id"],
         "question": m.get("question", ""),
         "yesTokenId": token_ids[0],
+        "noTokenId": token_ids[1],
         "finalYesPrice": final_yes,
         "closedTime": m.get("closedTime"),
     }

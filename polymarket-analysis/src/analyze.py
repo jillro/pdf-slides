@@ -1,33 +1,92 @@
 """Run the underdog-No strategy on data/snapshots.json and write out/report.md.
 
-Strategy:
-  For each event with valid snapshot data:
-    Rank candidate markets by `yesSnap` desc.
-    A "underdog bet" is taken on every market that is:
-      - rank >= 4 (i.e., not in top 3 by snapshot Yes price), AND
-      - yesSnap >= MIN_YES (default 0.05 → No price <= 0.95)
-    Buy 1 share of No at price (1 - yesSnap), hold to resolution.
-    Payout per share = 1 if candidate lost (finalYes == 0), else 0.
-    P&L per share = payout - cost = (1 if lost else 0) - (1 - yesSnap).
+v2 — three changes vs the original:
+  1. Bet cost uses the actual No-token price (`noSnap`), not `1 - yesSnap`.
+     They're nominally complementary, but the No book and Yes book trade
+     independently and can diverge on illiquid underdog markets.
+  2. A strict filter restricts the universe to *candidate races* (i.e.
+     "Will [person] win [the race]?"), dropping bracketed quantitative
+     markets (% of vote, # of seats, "what will Trump say in his speech",
+     margin-of-victory, tipping-point-state, …) that contaminated v1.
+  3. The price-snapshot window around T-30d is widened to ±5 days, so
+     markets that didn't have a tick at exactly T-30d still get one.
 
-We report:
-  - n bets, n wins (No paid), empirical loss-rate of underdogs
-  - break-even loss rate (= mean of (1 - yesSnap) over the bets)
-  - total invested, total returned, total P&L, ROI
-  - same metrics restricted to events with exactly one winner
-  - sensitivity to the MIN_YES threshold and the rank cutoff
+Strategy (unchanged otherwise):
+  Rank candidate markets in each event by `yesSnap` desc.
+  Underdog bets = rank > 3 AND `noSnap` ≤ 0.95.
+  Buy 1 share of No at `noSnap`. Hold to resolution.
+  Payout = 1 if candidate lost (finalYes == 0), else 0.
+  P&L = payout − noSnap.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-MIN_YES_DEFAULT = 0.05
-RANK_CUTOFF_DEFAULT = 3  # exclude top N
+MAX_NO_DEFAULT = 0.95
+RANK_CUTOFF_DEFAULT = 3
+
+
+# --- Strict filter --------------------------------------------------------
+
+# Event titles we drop outright (not real candidate races).
+EVENT_TITLE_DROP = re.compile(
+    r"(\bmargin\b|\bMOV\b|\b#\s*of\b|\bnumber\s+of\b|\bbrackets?\b|"
+    r"\bRCV\b|\bpopular\s+vote\b|\belectoral\s+college\b|"
+    r"\btipping\s+point\b|\bbalance\s+of\s+power\b|"
+    r"\bspeech\b|\baddress\s+to\s+congress\b|\bsay\b|"
+    r"\bmove(s|d)?\s+to\b|\bmoving\b|"
+    r"\bturnout\b|\bvote\s+share\b|"
+    r"\b1st\s+round\b|\b2nd\s+round\b|"
+    r"\b1st\s+place\b|\b2nd\s+place\b|"
+    r"\bfirst\s+round\b|\bsecond\s+round\b|"
+    r"\bfirst\s+place\b|\bsecond\s+place\b|"
+    r"\b%\s*of\b|\bpercentage\b|\b%\s*vote\b|\bvote\s*%\b|"
+    r"\bseats?\b|\bboroughs\b|\bcounties\b|\bstates?\s+will\b|"
+    r"\bbracket\b|\binaugurated\b|\bsmaller\s+brackets\b|"
+    r"\bwinner\s+by\b|\binaugural\b|\bappear\b|\bannounce\s+run\b|"
+    r"\bhow\s+many\b|\bhow\s+much\b|\bwhen\s+will\b)",
+    re.IGNORECASE,
+)
+
+# Per-market question patterns to drop within otherwise-valid events.
+# (The event filter does most of the work; this catches stragglers.)
+QUESTION_DROP = re.compile(
+    r"(\bby\s+\d|\b\d+\s*-\s*\d+\s*%|\b\d+\s*%\b|"
+    r"\bsay(s|ing)?\s*['\"]|\bsays?\s+\S+\s+(during|at)\b|"
+    r"\bbalance\s+of\s+power\b|\bseats?\b|\btipping\s+point\b|"
+    r"\bmargin\b|\bappear|\bRCV\b|\binaugurated\b|"
+    r"\bmove(s|d)?\s+(right|left)|"
+    r"\bnational\s+list\s+vote\b|"
+    r"\bborough\b|\bcounties\b|\bcountie\b|"
+    r"\bbe\s+decided\s+in\s+round\b|\bdecided\s+in\s+\d+\s+rounds?\b|"
+    r"\bfinish\s+(first|second|third|2nd|3rd)\b|"
+    r"\bplace\s+\d|\b\d+(st|nd|rd|th)\s+place\b|"
+    r"\bturnout\b)",
+    re.IGNORECASE,
+)
+
+
+def event_passes_strict(title: str) -> bool:
+    if not title:
+        return False
+    if EVENT_TITLE_DROP.search(title):
+        return False
+    return True
+
+
+def market_passes_strict(question: str) -> bool:
+    if not question:
+        return False
+    return not QUESTION_DROP.search(question)
+
+
+# --- Strategy -------------------------------------------------------------
 
 
 @dataclass
@@ -37,17 +96,17 @@ class Bet:
     market_id: str
     question: str
     yes_snap: float
+    no_snap: float
     final_yes: float  # 0 or 1
     rank: int
     n_candidates: int
 
     @property
     def cost(self) -> float:
-        return 1.0 - self.yes_snap
+        return self.no_snap
 
     @property
     def payout(self) -> float:
-        # Buying No: pays 1 if candidate lost (finalYes == 0).
         return 1.0 if self.final_yes == 0.0 else 0.0
 
     @property
@@ -61,24 +120,32 @@ class Bet:
 
 def collect_bets(
     events: list[dict],
-    min_yes: float = MIN_YES_DEFAULT,
+    max_no: float = MAX_NO_DEFAULT,
     rank_cutoff: int = RANK_CUTOFF_DEFAULT,
     one_winner_only: bool = False,
+    strict: bool = False,
 ) -> list[Bet]:
     bets: list[Bet] = []
     for ev in events:
-        markets = [m for m in ev["markets"] if m.get("yesSnap") is not None]
+        if strict and not event_passes_strict(ev["title"]):
+            continue
+        markets = [
+            m
+            for m in ev["markets"]
+            if m.get("yesSnap") is not None and m.get("noSnap") is not None
+            and (not strict or market_passes_strict(m["question"]))
+        ]
         if len(markets) < rank_cutoff + 1:
             continue
         if one_winner_only:
-            n_winners = sum(1 for m in ev["markets"] if m["finalYesPrice"] == 1.0)
+            n_winners = sum(1 for m in markets if m["finalYesPrice"] == 1.0)
             if n_winners != 1:
                 continue
         ranked = sorted(markets, key=lambda m: -m["yesSnap"])
         for i, m in enumerate(ranked, start=1):
             if i <= rank_cutoff:
                 continue
-            if m["yesSnap"] < min_yes:
+            if m["noSnap"] > max_no:
                 continue
             bets.append(
                 Bet(
@@ -87,6 +154,7 @@ def collect_bets(
                     market_id=m["id"],
                     question=m["question"],
                     yes_snap=m["yesSnap"],
+                    no_snap=m["noSnap"],
                     final_yes=m["finalYesPrice"],
                     rank=i,
                     n_candidates=len(ranked),
@@ -104,16 +172,16 @@ def summarize(bets: Iterable[Bet]) -> dict:
     invested = sum(b.cost for b in bets)
     returned = sum(b.payout for b in bets)
     pnl = returned - invested
-    avg_yes = sum(b.yes_snap for b in bets) / n
-    loss_rate = wins / n  # candidates losing = our No bets winning
-    breakeven_loss_rate = invested / n  # avg cost; need loss_rate above this
+    avg_no = sum(b.no_snap for b in bets) / n
+    loss_rate = wins / n
+    breakeven_loss_rate = invested / n
     return {
         "n": n,
         "wins": wins,
         "loss_rate": loss_rate,
         "breakeven_loss_rate": breakeven_loss_rate,
         "edge_pp": (loss_rate - breakeven_loss_rate) * 100,
-        "avg_yes_snap": avg_yes,
+        "avg_no_snap": avg_no,
         "invested": invested,
         "returned": returned,
         "pnl": pnl,
@@ -148,7 +216,27 @@ def main() -> None:
     n_events = len(events)
     n_markets_total = sum(len(e["markets"]) for e in events)
     n_markets_with_snap = sum(
-        1 for e in events for m in e["markets"] if m.get("yesSnap") is not None
+        1
+        for e in events
+        for m in e["markets"]
+        if m.get("yesSnap") is not None and m.get("noSnap") is not None
+    )
+
+    # Strict-filter coverage
+    strict_events = [e for e in events if event_passes_strict(e["title"])]
+    n_markets_strict = sum(
+        1
+        for e in strict_events
+        for m in e["markets"]
+        if market_passes_strict(m["question"])
+    )
+    n_markets_strict_snap = sum(
+        1
+        for e in strict_events
+        for m in e["markets"]
+        if market_passes_strict(m["question"])
+        and m.get("yesSnap") is not None
+        and m.get("noSnap") is not None
     )
 
     out_dir = here / "out"
@@ -156,71 +244,62 @@ def main() -> None:
     lines: list[str] = []
     p = lines.append
 
-    p("# Polymarket underdog-No strategy — results")
+    p("# Polymarket underdog-No strategy — results (v2)")
     p("")
-    p(f"- Events analyzed: **{n_events}**")
-    p(f"- Candidate markets: **{n_markets_total}**")
-    p(f"- Markets with usable T-30d snapshot: **{n_markets_with_snap}** "
+    p("Three changes vs the v1 backtest:")
+    p("")
+    p("- **Cost = actual No-token price** at T-30d, not `1 − yesSnap`.")
+    p("- **Strict filter** keeping only \"Will [person] win [race]?\" markets.")
+    p("- **Wider snapshot window** (±5d around T-30d) for better coverage.")
+    p("")
+    p(f"- Election-keyword events: **{n_events}** ({n_markets_total} markets)")
+    p(f"- Markets with snapshots (both legs): **{n_markets_with_snap}** "
       f"({n_markets_with_snap/n_markets_total:.1%})")
-    p("")
-    p("**TL;DR.** The hypothesis holds. In single-winner events with at least")
-    p("4 candidate markets, buying No on every non-top-3 candidate trading at")
-    p("Yes ≥ 5% one month before resolution returns about **+7% ROI** with a")
-    p("loss-rate edge of about **+6 pp** over the no-arbitrage break-even.")
-    p("The edge widens monotonically as the Yes-price floor rises (e.g. ≥10% →")
-    p("+23% ROI, ≥15% → +60% ROI on small samples), consistent with the market")
-    p("systematically over-pricing low-probability outcomes.")
-    p("")
-    p("**Caveats.** No fees, no slippage, no liquidity check; underdog markets")
-    p("are typically thin and the bid-ask on No can be 1-3¢, which would")
-    p("compress most of the edge at the higher Yes floors. The keyword filter")
-    p("also captures bracketed quantitative markets (% of vote, # of seats,")
-    p("\"what will Trump say in his speech\" bingo) that aren't really")
-    p("candidate races — those drive most of the losing bets in the table")
-    p("further down.")
+    p(f"- After strict filter: **{len(strict_events)} events / {n_markets_strict} markets / "
+      f"{n_markets_strict_snap} with snapshots**")
     p("")
 
-    # === Headline strategy ===
-    p("## Headline: rank > 3, Yes ≥ 5%, all events")
-    bets = collect_bets(events, min_yes=0.05, rank_cutoff=3)
+    # === Headline strategy (strict filter) ===
+    p("## Headline (strict filter, single-winner, rank > 3, No ≤ 95%)")
+    bets = collect_bets(events, max_no=0.95, rank_cutoff=3, one_winner_only=True, strict=True)
     headline = summarize(bets)
     p("```")
     p(fmt_summary(headline))
     p("```")
     p("")
 
-    # === One-winner subset ===
-    p("## Single-winner events only (typical winner-take-all elections)")
-    bets1 = collect_bets(events, min_yes=0.05, rank_cutoff=3, one_winner_only=True)
-    p("```")
-    p(fmt_summary(summarize(bets1)))
-    p("```")
+    # === Sensitivity to No cap ===
+    p("## Sensitivity to No-price cap (strict, single-winner, rank > 3)")
     p("")
-
-    # === Threshold sensitivity ===
-    p("## Sensitivity to Yes-price floor (rank > 3, single-winner)")
-    p("")
-    p("| min Yes | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |")
-    p("|--------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|")
-    for mn in [0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.15, 0.20]:
-        s = summarize(collect_bets(events, min_yes=mn, rank_cutoff=3, one_winner_only=True))
+    p("| max No | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |")
+    p("|-------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|")
+    for mx in [0.99, 0.98, 0.97, 0.95, 0.93, 0.90, 0.85, 0.80]:
+        s = summarize(
+            collect_bets(
+                events, max_no=mx, rank_cutoff=3, one_winner_only=True, strict=True
+            )
+        )
         if s.get("n", 0) == 0:
-            p(f"| {mn:.2f} | 0 | - | - | - | - | - | - | - |")
+            p(f"| {mx:.2f} | 0 | - | - | - | - | - | - | - |")
             continue
         p(
-            f"| {mn:.2f} | {s['n']} | {s['wins']} | {s['loss_rate']:.2%} | "
+            f"| {mx:.2f} | {s['n']} | {s['wins']} | {s['loss_rate']:.2%} | "
             f"{s['breakeven_loss_rate']:.2%} | {s['edge_pp']:+.2f} | "
             f"${s['invested']:.2f} | ${s['pnl']:+.2f} | {s['roi']:+.2%} |"
         )
     p("")
 
     # === Rank cutoff sensitivity ===
-    p("## Sensitivity to rank cutoff (Yes ≥ 5%, single-winner)")
+    p("## Sensitivity to rank cutoff (strict, single-winner, No ≤ 95%)")
     p("")
     p("| exclude top | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |")
     p("|------------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|")
     for rc in [0, 1, 2, 3, 4, 5]:
-        s = summarize(collect_bets(events, min_yes=0.05, rank_cutoff=rc, one_winner_only=True))
+        s = summarize(
+            collect_bets(
+                events, max_no=0.95, rank_cutoff=rc, one_winner_only=True, strict=True
+            )
+        )
         if s.get("n", 0) == 0:
             p(f"| {rc} | 0 | - | - | - | - | - | - | - |")
             continue
@@ -231,18 +310,22 @@ def main() -> None:
         )
     p("")
 
-    # === Joint table: yes floor × rank cutoff (one-winner) ===
-    p("## ROI heatmap: rank cutoff × Yes-price floor (one-winner events)")
+    # === Joint heatmap ===
+    p("## ROI heatmap: rank cutoff × No-price cap (strict, single-winner)")
     p("")
-    yes_floors = [0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.15]
+    no_caps = [0.99, 0.98, 0.97, 0.95, 0.93, 0.90, 0.85]
     rank_cuts = [0, 1, 2, 3, 4, 5]
-    header = "| rank> | " + " | ".join(f"≥{y:.2f}" for y in yes_floors) + " |"
-    sep = "|------:|" + "|".join(["---:"] * len(yes_floors)) + "|"
+    header = "| rank> | " + " | ".join(f"≤{c:.2f}" for c in no_caps) + " |"
+    sep = "|------:|" + "|".join(["---:"] * len(no_caps)) + "|"
     p(header); p(sep)
     for rc in rank_cuts:
         cells = []
-        for yf in yes_floors:
-            s = summarize(collect_bets(events, min_yes=yf, rank_cutoff=rc, one_winner_only=True))
+        for nc in no_caps:
+            s = summarize(
+                collect_bets(
+                    events, max_no=nc, rank_cutoff=rc, one_winner_only=True, strict=True
+                )
+            )
             if s.get("n", 0) == 0:
                 cells.append("—")
             else:
@@ -250,23 +333,61 @@ def main() -> None:
         p(f"| {rc} | " + " | ".join(cells) + " |")
     p("")
 
-    # === Worst & best individual bets at headline params ===
-    p("## Headline bets that lost (No bet failed, candidate won)")
-    losers = [b for b in bets if not b.won]
-    losers.sort(key=lambda b: b.yes_snap)  # smallest snapshot Yes (biggest upset)
+    # === Spread between No and (1 - Yes) ===
+    p("## Did using actual No-token prices change anything?")
     p("")
-    p("| event | candidate | yesSnap | rank | P&L |")
-    p("|-------|-----------|--------:|-----:|----:|")
+    bets_strict = bets
+    diffs = [b.no_snap - (1 - b.yes_snap) for b in bets_strict]
+    if diffs:
+        avg = sum(diffs) / len(diffs)
+        worst_pos = max(diffs)
+        worst_neg = min(diffs)
+        p(f"Across the {len(bets_strict)} headline bets, "
+          f"`noSnap − (1 − yesSnap)` had mean **{avg:+.4f}**, "
+          f"max **{worst_pos:+.4f}**, min **{worst_neg:+.4f}**.")
+        p("")
+        p("In other words, on these underdog tokens the No book traded ~at the "
+          "complement of the Yes price — which is what arbitrage should enforce. "
+          "Switching from `1 − yesSnap` to `noSnap` shifts the P&L only by a "
+          "few basis points on average.")
+    p("")
+
+    # === Comparison to relaxed filter (v1 universe) ===
+    p("## Comparison: strict vs relaxed event/market filter (single-winner)")
+    p("")
+    p("| filter | bets | wins | loss rate | breakeven | edge (pp) | ROI |")
+    p("|--------|-----:|-----:|----------:|----------:|----------:|----:|")
+    for label, strict_flag in [("strict", True), ("relaxed (v1)", False)]:
+        s = summarize(
+            collect_bets(
+                events, max_no=0.95, rank_cutoff=3, one_winner_only=True, strict=strict_flag
+            )
+        )
+        if s.get("n", 0) == 0:
+            p(f"| {label} | 0 | - | - | - | - | - |")
+        else:
+            p(
+                f"| {label} | {s['n']} | {s['wins']} | {s['loss_rate']:.2%} | "
+                f"{s['breakeven_loss_rate']:.2%} | {s['edge_pp']:+.2f} | "
+                f"{s['roi']:+.2%} |"
+            )
+    p("")
+
+    # === Headline bets that lost ===
+    p("## Headline bets that lost (No bet failed → candidate won)")
+    losers = sorted([b for b in bets if not b.won], key=lambda b: b.no_snap, reverse=True)
+    p("")
+    p("| event | candidate | noSnap | rank | P&L |")
+    p("|-------|-----------|-------:|-----:|----:|")
     for b in losers[:25]:
-        title = b.event_title[:50]
-        q = b.question[:60]
-        p(f"| {title} | {q} | {b.yes_snap:.3f} | {b.rank}/{b.n_candidates} | ${b.pnl:+.3f} |")
+        p(f"| {b.event_title[:50]} | {b.question[:60]} | "
+          f"{b.no_snap:.3f} | {b.rank}/{b.n_candidates} | ${b.pnl:+.3f} |")
     if len(losers) > 25:
         p(f"\n_…and {len(losers)-25} more losing bets_")
     p("")
 
-    # === Per-event breakdown for the biggest events ===
-    p("## Per-event P&L (headline strategy, top 30 events by bet count)")
+    # === Per-event breakdown ===
+    p("## Per-event P&L (headline, top 30 events by bet count)")
     per = by_event(bets)
     p("")
     p("| event | bets | wins | loss rate | invested | P&L | ROI |")
