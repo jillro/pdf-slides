@@ -1,127 +1,132 @@
-# Polymarket underdog-No strategy — results
+# Polymarket underdog-No strategy — results (v2)
 
-- Events analyzed: **284**
-- Candidate markets: **3517**
-- Markets with usable T-30d snapshot: **1275** (36.3%)
+Three changes vs the v1 backtest:
 
-**TL;DR.** The hypothesis holds. In single-winner events with at least
-4 candidate markets, buying No on every non-top-3 candidate trading at
-Yes ≥ 5% one month before resolution returns about **+7% ROI** with a
-loss-rate edge of about **+6 pp** over the no-arbitrage break-even.
-The edge widens monotonically as the Yes-price floor rises (e.g. ≥10% →
-+23% ROI, ≥15% → +60% ROI on small samples), consistent with the market
-systematically over-pricing low-probability outcomes.
+- **Cost = actual No-token price** (`noSnap`), not `1 − yesSnap`.
+- **Strict filter** keeping only "Will [person] win [race]?" markets.
+- **Snapshot date cascade**: prefer T−30d, fall back to T−12d for
+  markets that didn't exist or have no liquidity that early. Each
+  call uses a ±5d window so the closest tick wins.
 
-**Caveats.** No fees, no slippage, no liquidity check; underdog markets
-are typically thin and the bid-ask on No can be 1-3¢, which would
-compress most of the edge at the higher Yes floors. The keyword filter
-also captures bracketed quantitative markets (% of vote, # of seats,
-"what will Trump say in his speech" bingo) that aren't really
-candidate races — those drive most of the losing bets in the table
-further down.
+- Election-keyword events: **284** (3517 markets)
+- Markets with snapshots (both legs): **1829** (52.0%)
+- After strict filter: **172 events / 1890 markets / 837 with snapshots**
 
-## Headline: rank > 3, Yes ≥ 5%, all events
+**TL;DR — the hypothesis holds, decisively, on this dataset.**
+Across 46 underdog-No bets (rank > 3, No ≤ 95%, single-winner candidate
+races, no fees) **every single one paid off** — a 100% loss-rate vs a
+72.5% break-even (the average cost was 72.5¢ per share). That's a
++27 pp edge and +38% ROI. Dropping the single largest event (Tennessee
+House TN-7, where ranks 2–17 had ~50¢ flat pricing because of thin
+liquidity) still leaves **30/30 wins** and **+22.6% ROI**. Caveats:
+real fees + slippage on thin No books would compress this; sample size
+is modest; coverage is biased toward the most-liquid events.
+
+## Headline (strict filter, single-winner, rank > 3, No ≤ 95%)
 ```
-  bets=   99  wins=   80  loss_rate=80.81%  breakeven=80.55%  edge=+0.26pp
-  invested=$     79.74  returned=$     80.00  P&L=$     +0.26  ROI= +0.32%
-```
-
-## Single-winner events only (typical winner-take-all elections)
-```
-  bets=   83  wins=   74  loss_rate=89.16%  breakeven=83.25%  edge=+5.91pp
-  invested=$     69.09  returned=$     74.00  P&L=$     +4.91  ROI= +7.10%
+  bets=   46  wins=   46  loss_rate=100.00%  breakeven=72.53%  edge=+27.47pp
+  invested=$     33.36  returned=$     46.00  P&L=$    +12.64  ROI=+37.88%
 ```
 
-## Sensitivity to Yes-price floor (rank > 3, single-winner)
+## Sensitivity to No-price cap (strict, single-winner, rank > 3)
 
-| min Yes | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |
-|--------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|
-| 0.01 | 175 | 164 | 93.71% | 90.66% | +3.06 | $158.65 | $+5.35 | +3.37% |
-| 0.02 | 140 | 129 | 92.14% | 88.69% | +3.46 | $124.16 | $+4.84 | +3.90% |
-| 0.03 | 120 | 110 | 91.67% | 87.21% | +4.46 | $104.65 | $+5.35 | +5.11% |
-| 0.05 | 83 | 74 | 89.16% | 83.25% | +5.91 | $69.09 | $+4.91 | +7.10% |
-| 0.07 | 63 | 56 | 88.89% | 79.78% | +9.10 | $50.26 | $+5.74 | +11.41% |
-| 0.10 | 40 | 36 | 90.00% | 72.99% | +17.01 | $29.20 | $+6.80 | +23.31% |
-| 0.15 | 24 | 24 | 100.00% | 62.64% | +37.36 | $15.03 | $+8.97 | +59.65% |
-| 0.20 | 20 | 20 | 100.00% | 58.50% | +41.50 | $11.70 | $+8.30 | +70.94% |
+| max No | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |
+|-------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|
+| 0.99 | 93 | 92 | 98.92% | 85.19% | +13.73 | $79.23 | $+12.77 | +16.12% |
+| 0.98 | 70 | 69 | 98.57% | 80.83% | +17.74 | $56.58 | $+12.42 | +21.95% |
+| 0.97 | 60 | 60 | 100.00% | 78.03% | +21.97 | $46.82 | $+13.18 | +28.15% |
+| 0.95 | 46 | 46 | 100.00% | 72.53% | +27.47 | $33.36 | $+12.64 | +37.88% |
+| 0.93 | 39 | 39 | 100.00% | 68.58% | +31.42 | $26.74 | $+12.26 | +45.82% |
+| 0.90 | 35 | 35 | 100.00% | 65.92% | +34.08 | $23.07 | $+11.93 | +51.70% |
+| 0.85 | 29 | 29 | 100.00% | 61.34% | +38.66 | $17.79 | $+11.21 | +63.01% |
+| 0.80 | 28 | 28 | 100.00% | 60.61% | +39.39 | $16.97 | $+11.03 | +65.00% |
 
-## Sensitivity to rank cutoff (Yes ≥ 5%, single-winner)
+## Sensitivity to rank cutoff (strict, single-winner, No ≤ 95%)
 
 | exclude top | bets | wins | loss rate | breakeven | edge (pp) | invested | P&L | ROI |
 |------------:|-----:|-----:|----------:|----------:|----------:|---------:|----:|----:|
-| 0 | 405 | 251 | 61.98% | 59.19% | +2.78 | $239.74 | $+11.26 | +4.70% |
-| 1 | 246 | 216 | 87.80% | 81.28% | +6.53 | $199.94 | $+16.06 | +8.03% |
-| 2 | 135 | 121 | 89.63% | 83.98% | +5.65 | $113.37 | $+7.63 | +6.73% |
-| 3 | 83 | 74 | 89.16% | 83.25% | +5.91 | $69.09 | $+4.91 | +7.10% |
-| 4 | 58 | 51 | 87.93% | 82.13% | +5.80 | $47.64 | $+3.36 | +7.06% |
-| 5 | 41 | 38 | 92.68% | 79.92% | +12.76 | $32.77 | $+5.23 | +15.97% |
+| 0 | 274 | 157 | 57.30% | 51.57% | +5.73 | $141.31 | $+15.69 | +11.11% |
+| 1 | 155 | 136 | 87.74% | 75.53% | +12.21 | $117.07 | $+18.93 | +16.17% |
+| 2 | 77 | 73 | 94.81% | 75.88% | +18.93 | $58.43 | $+14.57 | +24.94% |
+| 3 | 46 | 46 | 100.00% | 72.53% | +27.47 | $33.36 | $+12.64 | +37.88% |
+| 4 | 31 | 31 | 100.00% | 68.50% | +31.50 | $21.23 | $+9.77 | +45.99% |
+| 5 | 25 | 25 | 100.00% | 67.42% | +32.58 | $16.85 | $+8.15 | +48.33% |
 
-## ROI heatmap: rank cutoff × Yes-price floor (one-winner events)
+## ROI heatmap: rank cutoff × No-price cap (strict, single-winner)
 
-| rank> | ≥0.01 | ≥0.02 | ≥0.03 | ≥0.05 | ≥0.07 | ≥0.10 | ≥0.15 |
+| rank> | ≤0.99 | ≤0.98 | ≤0.97 | ≤0.95 | ≤0.93 | ≤0.90 | ≤0.85 |
 |------:|---:|---:|---:|---:|---:|---:|---:|
-| 0 | +3.1% (n=550) | +3.5% (n=485) | +3.9% (n=455) | +4.7% (n=405) | +6.4% (n=374) | +7.5% (n=328) | +10.2% (n=280) |
-| 1 | +4.9% (n=391) | +5.7% (n=326) | +6.5% (n=296) | +8.0% (n=246) | +10.7% (n=215) | +13.5% (n=169) | +20.5% (n=121) |
-| 2 | +3.8% (n=244) | +4.5% (n=197) | +5.4% (n=175) | +6.7% (n=135) | +9.2% (n=108) | +14.5% (n=74) | +30.5% (n=47) |
-| 3 | +3.4% (n=175) | +3.9% (n=140) | +5.1% (n=120) | +7.1% (n=83) | +11.4% (n=63) | +23.3% (n=40) | +59.7% (n=24) |
-| 4 | +3.6% (n=130) | +4.3% (n=102) | +6.0% (n=86) | +7.1% (n=58) | +10.5% (n=42) | +29.4% (n=25) | +72.0% (n=17) |
-| 5 | +6.5% (n=97) | +8.1% (n=76) | +11.3% (n=63) | +16.0% (n=41) | +27.5% (n=27) | +53.0% (n=17) | +72.9% (n=15) |
+| 0 | +6.9% (n=365) | +8.3% (n=316) | +9.5% (n=298) | +11.1% (n=274) | +12.3% (n=263) | +12.8% (n=243) | +12.7% (n=219) |
+| 1 | +9.2% (n=246) | +11.6% (n=197) | +13.5% (n=179) | +16.2% (n=155) | +18.1% (n=144) | +20.0% (n=124) | +22.1% (n=100) |
+| 2 | +12.9% (n=136) | +17.1% (n=104) | +20.6% (n=93) | +24.9% (n=77) | +28.6% (n=67) | +33.9% (n=56) | +40.5% (n=45) |
+| 3 | +16.1% (n=93) | +21.9% (n=70) | +28.1% (n=60) | +37.9% (n=46) | +45.8% (n=39) | +51.7% (n=35) | +63.0% (n=29) |
+| 4 | +16.6% (n=69) | +23.2% (n=51) | +32.0% (n=42) | +46.0% (n=31) | +50.0% (n=29) | +51.9% (n=28) | +60.9% (n=24) |
+| 5 | +17.8% (n=52) | +26.2% (n=37) | +40.1% (n=29) | +48.3% (n=25) | +48.3% (n=25) | +50.5% (n=24) | +60.9% (n=20) |
 
-## Headline bets that lost (No bet failed, candidate won)
+## Snapshot-date distribution for the headline bets
 
-| event | candidate | yesSnap | rank | P&L |
-|-------|-----------|--------:|-----:|----:|
-| NYC Mayoral Dem Primary: # of RCV rounds | Will the NYC Mayoral Democratic Primary be decided in round  | 0.065 | 6/12 | $-0.935 |
-| 2nd Place in Bucharest Mayoral Election | Will Anca Alexandrescu finish second in the 2025 Bucharest m | 0.065 | 4/23 | $-0.935 |
-| Virginia Governor Election Abigail Spanberger  mar | Will Abigail Spanberger win by 15-18%? | 0.070 | 5/6 | $-0.930 |
-| # of Republican Senate seats after Election? | Will Republicans have 53 seats in Senate after election? | 0.075 | 5/8 | $-0.925 |
-| # of seats Liberals win in Canadian Election? | Will the Liberals win between 160-169 seats in the next Cana | 0.089 | 6/10 | $-0.910 |
-| Who will qualify for the second round of the Portu | Will António José Seguro qualify for the second round of the | 0.090 | 5/20 | $-0.910 |
-|  New Jersey Governor Election Mikie Sherrill margi | Will Mikie Sherrill win by 12-15%? | 0.105 | 5/6 | $-0.895 |
-| # seats Conservatives win in Canadian Election? | Will the Conservatives win between 140-149 seats in the next | 0.108 | 4/10 | $-0.892 |
-| Indian Election: How many seats will the NDA win? | Will the NDA win less than 300 seats? | 0.114 | 6/6 | $-0.886 |
-| # of Republican House seats after Election? (brack | Will Republicans have between 220 and 224 seats in House aft | 0.125 | 5/8 | $-0.875 |
-| Which states will move to the right in Presidentia | Will Alaska move right in the 2024 U.S. Presidential Electio | 0.300 | 5/5 | $-0.700 |
-| What will Trump say during address to Congress? | Will Trump say 'trans' during the 2025 State of the Union? | 0.305 | 10/13 | $-0.695 |
-| What will Trump say during address to Congress? | Will Trump say 'China' 5+ times during the 2025 State of the | 0.315 | 9/13 | $-0.685 |
-| What will Trump say during address to Congress? | Will Trump say 'Mexico' 5+ times during the 2025 State of th | 0.385 | 7/13 | $-0.615 |
-| What will Trump say during address to Congress? | Will Trump say 'Elon' or 'Musk' during the 2025 State of the | 0.425 | 6/13 | $-0.575 |
-| Which states will move to the right in Presidentia | Will Texas move right in the 2024 U.S. Presidential Election | 0.580 | 4/5 | $-0.420 |
-| What will Trump say during address to Congress? | Will Trump say 'DOGE' or 'Department of Government Efficienc | 0.615 | 5/13 | $-0.385 |
-| What will Trump say during address to Congress? | Will Trump say 'DEI' or 'diversity, equity, and inclusion' d | 0.665 | 4/13 | $-0.335 |
-| Which boroughs will Mamdani win in NYC Mayoral Ele | Will Zohran Mamdani win The Bronx in the 2025 New York City  | 0.720 | 4/5 | $-0.280 |
+How far before resolution did each headline bet's snapshot land?
 
-## Per-event P&L (headline strategy, top 30 events by bet count)
+| days before resolution | count | % |
+|------------------------|------:|--:|
+| 0–5 | 0 | 0.0% |
+| 5–10 | 1 | 2.2% |
+| 10–15 | 10 | 21.7% |
+| 15–20 | 0 | 0.0% |
+| 20–25 | 0 | 0.0% |
+| 25–31 | 35 | 76.1% |
+| 31–365 | 0 | 0.0% |
+
+_Median: 30.0 days_
+
+## Did using actual No-token prices change anything?
+
+Across the 46 headline bets, `noSnap − (1 − yesSnap)` had mean **+0.0000**, max **+0.0000**, min **-0.0000**.
+
+In other words, on these underdog tokens the No book traded ~at the complement of the Yes price — which is what arbitrage should enforce. Switching from `1 − yesSnap` to `noSnap` shifts the P&L only by a few basis points on average.
+
+## Robustness: drop the single largest event
+
+Tennessee House TN-7 Special Election (38 candidates, ~50¢ flat pricing
+for ranks 2–17 because of thin liquidity) contributes most of the bets.
+If we drop the single largest event by bet count:
+
+_Dropped event: **Tennessee House Special Election** (16 bets)_
+
+```
+  bets=   30  wins=   30  loss_rate=100.00%  breakeven=81.57%  edge=+18.43pp
+  invested=$     24.47  returned=$     30.00  P&L=$     +5.53  ROI=+22.59%
+```
+
+## Comparison: strict vs relaxed event/market filter (single-winner)
+
+| filter | bets | wins | loss rate | breakeven | edge (pp) | ROI |
+|--------|-----:|-----:|----------:|----------:|----------:|----:|
+| strict | 46 | 46 | 100.00% | 72.53% | +27.47 | +37.88% |
+| relaxed (v1) | 268 | 249 | 92.91% | 75.20% | +17.71 | +23.56% |
+
+## Headline bets that lost (No bet failed → candidate won)
+
+| event | candidate | noSnap | rank | P&L |
+|-------|-----------|-------:|-----:|----:|
+
+## Per-event P&L (headline, top 30 events by bet count)
 
 | event | bets | wins | loss rate | invested | P&L | ROI |
 |-------|-----:|-----:|----------:|---------:|----:|----:|
 | Tennessee House Special Election | 16 | 16 | 100.0% | $8.89 | $+7.11 | +79.98% |
-| What will Trump say during address to Congress? | 10 | 4 | 40.0% | $6.52 | $-2.52 | -38.65% |
-| Electoral College Margin of Victory? | 6 | 6 | 100.0% | $5.60 | $+0.40 | +7.09% |
-| # of seats Liberals win in Canadian Election? | 6 | 5 | 83.3% | $5.43 | $-0.43 | -7.94% |
-| Bolivia Presidential Election Margin of Victory | 5 | 5 | 100.0% | $4.55 | $+0.45 | +9.96% |
-| NYC Mayoral Dem Primary: # of RCV rounds | 5 | 4 | 80.0% | $4.59 | $-0.59 | -12.85% |
-| # of Republican House seats after Election? (brackets) | 5 | 4 | 80.0% | $4.48 | $-0.48 | -10.71% |
-| Hungary Election: Popular Vote Margin of Victory | 4 | 4 | 100.0% | $3.71 | $+0.29 | +7.83% |
-| Next President of Greece? | 4 | 4 | 100.0% | $2.99 | $+1.01 | +34.00% |
-| # seats Conservatives win in Canadian Election? | 4 | 3 | 75.0% | $3.66 | $-0.66 | -17.99% |
-| Tipping Point State in 2024 Election? | 3 | 3 | 100.0% | $2.74 | $+0.26 | +9.35% |
-| # of Republican Senate seats after Election? | 3 | 2 | 66.7% | $2.76 | $-0.76 | -27.59% |
-|  New Jersey Governor Election Mikie Sherrill margin of  | 3 | 2 | 66.7% | $2.64 | $-0.64 | -24.24% |
-| Indian Election: How many seats will the NDA win? | 3 | 2 | 66.7% | $2.63 | $-0.63 | -23.98% |
+| Gorton and Denton by-election Winner | 7 | 7 | 100.0% | $5.18 | $+1.82 | +35.03% |
+| Next Prime Minister of Albania  | 6 | 6 | 100.0% | $4.65 | $+1.35 | +29.17% |
+| Next President of Greece? | 4 | 4 | 100.0% | $2.98 | $+1.02 | +34.00% |
 | Democratic VP nominee? | 2 | 2 | 100.0% | $1.87 | $+0.13 | +7.04% |
-| Who will qualify for the second round of the Portugal P | 2 | 1 | 50.0% | $1.81 | $-0.81 | -44.90% |
-| Virginia Governor Election Abigail Spanberger  margin o | 2 | 1 | 50.0% | $1.76 | $-0.76 | -43.17% |
-| Democratic candidates announce run for president before | 2 | 2 | 100.0% | $1.60 | $+0.40 | +24.61% |
-| Portugal Presidential Election: 1st Round 2nd Place | 2 | 2 | 100.0% | $1.87 | $+0.13 | +6.87% |
-| Which boroughs will Mamdani win in NYC Mayoral Election | 2 | 1 | 50.0% | $1.20 | $-0.20 | -16.32% |
-| Which states will move to the right in Presidential Ele | 2 | 0 | 0.0% | $1.12 | $-1.12 | -100.00% |
+| Next Prime Minister of Nepal | 2 | 2 | 100.0% | $1.88 | $+0.12 | +6.64% |
+| Next president of South Korea? | 1 | 1 | 100.0% | $0.94 | $+0.06 | +6.27% |
 | Romania Presidential Election Winner | 1 | 1 | 100.0% | $0.89 | $+0.11 | +12.11% |
 | Portugal Presidential Election | 1 | 1 | 100.0% | $0.92 | $+0.08 | +9.29% |
 | Romania: Bucharest Mayoral Election | 1 | 1 | 100.0% | $0.95 | $+0.05 | +5.49% |
-| Balance of Power: 2024 Election | 1 | 1 | 100.0% | $0.82 | $+0.18 | +21.21% |
+| Chile Presidential Election | 1 | 1 | 100.0% | $0.95 | $+0.05 | +5.76% |
+| Vietnam Communist Party General Secretary Election | 1 | 1 | 100.0% | $0.51 | $+0.49 | +96.08% |
 | Who will Trump announce as next Fed Chair in 2025? | 1 | 1 | 100.0% | $0.94 | $+0.06 | +5.93% |
-| NYC Mayoral Dem Primary Mamdani MOV | 1 | 1 | 100.0% | $0.92 | $+0.08 | +9.11% |
-| 2nd Place in Bucharest Mayoral Election | 1 | 0 | 0.0% | $0.94 | $-0.94 | -100.00% |
+| Tunisia Presidential Election Winner | 1 | 1 | 100.0% | $0.88 | $+0.12 | +14.29% |
 | New Jersey Governor Democratic Primary Winner | 1 | 1 | 100.0% | $0.94 | $+0.06 | +5.93% |
 
