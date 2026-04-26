@@ -1,4 +1,9 @@
-data/
+data/*.log
+data/events.json
 __pycache__/
 *.pyc
 .venv/
+
+# Keep the historical snapshots for reproducibility — Polymarket may not
+# always serve old price history.
+!data/snapshots.json

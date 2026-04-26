@@ -163,6 +163,22 @@ def main() -> None:
     p(f"- Markets with usable T-30d snapshot: **{n_markets_with_snap}** "
       f"({n_markets_with_snap/n_markets_total:.1%})")
     p("")
+    p("**TL;DR.** The hypothesis holds. In single-winner events with at least")
+    p("4 candidate markets, buying No on every non-top-3 candidate trading at")
+    p("Yes ≥ 5% one month before resolution returns about **+7% ROI** with a")
+    p("loss-rate edge of about **+6 pp** over the no-arbitrage break-even.")
+    p("The edge widens monotonically as the Yes-price floor rises (e.g. ≥10% →")
+    p("+23% ROI, ≥15% → +60% ROI on small samples), consistent with the market")
+    p("systematically over-pricing low-probability outcomes.")
+    p("")
+    p("**Caveats.** No fees, no slippage, no liquidity check; underdog markets")
+    p("are typically thin and the bid-ask on No can be 1-3¢, which would")
+    p("compress most of the edge at the higher Yes floors. The keyword filter")
+    p("also captures bracketed quantitative markets (% of vote, # of seats,")
+    p("\"what will Trump say in his speech\" bingo) that aren't really")
+    p("candidate races — those drive most of the losing bets in the table")
+    p("further down.")
+    p("")
 
     # === Headline strategy ===
     p("## Headline: rank > 3, Yes ≥ 5%, all events")
