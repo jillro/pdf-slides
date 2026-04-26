@@ -73,6 +73,12 @@ def main() -> None:
     last_save = time.time()
 
     for ev in events:
+        if not ev.get("endDate"):
+            for m in ev["markets"]:
+                done += 1
+                m.setdefault("yesSnap", None)
+                m.setdefault("yesSnapTs", None)
+            continue
         target_ts = snapshot_target_ts(ev["endDate"])
         for m in ev["markets"]:
             done += 1
