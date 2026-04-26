@@ -21,12 +21,22 @@ Strategy (unchanged otherwise):
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+
+
+def parse_iso_safe(s: str | None) -> dt.datetime | None:
+    if not s:
+        return None
+    try:
+        return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 MAX_NO_DEFAULT = 0.95
 RANK_CUTOFF_DEFAULT = 3
@@ -50,7 +60,14 @@ EVENT_TITLE_DROP = re.compile(
     r"\bseats?\b|\bboroughs\b|\bcounties\b|\bstates?\s+will\b|"
     r"\bbracket\b|\binaugurated\b|\bsmaller\s+brackets\b|"
     r"\bwinner\s+by\b|\binaugural\b|\bappear\b|\bannounce\s+run\b|"
-    r"\bhow\s+many\b|\bhow\s+much\b|\bwhen\s+will\b)",
+    r"\bhow\s+many\b|\bhow\s+much\b|\bwhen\s+will\b|"
+    # date-bucket / quantitative / non-candidate events that v2 still missed
+    r"\bwhat\s+day\b|\bwhich\s+day\b|"
+    r"\bclosest\s+state\b|\bclosest\s+states\b|"
+    r"\bswing\s+state\b|"
+    r"\bbattleground\b|"
+    r"\bwhat\s+(time|date|month|year)\b|"
+    r"\bbefore\s+\d{4}\b)",
     re.IGNORECASE,
 )
 
@@ -248,9 +265,11 @@ def main() -> None:
     p("")
     p("Three changes vs the v1 backtest:")
     p("")
-    p("- **Cost = actual No-token price** at T-30d, not `1 − yesSnap`.")
+    p("- **Cost = actual No-token price** (`noSnap`), not `1 − yesSnap`.")
     p("- **Strict filter** keeping only \"Will [person] win [race]?\" markets.")
-    p("- **Wider snapshot window** (±5d around T-30d) for better coverage.")
+    p("- **Snapshot date cascade**: prefer T−30d, fall back to T−12d for")
+    p("  markets that didn't exist or have no liquidity that early. Each")
+    p("  call uses a ±5d window so the closest tick wins.")
     p("")
     p(f"- Election-keyword events: **{n_events}** ({n_markets_total} markets)")
     p(f"- Markets with snapshots (both legs): **{n_markets_with_snap}** "
@@ -332,6 +351,42 @@ def main() -> None:
                 cells.append(f"{s['roi']:+.1%} (n={s['n']})")
         p(f"| {rc} | " + " | ".join(cells) + " |")
     p("")
+
+    # === Snapshot-date distribution (T-30d vs cascade fallback) ===
+    p("## Snapshot-date distribution for the headline bets")
+    p("")
+    p("How far before resolution did each headline bet's snapshot land?")
+    p("")
+    if bets:
+        # Need to look up snapTs and event endDate for each bet
+        ts_lookup = {}
+        for ev in events:
+            try:
+                ev_end = parse_iso_safe(ev.get("endDate"))
+            except Exception:
+                continue
+            for m in ev["markets"]:
+                if m.get("snapTs"):
+                    ts_lookup[m["id"]] = (m["snapTs"], ev_end)
+        deltas: list[float] = []
+        for b in bets:
+            if b.market_id in ts_lookup:
+                snap_ts, ev_end = ts_lookup[b.market_id]
+                if ev_end is None:
+                    continue
+                delta_days = (ev_end.timestamp() - snap_ts) / 86400
+                deltas.append(delta_days)
+        if deltas:
+            buckets = [(0, 5), (5, 10), (10, 15), (15, 20), (20, 25), (25, 31), (31, 365)]
+            p("| days before resolution | count | % |")
+            p("|------------------------|------:|--:|")
+            for lo, hi in buckets:
+                n = sum(1 for d in deltas if lo <= d < hi)
+                pct = n / len(deltas) if deltas else 0
+                p(f"| {lo}–{hi} | {n} | {pct:.1%} |")
+            p("")
+            p(f"_Median: {sorted(deltas)[len(deltas)//2]:.1f} days_")
+        p("")
 
     # === Spread between No and (1 - Yes) ===
     p("## Did using actual No-token prices change anything?")

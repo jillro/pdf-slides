@@ -21,6 +21,10 @@ from pathlib import Path
 from common import clob_price_history
 
 SNAPSHOT_OFFSET_DAYS = 30
+# If T-30d has no data (market created later), fall back to T-FALLBACK_DAYS
+# closer to resolution. Per the user spec, we are allowed to use a closer
+# date as long as a qualifying candidate (rank > 3, No <= 95%) still exists.
+FALLBACK_OFFSET_DAYS = 12
 WINDOW_HALF_DAYS = 5  # CLOB caps total window at ~14d; 10d is well within
 FIDELITY_MIN = 60
 
@@ -29,13 +33,13 @@ def parse_iso(ts: str) -> dt.datetime:
     return dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
-def snapshot_target_ts(event_end_iso: str) -> int:
+def snapshot_target_ts(event_end_iso: str, days_before: int = SNAPSHOT_OFFSET_DAYS) -> int:
     end = parse_iso(event_end_iso)
-    target = end - dt.timedelta(days=SNAPSHOT_OFFSET_DAYS)
+    target = end - dt.timedelta(days=days_before)
     return int(target.timestamp())
 
 
-def closest_price(token_id: str, target_ts: int) -> tuple[float, int] | None:
+def _fetch_one(token_id: str, target_ts: int) -> tuple[float, int] | None:
     half = WINDOW_HALF_DAYS * 86400
     try:
         hist = clob_price_history(
@@ -51,6 +55,17 @@ def closest_price(token_id: str, target_ts: int) -> tuple[float, int] | None:
         return None
     closest = min(hist, key=lambda p: abs(p["t"] - target_ts))
     return float(closest["p"]), int(closest["t"])
+
+
+def closest_price(
+    token_id: str, target_centers: list[int]
+) -> tuple[float, int] | None:
+    """Try the given target timestamps in order; return the first hit."""
+    for ts in target_centers:
+        result = _fetch_one(token_id, ts)
+        if result is not None:
+            return result
+    return None
 
 
 def main() -> None:
@@ -81,10 +96,19 @@ def main() -> None:
                 m.setdefault("noSnap", None)
                 m.setdefault("snapTs", None)
             continue
-        target_ts = snapshot_target_ts(ev["endDate"])
+        # Cascade: prefer T-30d, fall back to T-12d if no data there.
+        targets = [
+            snapshot_target_ts(ev["endDate"], SNAPSHOT_OFFSET_DAYS),
+            snapshot_target_ts(ev["endDate"], FALLBACK_OFFSET_DAYS),
+        ]
         for m in ev["markets"]:
             done += 1
-            if m["id"] in cached:
+            # Cache hit only when we already have BOTH legs.
+            if (
+                m["id"] in cached
+                and cached[m["id"]].get("yesSnap") is not None
+                and cached[m["id"]].get("noSnap") is not None
+            ):
                 c = cached[m["id"]]
                 m["yesSnap"] = c["yesSnap"]
                 m["noSnap"] = c["noSnap"]
@@ -93,8 +117,8 @@ def main() -> None:
                 skipped_cached += 1
                 continue
 
-            yes = closest_price(m["yesTokenId"], target_ts)
-            no = closest_price(m["noTokenId"], target_ts) if m.get("noTokenId") else None
+            yes = closest_price(m["yesTokenId"], targets)
+            no = closest_price(m["noTokenId"], targets) if m.get("noTokenId") else None
 
             if yes is None and no is None:
                 m["yesSnap"] = None
