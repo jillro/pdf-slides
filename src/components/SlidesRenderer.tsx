@@ -12,6 +12,7 @@ import {
   DEFAULT_CONTENT_BG_THEME,
   type ContentBgThemeId,
 } from "../lib/contentBgThemes";
+import type { FirstSlideLayout } from "../app/storage";
 
 const FirstSlide = dynamicImport(() => import("./FirstSlide"), { ssr: false });
 const ContentSlide = dynamicImport(() => import("./ContentSlide"), {
@@ -31,6 +32,7 @@ export interface SlidesRendererProps {
   title: string;
   intro: string;
   format: Format;
+  firstSlideLayout?: FirstSlideLayout;
   slidesContent: string[];
   slideThemes: ContentBgThemeId[];
   subForMore: boolean;
@@ -62,6 +64,7 @@ export default function SlidesRenderer({
   title,
   intro,
   format,
+  firstSlideLayout = "gradient",
   slidesContent,
   slideThemes,
   subForMore,
@@ -134,6 +137,7 @@ export default function SlidesRenderer({
         width={width}
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
+        firstSlideLayout={firstSlideLayout}
         display={showAllSlides || currentSlide === 0}
         onImgXChange={onImgXChange || (() => {})}
         ref={getRef(0)}

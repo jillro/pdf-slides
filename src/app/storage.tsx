@@ -30,6 +30,8 @@ async function getClient() {
 import type { Format } from "../lib/formats";
 import type { ContentBgThemeId } from "../lib/contentBgThemes";
 
+export type FirstSlideLayout = "gradient" | "split-light" | "split-dark";
+
 export type Post = {
   id: string;
   img: string | null; // data-url
@@ -46,6 +48,7 @@ export type Post = {
   legendContent: string;
   imageCaption: string | null;
   articleUrl: string | null;
+  firstSlideLayout: FirstSlideLayout;
 };
 
 type RedisPost = Partial<
@@ -92,6 +95,9 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.articleUrl != undefined
     ? { articleUrl: post.articleUrl ?? "" }
     : {}),
+  ...(post.firstSlideLayout != undefined
+    ? { firstSlideLayout: post.firstSlideLayout }
+    : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
@@ -120,6 +126,7 @@ const newPost = (id: string): Post => ({
   legendContent: "",
   imageCaption: null,
   articleUrl: null,
+  firstSlideLayout: "gradient",
 });
 
 const memory: { [key: string]: Post } = {};

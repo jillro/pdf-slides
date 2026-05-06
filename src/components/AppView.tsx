@@ -11,7 +11,7 @@ import JSZip from "jszip";
 import useImage from "use-image";
 import { useInterval, useResizeObserver, useMediaQuery } from "usehooks-ts";
 
-import { Post, savePost } from "../app/storage";
+import { Post, savePost, FirstSlideLayout } from "../app/storage";
 import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 import { createBlurredImage } from "../lib/blur";
@@ -124,6 +124,8 @@ export default function AppView(params: { post?: Post }) {
     "format",
     "post" as Format,
   );
+  const [firstSlideLayout, unsavedFirstSlideLayout, setFirstSlideLayout] =
+    useSavedState("firstSlideLayout", "gradient" as FirstSlideLayout);
   const [legendContent, unsavedLegendContent, setLegendContent] = useSavedState(
     "legendContent",
     "",
@@ -360,6 +362,7 @@ export default function AppView(params: { post?: Post }) {
               title={title}
               intro={intro}
               format={format}
+              firstSlideLayout={firstSlideLayout}
               slidesContent={slidesContent}
               slideThemes={slideThemes}
               subForMore={subForMore}
@@ -413,6 +416,23 @@ export default function AppView(params: { post?: Post }) {
             >
               <option value="post">Post (4:5)</option>
               <option value="story">Story (9:16)</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label htmlFor="firstSlideLayout">
+              Mise en page première slide{" "}
+              {unsavedFirstSlideLayout ? "⏳" : null}
+            </label>
+            <select
+              name="firstSlideLayout"
+              value={firstSlideLayout}
+              onChange={(e) =>
+                setFirstSlideLayout(e.target.value as FirstSlideLayout)
+              }
+            >
+              <option value="gradient">Dégradé sur photo</option>
+              <option value="split-light">Moitié + motif clair</option>
+              <option value="split-dark">Moitié + motif foncé</option>
             </select>
           </div>
           <div className="input-group">

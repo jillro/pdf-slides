@@ -3,11 +3,14 @@
 import { useLogoImage } from "../lib/useLogoImage";
 import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
-import { Image as KImage, Layer, Stage, Text } from "react-konva";
+import { Group, Image as KImage, Layer, Stage, Text } from "react-konva";
+import useImage from "use-image";
 import BackgroundImage from "./BackgroundImage";
 import Gradient from "./Gradient";
 import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import { NEAR_WHITE, ACCENT } from "../lib/colors";
+import { CONTENT_BG_THEMES } from "../lib/contentBgThemes";
+import type { FirstSlideLayout } from "../app/storage";
 
 export default function FirstSlide(props: {
   img?: HTMLImageElement;
@@ -20,6 +23,7 @@ export default function FirstSlide(props: {
   width: number;
   canvasWidth: number;
   canvasHeight: number;
+  firstSlideLayout?: FirstSlideLayout;
   ref: React.Ref<Konva.Stage>;
   display: boolean;
   onImgXChange: (x: number) => void;
@@ -39,7 +43,13 @@ export default function FirstSlide(props: {
     onIntroHeightChange,
   } = props;
 
-  const [logo] = useLogoImage();
+  const firstSlideLayout = props.firstSlideLayout ?? "gradient";
+  const isSplit = firstSlideLayout !== "gradient";
+  const splitThemeId =
+    firstSlideLayout === "split-dark" ? "alt_bg2" : "alt_bg1";
+  const splitTheme = CONTENT_BG_THEMES[splitThemeId];
+
+  const [logo] = useLogoImage(isSplit ? splitTheme.accentColor : undefined);
 
   const [localTitleHeight, setLocalTitleHeight] = useState<number>(0);
   const [localIntroHeight, setLocalIntroHeight] = useState<number>(0);
@@ -84,6 +94,16 @@ export default function FirstSlide(props: {
   const isStoryFormat = props.canvasHeight === 1920;
   const storyMargin = isStoryFormat ? 100 : 0;
 
+  const [splitPatternImg] = useImage(
+    isSplit && splitTheme.src ? splitTheme.src : "",
+    "anonymous",
+  );
+  const halfHeight = props.canvasHeight / 2;
+  const photoY = props.position === "top" ? 0 : halfHeight;
+  const panelY = props.position === "top" ? halfHeight : 0;
+  const splitTitleY = panelY + 200 + storyMargin;
+  const splitIntroY = panelY + 250 + titleHeight + storyMargin;
+
   return (
     <Stage
       scaleX={props.scale}
@@ -96,7 +116,7 @@ export default function FirstSlide(props: {
       style={{ display: props.display ? "block" : "none" }}
     >
       <Layer background={"white"}>
-        {props.img && (
+        {!isSplit && props.img && (
           <BackgroundImage
             x={props.imgX}
             image={props.img}
@@ -105,44 +125,78 @@ export default function FirstSlide(props: {
             onCoordinateChange={props.onImgXChange}
           />
         )}
-        {!props.previewMode && (
+        {isSplit && (
           <>
-            <Gradient
-              position={props.position}
-              height={titleHeight + introHeight + 400 + storyMargin}
-              maxOpacity={gradientOpacity}
-              canvasHeight={props.canvasHeight}
-            />
-            <KImage
-              image={logo}
-              x={150}
-              y={
-                props.position === "top"
+            {splitPatternImg && (
+              <KImage
+                image={splitPatternImg}
+                x={0}
+                y={panelY}
+                width={props.canvasWidth}
+                height={halfHeight}
+              />
+            )}
+            {props.img && (
+              <Group
+                y={photoY}
+                clipX={0}
+                clipY={0}
+                clipWidth={props.canvasWidth}
+                clipHeight={halfHeight}
+              >
+                <BackgroundImage
+                  x={props.imgX}
+                  image={props.img}
+                  canvasWidth={props.canvasWidth}
+                  canvasHeight={halfHeight}
+                  onCoordinateChange={props.onImgXChange}
+                />
+              </Group>
+            )}
+          </>
+        )}
+        {!props.previewMode && !isSplit && (
+          <Gradient
+            position={props.position}
+            height={titleHeight + introHeight + 400 + storyMargin}
+            maxOpacity={gradientOpacity}
+            canvasHeight={props.canvasHeight}
+          />
+        )}
+        {!props.previewMode && (
+          <KImage
+            image={logo}
+            x={150}
+            y={
+              isSplit
+                ? panelY + 87 + storyMargin
+                : props.position === "top"
                   ? 87 + storyMargin
                   : props.canvasHeight -
                     233 -
                     introHeight -
                     titleHeight -
                     storyMargin
-              }
-              width={80}
-              height={60}
-            />
-          </>
+            }
+            width={80}
+            height={60}
+          />
         )}
         <Text
           text={props.rubrique}
           x={260}
           y={
-            props.position === "top"
-              ? 85 + storyMargin
-              : props.canvasHeight -
-                235 -
-                introHeight -
-                titleHeight -
-                storyMargin
+            isSplit
+              ? panelY + 85 + storyMargin
+              : props.position === "top"
+                ? 85 + storyMargin
+                : props.canvasHeight -
+                  235 -
+                  introHeight -
+                  titleHeight -
+                  storyMargin
           }
-          fill={ACCENT}
+          fill={isSplit ? splitTheme.accentColor : ACCENT}
           wrap={"word"}
           fontSize={64}
           fontFamily={"Rubik"}
@@ -152,17 +206,19 @@ export default function FirstSlide(props: {
           text={props.title}
           x={150}
           y={
-            props.position === "top"
-              ? 200 + storyMargin
-              : props.canvasHeight -
-                150 -
-                titleHeight -
-                introHeight -
-                storyMargin
+            isSplit
+              ? splitTitleY
+              : props.position === "top"
+                ? 200 + storyMargin
+                : props.canvasHeight -
+                  150 -
+                  titleHeight -
+                  introHeight -
+                  storyMargin
           }
           ref={titleRef}
           width={props.canvasWidth - 150 * 2}
-          fill={NEAR_WHITE}
+          fill={isSplit ? splitTheme.textColor : NEAR_WHITE}
           wrap={"word"}
           fontSize={80}
           fontFamily={"Atkinson Hyperlegible Next"}
@@ -175,13 +231,15 @@ export default function FirstSlide(props: {
           text={props.intro}
           x={150}
           y={
-            props.position === "top"
-              ? 250 + titleHeight + storyMargin
-              : props.canvasHeight - 100 - introHeight - storyMargin
+            isSplit
+              ? splitIntroY
+              : props.position === "top"
+                ? 250 + titleHeight + storyMargin
+                : props.canvasHeight - 100 - introHeight - storyMargin
           }
           ref={introRef}
           width={props.canvasWidth - 150 * 2}
-          fill={NEAR_WHITE}
+          fill={isSplit ? splitTheme.textColor : NEAR_WHITE}
           wrap={"word"}
           fontSize={64}
           fontFamily={"Atkinson Hyperlegible Next"}
