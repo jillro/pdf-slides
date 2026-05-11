@@ -1,12 +1,43 @@
-import { redirect, RedirectType } from "next/navigation";
+import Link from "next/link";
+import PostCard from "../components/PostCard";
+import { listPosts } from "./storage";
+import styles from "../components/HomePage.module.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function Page() {
-  const id = Math.random().toString(36).substring(7);
+export default async function Page() {
+  const posts = await listPosts();
 
-  redirect(`/${id}`, RedirectType.replace);
+  return (
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Visuels PDF</h1>
+        <Link href="/new" className={styles.newPostButton}>
+          + Nouveau post
+        </Link>
+      </header>
+
+      {posts.length === 0 ? (
+        <p className={styles.empty}>
+          Aucun post pour l&apos;instant. Cliquez sur « Nouveau post » pour
+          commencer.
+        </p>
+      ) : (
+        <section className={styles.grid}>
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={{
+                id: post.id,
+                title: post.title,
+                img: post.img,
+                updatedAt: post.updatedAt,
+              }}
+            />
+          ))}
+        </section>
+      )}
+    </main>
+  );
 }
-
-export default Page;

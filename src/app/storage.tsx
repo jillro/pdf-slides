@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "redis";
 import { deleteS3Object, getPublicUrlBase } from "./s3";
 
@@ -50,6 +51,7 @@ export type Post = {
   imageCaption: string | null;
   articleUrl: string | null;
   firstSlideLayout: FirstSlideLayout;
+  updatedAt: number;
 };
 
 type RedisPost = Partial<
@@ -60,12 +62,14 @@ type RedisPost = Partial<
     | "subForMore"
     | "imageCaption"
     | "articleUrl"
+    | "updatedAt"
   > & {
     slidesContent: string; // serialized array
     slideThemes: string; // serialized array
     subForMore: "true" | "false";
     imageCaption: string;
     articleUrl: string;
+    updatedAt: string;
   }
 >;
 
@@ -99,6 +103,9 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.firstSlideLayout != undefined
     ? { firstSlideLayout: post.firstSlideLayout }
     : {}),
+  ...(post.updatedAt != undefined
+    ? { updatedAt: String(post.updatedAt) }
+    : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
@@ -109,6 +116,7 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
   subForMore: post.subForMore === "true",
   imageCaption: post.imageCaption || null,
   articleUrl: post.articleUrl || null,
+  updatedAt: post.updatedAt ? Number(post.updatedAt) : 0,
 });
 
 const newPost = (id: string): Post => ({
@@ -128,6 +136,7 @@ const newPost = (id: string): Post => ({
   imageCaption: null,
   articleUrl: null,
   firstSlideLayout: "gradient",
+  updatedAt: 0,
 });
 
 const memory: { [key: string]: Post } = {};
@@ -169,6 +178,8 @@ async function maybeDeletePreviousImage(
 export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
   "use server";
 
+  post.updatedAt = Date.now();
+
   if (!process.env.REDIS_URL) {
     const previousImg = memory[post.id]?.img;
     await maybeDeletePreviousImage(previousImg, post);
@@ -189,4 +200,58 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
 
   await client.hSet(`hash:${post.id}`, toRedisHash(post));
   return;
+}
+
+export async function listPosts(): Promise<Post[]> {
+  if (!process.env.REDIS_URL) {
+    return Object.values(memory).sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  const client = await getClient();
+  const keys: string[] = [];
+  let cursor = "0";
+  do {
+    const result = await client.scan(cursor, {
+      MATCH: "hash:*",
+      COUNT: 200,
+    });
+    cursor = String(result.cursor);
+    for (const key of result.keys) {
+      keys.push(typeof key === "string" ? key : key.toString());
+    }
+  } while (cursor !== "0");
+
+  const hashes = await Promise.all(
+    keys.map(async (key) => {
+      const id = key.slice("hash:".length);
+      const hash = (await client.hGetAll(key)) as unknown as RedisPost;
+      return toJsValue(id, hash);
+    }),
+  );
+
+  return hashes.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function deletePost(id: string): Promise<void> {
+  if (!process.env.REDIS_URL) {
+    const previousImg = memory[id]?.img;
+    await maybeDeletePreviousImage(previousImg, { img: null });
+    delete memory[id];
+    return;
+  }
+
+  const client = await getClient();
+  const previousImg = (await client.hGet(`hash:${id}`, "img")) as
+    | string
+    | undefined;
+  await maybeDeletePreviousImage(previousImg, { img: null });
+
+  await client.del(`hash:${id}`);
+  await client.del(id);
+}
+
+export async function deletePostAction(id: string) {
+  "use server";
+  await deletePost(id);
+  revalidatePath("/");
 }
