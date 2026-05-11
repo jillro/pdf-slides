@@ -1,0 +1,60 @@
+.page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-self: flex-start;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 2rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.newPostButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background-color: var(--accent);
+  color: #1a1a1a;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.newPostButton:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #1a1a1a;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+}
