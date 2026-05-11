@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "redis";
+import { deleteS3Object, getPublicUrlBase } from "./s3";
 
 let client: ReturnType<typeof createClient>;
 
@@ -150,10 +151,28 @@ export async function getPost(id: string): Promise<Post> {
   return newPost(id);
 }
 
+async function maybeDeletePreviousImage(
+  previousImg: string | undefined | null,
+  post: Partial<Post>,
+) {
+  if (!("img" in post)) return;
+  if (!previousImg) return;
+  if (previousImg === post.img) return;
+
+  const publicUrlBase = await getPublicUrlBase();
+  if (!publicUrlBase) return;
+  if (!previousImg.startsWith(`${publicUrlBase}/`)) return;
+
+  await deleteS3Object(previousImg);
+}
+
 export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
   "use server";
 
   if (!process.env.REDIS_URL) {
+    const previousImg = memory[post.id]?.img;
+    await maybeDeletePreviousImage(previousImg, post);
+
     if (!memory[post.id]) {
       memory[post.id] = newPost(post.id);
     }
@@ -163,7 +182,11 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
   }
 
   const client = await getClient();
+  const previousImg = (await client.hGet(`hash:${post.id}`, "img")) as
+    | string
+    | undefined;
+  await maybeDeletePreviousImage(previousImg, post);
+
   await client.hSet(`hash:${post.id}`, toRedisHash(post));
-  await client.EXPIRE(`hash:${post.id}`, 60 * 60 * 24 * 30);
   return;
 }

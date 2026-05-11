@@ -12,6 +12,7 @@ import useImage from "use-image";
 import { useInterval, useResizeObserver, useMediaQuery } from "usehooks-ts";
 
 import { Post, savePost, FirstSlideLayout } from "../app/storage";
+import { createUploadUrl } from "../app/s3";
 import { importFromWordPress } from "../app/wordpress";
 import { Format, FORMAT_DIMENSIONS, MAX_FORMAT_HEIGHT } from "../lib/formats";
 import { createBlurredImage } from "../lib/blur";
@@ -32,6 +33,26 @@ async function resizeImage(imgBlob: Blob): Promise<string> {
   if (!ctx) return "";
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL();
+}
+
+async function uploadImage(postId: string, file: Blob): Promise<string> {
+  const dataUrl = await resizeImage(file);
+  const blob = await (await fetch(dataUrl)).blob();
+  const ext = blob.type.split("/")[1] || "png";
+  const presigned = await createUploadUrl({
+    postId,
+    contentType: blob.type,
+    ext,
+  });
+  if (!presigned) return dataUrl;
+
+  const res = await fetch(presigned.uploadUrl, {
+    method: "PUT",
+    body: blob,
+    headers: { "Content-Type": blob.type },
+  });
+  if (!res.ok) throw new Error(`S3 upload failed: ${res.status}`);
+  return presigned.publicUrl;
 }
 
 function useSavedPost(id: string, init: Post) {
@@ -249,11 +270,9 @@ export default function AppView(params: { post?: Post }) {
     setImageCaption(importedImageCaption);
 
     if (imageDataUrl) {
-      // Convert base64 to blob and resize using existing resizeImage function
       const response = await fetch(imageDataUrl);
       const blob = await response.blob();
-      const resizedDataUrl = await resizeImage(blob);
-      setImgDataUrl(resizedDataUrl);
+      setImgDataUrl(await uploadImage(init.id, blob));
     }
 
     setWpLoading(false);
@@ -261,7 +280,7 @@ export default function AppView(params: { post?: Post }) {
   };
 
   const handleImageUpload = async (file: File) => {
-    setImgDataUrl(await resizeImage(file));
+    setImgDataUrl(await uploadImage(init.id, file));
   };
 
   // Mobile layout
@@ -461,7 +480,7 @@ export default function AppView(params: { post?: Post }) {
               accept="image/*"
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
-                  setImgDataUrl(await resizeImage(e.target.files[0]));
+                  setImgDataUrl(await uploadImage(init.id, e.target.files[0]));
                 }
               }}
             />
