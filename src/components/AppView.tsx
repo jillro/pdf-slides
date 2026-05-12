@@ -183,7 +183,7 @@ export default function AppView(params: { post?: Post }) {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
   // WordPress import state
-  const [wpUrl, setWpUrl] = useState("");
+  const [wpUrl, , setWpUrl] = useSavedState("wpUrl", "");
   const [wpLoading, setWpLoading] = useState(false);
   const [wpError, setWpError] = useState<string | null>(null);
   const [importWithContent, setImportWithContent] = useState(true);
@@ -276,7 +276,6 @@ export default function AppView(params: { post?: Post }) {
     }
 
     setWpLoading(false);
-    setWpUrl("");
   };
 
   const handleImageUpload = async (file: File) => {
