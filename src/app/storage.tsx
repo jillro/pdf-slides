@@ -4,29 +4,55 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "redis";
 import { deleteS3Object, getPublicUrlBase } from "./s3";
 
-let client: ReturnType<typeof createClient>;
+type RedisClient = ReturnType<typeof createClient>;
 
-async function getClient() {
-  if (!client) {
-    client = await createClient({
+const COMMAND_TIMEOUT_MS = 2000;
+const CONNECT_TIMEOUT_MS = 2000;
+
+let clientPromise: Promise<RedisClient> | null = null;
+
+async function getClient(): Promise<RedisClient> {
+  if (!clientPromise) {
+    clientPromise = createClient({
       url: process.env.REDIS_URL,
       pingInterval: 10000,
-    }).connect();
+      socket: { connectTimeout: CONNECT_TIMEOUT_MS },
+    })
+      .on("error", () => {})
+      .connect()
+      .catch((e) => {
+        clientPromise = null;
+        throw e;
+      });
   }
+  return clientPromise;
+}
 
-  if (!client.isReady) {
-    try {
-      await client.connect();
-    } catch (e) {
-      if (e.message.includes("Socket already opened")) {
-        return client;
-      }
+function resetClient() {
+  const p = clientPromise;
+  clientPromise = null;
+  p?.then((c) => c.destroy()).catch(() => {});
+}
 
-      throw e;
-    }
+async function withRedis<T>(fn: (c: RedisClient) => Promise<T>): Promise<T> {
+  const client = await getClient();
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      fn(client),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Redis command timed out")),
+          COMMAND_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } catch (e) {
+    resetClient();
+    throw e;
+  } finally {
+    clearTimeout(timer);
   }
-
-  return client;
 }
 
 import type { Format } from "../lib/formats";
@@ -146,18 +172,19 @@ export async function getPost(id: string): Promise<Post> {
     return memory[id] || newPost(id);
   }
 
-  const client = await getClient();
-  const redisResult = (await client.hGetAll(`hash:${id}`)) as RedisPost;
-  if (redisResult) {
-    return toJsValue(id, redisResult) as Post;
-  }
+  return withRedis(async (client) => {
+    const redisResult = (await client.hGetAll(`hash:${id}`)) as RedisPost;
+    if (redisResult) {
+      return toJsValue(id, redisResult) as Post;
+    }
 
-  const legacyRedisResult: string = (await client.GET(id)) as string;
-  if (legacyRedisResult) {
-    return JSON.parse(legacyRedisResult) as Post;
-  }
+    const legacyRedisResult: string = (await client.GET(id)) as string;
+    if (legacyRedisResult) {
+      return JSON.parse(legacyRedisResult) as Post;
+    }
 
-  return newPost(id);
+    return newPost(id);
+  });
 }
 
 async function maybeDeletePreviousImage(
@@ -192,13 +219,15 @@ export async function savePost(post: Partial<Post> & Pick<Post, "id">) {
     return;
   }
 
-  const client = await getClient();
-  const previousImg = (await client.hGet(`hash:${post.id}`, "img")) as
-    | string
-    | undefined;
+  const previousImg = await withRedis(
+    (client) =>
+      client.hGet(`hash:${post.id}`, "img") as Promise<string | undefined>,
+  );
   await maybeDeletePreviousImage(previousImg, post);
 
-  await client.hSet(`hash:${post.id}`, toRedisHash(post));
+  await withRedis((client) =>
+    client.hSet(`hash:${post.id}`, toRedisHash(post)),
+  );
   return;
 }
 
