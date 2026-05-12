@@ -78,6 +78,7 @@ export type Post = {
   articleUrl: string | null;
   firstSlideLayout: FirstSlideLayout;
   updatedAt: number;
+  wpUrl: string;
 };
 
 type RedisPost = Partial<
@@ -132,6 +133,7 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.updatedAt != undefined
     ? { updatedAt: String(post.updatedAt) }
     : {}),
+  ...(post.wpUrl != undefined ? { wpUrl: post.wpUrl } : {}),
 });
 
 const toJsValue = (id: string, post: RedisPost): Post => ({
@@ -163,6 +165,7 @@ const newPost = (id: string): Post => ({
   articleUrl: null,
   firstSlideLayout: "gradient",
   updatedAt: 0,
+  wpUrl: "",
 });
 
 const memory: { [key: string]: Post } = {};
