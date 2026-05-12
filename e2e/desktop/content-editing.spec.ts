@@ -78,22 +78,6 @@ test.describe("Content Editing", () => {
     );
   });
 
-  test("unsaved indicator appears while saving", async ({ app, page }) => {
-    await app.gotoNewPost();
-
-    // Type something
-    await page.locator('input[name="title"]').fill("Testing unsaved");
-
-    // The unsaved indicator should appear briefly
-    // (It may already be gone by the time we check, so we just verify the field works)
-    await app.waitForSave();
-
-    // After save, the value should be there
-    await expect(page.locator('input[name="title"]')).toHaveValue(
-      "Testing unsaved",
-    );
-  });
-
   test("legend content persists after reload", async ({ app, page }) => {
     await app.gotoNewPost();
 

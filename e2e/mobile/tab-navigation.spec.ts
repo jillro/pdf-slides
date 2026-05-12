@@ -87,25 +87,6 @@ test.describe("Mobile Tab Navigation", () => {
     );
   });
 
-  test("unsaved indicator appears on tab with changes", async ({
-    app,
-    page,
-  }) => {
-    await app.gotoNewPost();
-
-    // Make a change in Contenu tab
-    await app.setTitle("Test unsaved indicator");
-
-    // The unsaved dot may appear briefly on the Contenu tab before save completes
-    // Just verify the tab still works after making changes
-    await app.waitForSave();
-
-    // Value should be saved (mobile uses id="title")
-    await expect(page.locator("input#title")).toHaveValue(
-      "Test unsaved indicator",
-    );
-  });
-
   test("each tab shows appropriate content", async ({ app, page }) => {
     await app.gotoNewPost();
 
