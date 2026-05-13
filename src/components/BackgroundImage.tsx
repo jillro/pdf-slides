@@ -33,19 +33,10 @@ export default function BackgroundImage({
       onTouchStart={(e) => {
         e.evt.preventDefault();
       }}
-      onDragMove={(e) => {
-        const newX = Math.max(
-          Math.min(e.target.x(), 0),
-          canvasWidth - image.width * imgScale,
-        );
-        e.target.x(newX);
-        e.target.y(
-          Math.max(
-            Math.min(e.target.y(), 0),
-            canvasHeight - image.height * imgScale,
-          ),
-        );
-      }}
+      dragBoundFunc={(pos) => ({
+        x: Math.max(Math.min(pos.x, 0), canvasWidth - image.width * imgScale),
+        y: Math.max(Math.min(pos.y, 0), canvasHeight - image.height * imgScale),
+      })}
       onDragEnd={(e) => {
         const newX = Math.max(
           Math.min(e.target.x(), 0),
