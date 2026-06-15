@@ -43,10 +43,12 @@ function measureWord(
   fontFamily: string,
   bold: boolean,
   fontWeight: string = "500",
+  letterSpacing: number = 0,
 ): number {
   const ctx = getMeasureCtx();
   ctx.font = `${bold ? "bold" : fontWeight} ${fontSize}px ${fontFamily}`;
-  return ctx.measureText(word).width;
+  // Match Konva's _getTextWidth: measureText + letterSpacing * length
+  return ctx.measureText(word).width + letterSpacing * word.length;
 }
 
 type TaggedWord = {
@@ -84,6 +86,7 @@ function layoutWords(
   lineHeight: number,
   fontFamily: string,
   fontWeight: string = "500",
+  letterSpacing: number = 0,
 ): { positioned: PositionedWord[]; totalHeight: number } {
   const positioned: PositionedWord[] = [];
   const lineHeightPx = fontSize * lineHeight;
@@ -102,11 +105,25 @@ function layoutWords(
 
     // Whitespace-only tokens: just advance x
     if (/^\s+$/.test(word.text)) {
-      curX += measureWord(word.text, fontSize, fontFamily, bold, fontWeight);
+      curX += measureWord(
+        word.text,
+        fontSize,
+        fontFamily,
+        bold,
+        fontWeight,
+        letterSpacing,
+      );
       continue;
     }
 
-    const wordW = measureWord(word.text, fontSize, fontFamily, bold, fontWeight);
+    const wordW = measureWord(
+      word.text,
+      fontSize,
+      fontFamily,
+      bold,
+      fontWeight,
+      letterSpacing,
+    );
 
     // Wrap if this word exceeds the line width (but not if we're at position 0)
     if (curX > 0 && curX + wordW > width) {
@@ -140,6 +157,7 @@ export function computeTextHeight(
   lineHeight: number,
   fontFamily: string,
   fontWeight: string = "500",
+  letterSpacing: number = 0,
 ): number {
   const words = tokenize(segments);
   const { totalHeight } = layoutWords(
@@ -149,6 +167,7 @@ export function computeTextHeight(
     lineHeight,
     fontFamily,
     fontWeight,
+    letterSpacing,
   );
   return totalHeight;
 }
@@ -169,8 +188,24 @@ export default function RichContentRenderer({
 }: RichContentRendererProps) {
   const { positioned } = useMemo(() => {
     const words = tokenize(segments);
-    return layoutWords(words, width, fontSize, lineHeight, fontFamily, fontWeight);
-  }, [segments, width, fontSize, lineHeight, fontFamily, fontWeight]);
+    return layoutWords(
+      words,
+      width,
+      fontSize,
+      lineHeight,
+      fontFamily,
+      fontWeight,
+      letterSpacing,
+    );
+  }, [
+    segments,
+    width,
+    fontSize,
+    lineHeight,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+  ]);
 
   const bgPadX = fontSize * 0.12;
   const bgPadY = fontSize * 0.14;
