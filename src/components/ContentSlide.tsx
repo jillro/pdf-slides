@@ -52,6 +52,7 @@ export default function ContentSlide(props: {
   const lineHeight = 1.2 + (58 - fontSize) * 0.01;
   const contentWidth = canvasWidth - CONTENT_MARGIN * 2;
   const fontFamily = "Atkinson Hyperlegible Next";
+  const letterSpacing = fontSize >= 56 ? 0 : 0.5;
 
   const rubriqueRef = useRef<Konva.Text>(null);
 
@@ -65,8 +66,16 @@ export default function ContentSlide(props: {
         lineHeight,
         fontFamily,
         theme.fontWeight,
+        letterSpacing,
       ),
-    [segments, contentWidth, fontSize, lineHeight, theme.fontWeight],
+    [
+      segments,
+      contentWidth,
+      fontSize,
+      lineHeight,
+      theme.fontWeight,
+      letterSpacing,
+    ],
   );
 
   useEffect(() => {
@@ -182,7 +191,7 @@ export default function ContentSlide(props: {
           boldColor={theme.boldColor}
           bgHighlightColor={theme.bgHighlightColor}
           fontWeight={theme.fontWeight}
-          letterSpacing={fontSize >= 56 ? 0 : 0.5}
+          letterSpacing={letterSpacing}
         />
 
         {!props.last ? (
