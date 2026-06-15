@@ -94,52 +94,73 @@ function layoutWords(
   let curX = 0;
   let curLine = 0;
 
-  for (const word of words) {
+  const isWhitespace = (text: string) => /^\s+$/.test(text);
+
+  let i = 0;
+  while (i < words.length) {
+    const word = words[i];
+
     if (word.isLineBreak) {
       curLine++;
       curX = 0;
+      i++;
       continue;
     }
 
-    const bold = word.style === "bold";
-
-    // Whitespace-only tokens: just advance x
-    if (/^\s+$/.test(word.text)) {
+    // Whitespace-only tokens: just advance x (breaks are only allowed here)
+    if (isWhitespace(word.text)) {
       curX += measureWord(
         word.text,
         fontSize,
         fontFamily,
-        bold,
+        word.style === "bold",
         fontWeight,
         letterSpacing,
       );
+      i++;
       continue;
     }
 
-    const wordW = measureWord(
-      word.text,
-      fontSize,
-      fontFamily,
-      bold,
-      fontWeight,
-      letterSpacing,
-    );
+    // Gather a wrap unit: consecutive non-whitespace tokens with no break
+    // between them (e.g. a bold word and the comma that immediately follows
+    // it). Punctuation stuck to a word must never wrap onto its own line.
+    const unit: { word: TaggedWord; width: number }[] = [];
+    let unitWidth = 0;
+    while (
+      i < words.length &&
+      !words[i].isLineBreak &&
+      !isWhitespace(words[i].text)
+    ) {
+      const w = words[i];
+      const wordW = measureWord(
+        w.text,
+        fontSize,
+        fontFamily,
+        w.style === "bold",
+        fontWeight,
+        letterSpacing,
+      );
+      unit.push({ word: w, width: wordW });
+      unitWidth += wordW;
+      i++;
+    }
 
-    // Wrap if this word exceeds the line width (but not if we're at position 0)
-    if (curX > 0 && curX + wordW > width) {
+    // Wrap the whole unit if it overflows (but not if we're at position 0)
+    if (curX > 0 && curX + unitWidth > width) {
       curLine++;
       curX = 0;
     }
 
-    positioned.push({
-      text: word.text,
-      x: curX,
-      y: curLine * lineHeightPx,
-      width: wordW,
-      style: word.style,
-    });
-
-    curX += wordW;
+    for (const { word: w, width: wordW } of unit) {
+      positioned.push({
+        text: w.text,
+        x: curX,
+        y: curLine * lineHeightPx,
+        width: wordW,
+        style: w.style,
+      });
+      curX += wordW;
+    }
   }
 
   const totalHeight = (curLine + 1) * lineHeightPx;
