@@ -13,7 +13,6 @@ npm run start            # Run production server
 
 npm run lint             # Lint
 npm run format           # Format with Prettier
-npm test                 # Playwright end-to-end tests
 ```
 
 ## Environment variables
