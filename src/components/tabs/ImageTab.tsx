@@ -4,41 +4,20 @@ import styles from "./ImageTab.module.css";
 import { useRef, useCallback } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import dynamicImport from "next/dynamic";
-import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
+import { FORMAT_DIMENSIONS } from "../../lib/formats";
+import { usePostEditor, usePostField } from "../PostEditorContext";
 
 const FirstSlide = dynamicImport(() => import("../FirstSlide"), { ssr: false });
 
 // Preview renders at half resolution for performance
 const PREVIEW_SCALE = 0.5;
 
-interface ImageTabProps {
-  format: Format;
-  setFormat: (value: Format) => void;
-  unsavedFormat: boolean;
+export default function ImageTab() {
+  const [format, unsavedFormat, setFormat] = usePostField("format");
+  const [position, unsavedPosition, setPosition] = usePostField("position");
+  const [imgX, , setImgX] = usePostField("imgX");
+  const { img, handleImageUpload } = usePostEditor();
 
-  position: "top" | "bottom";
-  setPosition: (value: "top" | "bottom") => void;
-  unsavedPosition: boolean;
-
-  img: HTMLImageElement | undefined;
-  imgX: number;
-  setImgX: (x: number) => void;
-
-  onImageUpload: (file: File) => void;
-}
-
-export default function ImageTab({
-  format,
-  setFormat,
-  unsavedFormat,
-  position,
-  setPosition,
-  unsavedPosition,
-  img,
-  imgX,
-  setImgX,
-  onImageUpload,
-}: ImageTabProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const { width: previewWidth } = useResizeObserver({
     ref: previewRef,
@@ -86,7 +65,7 @@ export default function ImageTab({
             accept="image/*"
             onChange={(e) => {
               if (e.target.files?.[0]) {
-                onImageUpload(e.target.files[0]);
+                handleImageUpload(e.target.files[0]);
               }
             }}
             className={styles.fileInput}

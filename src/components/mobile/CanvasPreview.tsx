@@ -1,56 +1,30 @@
 "use client";
 
 import styles from "./CanvasPreview.module.css";
-import { MutableRefObject, useRef } from "react";
+import { useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import SlidesRenderer from "../SlidesRenderer";
-import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
-import type { ContentBgThemeId } from "../../lib/contentBgThemes";
+import { FORMAT_DIMENSIONS } from "../../lib/formats";
+import { usePostEditor } from "../PostEditorContext";
 
 interface CanvasPreviewProps {
-  img: HTMLImageElement | undefined;
-  blurredImg: HTMLImageElement | null;
-  imgX: number;
-  position: "top" | "bottom";
-  rubrique: string;
-  title: string;
-  intro: string;
-  format: Format;
-  slidesContent: string[];
-  slideThemes: ContentBgThemeId[];
-  subForMore: boolean;
-  numero: number;
-  currentSlide: number;
   totalSlides: number;
   onTap: () => void;
-  stagesRef?: MutableRefObject<unknown[]>;
 }
 
 export default function CanvasPreview({
-  img,
-  blurredImg,
-  imgX,
-  position,
-  rubrique,
-  title,
-  intro,
-  format,
-  slidesContent,
-  slideThemes,
-  subForMore,
-  numero,
-  currentSlide,
   totalSlides,
   onTap,
-  stagesRef,
 }: CanvasPreviewProps) {
+  const { post, img, blurredImg, currentSlide, stagesRef } = usePostEditor();
+
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth } = useResizeObserver({
     ref: containerRef,
     box: "content-box",
   });
 
-  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
+  const { width: canvasWidth } = FORMAT_DIMENSIONS[post.format];
 
   // Scale to fit container width while maintaining aspect ratio
   const scale = containerWidth ? containerWidth / canvasWidth : 0;
@@ -61,16 +35,16 @@ export default function CanvasPreview({
         <SlidesRenderer
           img={img}
           blurredImg={blurredImg}
-          imgX={imgX}
-          position={position}
-          rubrique={rubrique}
-          title={title}
-          intro={intro}
-          format={format}
-          slidesContent={slidesContent}
-          slideThemes={slideThemes}
-          subForMore={subForMore}
-          numero={numero}
+          imgX={post.imgX}
+          position={post.position}
+          rubrique={post.rubrique}
+          title={post.title}
+          intro={post.intro}
+          format={post.format}
+          slidesContent={post.slidesContent}
+          slideThemes={post.slideThemes}
+          subForMore={post.subForMore}
+          numero={post.numero}
           currentSlide={currentSlide}
           scale={scale}
           width={containerWidth || 0}

@@ -2,30 +2,19 @@
 
 import styles from "./SlidesTab.module.css";
 import SlideContentEditor from "../SlideContentEditor/SlideContentEditor";
-import type { ContentBgThemeId } from "../../lib/contentBgThemes";
+import { usePostEditor, usePostField } from "../PostEditorContext";
 
-interface SlidesTabProps {
-  slidesContent: string[];
-  slideThemes: ContentBgThemeId[];
-  onSlidesAndThemesChange: (
-    value: string[],
-    themes: ContentBgThemeId[],
-  ) => void;
-  unsavedSlidesContent: boolean;
-}
+export default function SlidesTab() {
+  const [slidesContent, unsavedSlidesContent] = usePostField("slidesContent");
+  const [slideThemes] = usePostField("slideThemes");
+  const { setSlidesAndThemes } = usePostEditor();
 
-export default function SlidesTab({
-  slidesContent,
-  slideThemes,
-  onSlidesAndThemesChange,
-  unsavedSlidesContent,
-}: SlidesTabProps) {
   return (
     <div className={styles.container}>
       <SlideContentEditor
         value={slidesContent}
         slideThemes={slideThemes}
-        onChange={onSlidesAndThemesChange}
+        onChange={setSlidesAndThemes}
         unsaved={unsavedSlidesContent}
       />
     </div>

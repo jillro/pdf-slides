@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
-import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import RichContentRenderer, { computeTextHeight } from "./RichContentRenderer";
 import type { TextSegment } from "../lib/rich-text-parser";
 import { CONTENT_BG_THEMES, type ContentBgTheme } from "../lib/contentBgThemes";
@@ -15,7 +14,7 @@ const CONTENT_MARGIN = 80;
 
 export default function ContentSlide(props: {
   backgroundImg?: HTMLImageElement;
-  originalImg?: HTMLImageElement;
+  overlayOpacity: number;
   imgX: number;
   rubrique: string;
   segments: TextSegment[];
@@ -31,7 +30,7 @@ export default function ContentSlide(props: {
   theme?: ContentBgTheme;
 }) {
   const {
-    originalImg,
+    overlayOpacity,
     rubrique,
     segments,
     canvasWidth,
@@ -46,7 +45,6 @@ export default function ContentSlide(props: {
 
   const [rubriqueWidth, setRubriqueWidth] = useState<number>(0);
   const [localFontSize, setLocalFontSize] = useState<number>(58);
-  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
   const fontSize = externalFontSize ?? localFontSize;
   const lineHeight = 1.2 + (58 - fontSize) * 0.01;
@@ -77,16 +75,6 @@ export default function ContentSlide(props: {
       letterSpacing,
     ],
   );
-
-  useEffect(() => {
-    if (originalImg) {
-      const luminosity = getImageLuminosity(originalImg);
-      const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
-      setOverlayOpacity(opacity);
-    } else {
-      setOverlayOpacity(0.61);
-    }
-  }, [originalImg]);
 
   useEffect(() => {
     setRubriqueWidth(rubriqueRef.current?.width() || 0);

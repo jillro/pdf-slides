@@ -5,46 +5,32 @@ import { useRef, useState } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useResizeObserver } from "usehooks-ts";
 import SlidesRenderer from "../SlidesRenderer";
-import { Format, FORMAT_DIMENSIONS } from "../../lib/formats";
-import type { ContentBgThemeId } from "../../lib/contentBgThemes";
+import { FORMAT_DIMENSIONS } from "../../lib/formats";
+import { slideCount } from "../../lib/slides";
+import { usePostEditor, usePostField } from "../PostEditorContext";
 
 interface CanvasFocusModeProps {
-  img: HTMLImageElement | undefined;
-  blurredImg: HTMLImageElement | null;
-  imgX: number;
-  position: "top" | "bottom";
-  rubrique: string;
-  title: string;
-  intro: string;
-  format: Format;
-  slidesContent: string[];
-  slideThemes: ContentBgThemeId[];
-  subForMore: boolean;
-  numero: number;
-  currentSlide: number;
-  onSlideChange: (slide: number) => void;
-  onImgXChange: (x: number) => void;
   onClose: () => void;
 }
 
-export default function CanvasFocusMode({
-  img,
-  blurredImg,
-  imgX,
-  position,
-  rubrique,
-  title,
-  intro,
-  format,
-  slidesContent,
-  slideThemes,
-  subForMore,
-  numero,
-  currentSlide,
-  onSlideChange,
-  onImgXChange,
-  onClose,
-}: CanvasFocusModeProps) {
+export default function CanvasFocusMode({ onClose }: CanvasFocusModeProps) {
+  const { post, img, blurredImg, currentSlide, setCurrentSlide } =
+    usePostEditor();
+  const [imgX, , setImgX] = usePostField("imgX");
+  const {
+    position,
+    rubrique,
+    title,
+    intro,
+    format,
+    slidesContent,
+    slideThemes,
+    subForMore,
+    numero,
+  } = post;
+  const onSlideChange = setCurrentSlide;
+  const onImgXChange = setImgX;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useResizeObserver({
     ref: containerRef,
@@ -67,7 +53,7 @@ export default function CanvasFocusMode({
         )
       : 0;
 
-  const totalSlides = 1 + slidesContent.length + (subForMore ? 1 : 0);
+  const totalSlides = slideCount(slidesContent, subForMore);
 
   const goToNextSlide = () => {
     if (currentSlide < totalSlides - 1) {

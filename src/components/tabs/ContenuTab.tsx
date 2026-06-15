@@ -1,51 +1,22 @@
 "use client";
 
 import styles from "./ContenuTab.module.css";
+import { usePostEditor, usePostField } from "../PostEditorContext";
 
-interface ContenuTabProps {
-  // WordPress import
-  wpUrl: string;
-  setWpUrl: (url: string) => void;
-  wpLoading: boolean;
-  wpError: string | null;
-  setWpError: (error: string | null) => void;
-  importWithContent: boolean;
-  setImportWithContent: (value: boolean) => void;
-  onWordPressImport: () => void;
+export default function ContenuTab() {
+  const [rubrique, unsavedRubrique, setRubrique] = usePostField("rubrique");
+  const [title, unsavedTitle, setTitle] = usePostField("title");
+  const [intro, unsavedIntro, setIntro] = usePostField("intro");
+  const [wpUrl, , setWpUrl] = usePostField("wpUrl");
+  const {
+    wpLoading,
+    wpError,
+    setWpError,
+    importWithContent,
+    setImportWithContent,
+    handleWordPressImport,
+  } = usePostEditor();
 
-  // Content fields
-  rubrique: string;
-  setRubrique: (value: string) => void;
-  unsavedRubrique: boolean;
-
-  title: string;
-  setTitle: (value: string) => void;
-  unsavedTitle: boolean;
-
-  intro: string;
-  setIntro: (value: string) => void;
-  unsavedIntro: boolean;
-}
-
-export default function ContenuTab({
-  wpUrl,
-  setWpUrl,
-  wpLoading,
-  wpError,
-  setWpError,
-  importWithContent,
-  setImportWithContent,
-  onWordPressImport,
-  rubrique,
-  setRubrique,
-  unsavedRubrique,
-  title,
-  setTitle,
-  unsavedTitle,
-  intro,
-  setIntro,
-  unsavedIntro,
-}: ContenuTabProps) {
   return (
     <div className={styles.container}>
       <div className={styles.section}>
@@ -62,7 +33,7 @@ export default function ContenuTab({
             className={styles.urlInput}
           />
           <button
-            onClick={onWordPressImport}
+            onClick={handleWordPressImport}
             disabled={wpLoading}
             className={styles.importButton}
           >

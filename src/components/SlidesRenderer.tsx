@@ -1,10 +1,12 @@
 "use client";
 
-import { MutableRefObject, useCallback, useEffect } from "react";
+import { MutableRefObject, useCallback, useEffect, useState } from "react";
 import dynamicImport from "next/dynamic";
 import type Konva from "konva";
 import useImage from "use-image";
 import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
+import { slideCount } from "../lib/slides";
+import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import { applyFrenchTypography } from "../lib/french-typography";
 import { parseRichText, type TextSegment } from "../lib/rich-text-parser";
 import {
@@ -93,7 +95,20 @@ export default function SlidesRenderer({
     alt_bg2: altBg2Img,
   };
 
-  const expectedStages = 1 + slidesContent.length + (subForMore ? 1 : 0);
+  // Overlay opacity shared by every content/CTA slide — derived once from the
+  // source image rather than recomputed in each slide.
+  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
+  useEffect(() => {
+    if (img) {
+      setOverlayOpacity(
+        calculateOverlayOpacity(getImageLuminosity(img), 0.5, 0.8),
+      );
+    } else {
+      setOverlayOpacity(0.61);
+    }
+  }, [img]);
+
+  const expectedStages = slideCount(slidesContent, subForMore);
 
   // Reset refs when component mounts or slide count changes
   useEffect(() => {
@@ -159,7 +174,7 @@ export default function SlidesRenderer({
           <ContentSlide
             key={i}
             backgroundImg={backgroundImg || undefined}
-            originalImg={img}
+            overlayOpacity={overlayOpacity}
             imgX={imgX}
             rubrique={applyFrenchTypography(rubrique)}
             segments={segments}
@@ -177,7 +192,7 @@ export default function SlidesRenderer({
       {subForMore && (
         <SubForMoreSlide
           backgroundImg={blurredImg || undefined}
-          originalImg={img}
+          overlayOpacity={overlayOpacity}
           imgX={imgX}
           numero={numero}
           scale={scale}

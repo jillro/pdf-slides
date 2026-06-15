@@ -28,20 +28,8 @@ export default function FirstSlide(props: {
   display: boolean;
   onImgXChange: (x: number) => void;
   previewMode?: boolean;
-  // Optional external state management for shared measurements
-  titleHeight?: number;
-  introHeight?: number;
-  onTitleHeightChange?: (height: number) => void;
-  onIntroHeightChange?: (height: number) => void;
 }) {
-  const {
-    title,
-    intro,
-    titleHeight: externalTitleHeight,
-    introHeight: externalIntroHeight,
-    onTitleHeightChange,
-    onIntroHeightChange,
-  } = props;
+  const { title, intro } = props;
 
   const firstSlideLayout = props.firstSlideLayout ?? "gradient";
   const isSplit = firstSlideLayout !== "gradient";
@@ -51,32 +39,20 @@ export default function FirstSlide(props: {
 
   const [logo] = useLogoImage(isSplit ? splitTheme.accentColor : undefined);
 
-  const [localTitleHeight, setLocalTitleHeight] = useState<number>(0);
-  const [localIntroHeight, setLocalIntroHeight] = useState<number>(0);
+  const [titleHeight, setTitleHeight] = useState<number>(0);
+  const [introHeight, setIntroHeight] = useState<number>(0);
   const [gradientOpacity, setGradientOpacity] = useState<number>(1);
-
-  // Use external values if provided, otherwise use local state
-  const titleHeight = externalTitleHeight ?? localTitleHeight;
-  const introHeight = externalIntroHeight ?? localIntroHeight;
 
   const titleRef = useRef<Konva.Text>(null);
   const introRef = useRef<Konva.Text>(null);
 
   useEffect(() => {
-    const measuredHeight = titleRef.current?.height() || 0;
-    if (externalTitleHeight === undefined) {
-      setLocalTitleHeight(measuredHeight);
-    }
-    onTitleHeightChange?.(measuredHeight);
-  }, [title, externalTitleHeight, onTitleHeightChange]);
+    setTitleHeight(titleRef.current?.height() || 0);
+  }, [title]);
 
   useEffect(() => {
-    const measuredHeight = introRef.current?.height() || 0;
-    if (externalIntroHeight === undefined) {
-      setLocalIntroHeight(measuredHeight);
-    }
-    onIntroHeightChange?.(measuredHeight);
-  }, [intro, externalIntroHeight, onIntroHeightChange]);
+    setIntroHeight(introRef.current?.height() || 0);
+  }, [intro]);
 
   useEffect(() => {
     if (props.img) {
