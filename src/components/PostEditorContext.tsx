@@ -173,7 +173,7 @@ export function PostEditorProvider({
   // WordPress import transient state
   const [wpLoading, setWpLoading] = useState(false);
   const [wpError, setWpError] = useState<string | null>(null);
-  const [importWithContent, setImportWithContent] = useState(true);
+  const [importWithContent, setImportWithContent] = useState(false);
 
   const stagesRef = useRef<unknown[]>([]);
 
