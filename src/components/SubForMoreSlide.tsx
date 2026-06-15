@@ -1,16 +1,15 @@
 "use client";
 
 import { useLogoImage } from "../lib/useLogoImage";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type Konva from "konva";
 import { Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import BackgroundImage from "./BackgroundImage";
-import { getImageLuminosity, calculateOverlayOpacity } from "../lib/luminosity";
 import { NEAR_WHITE, ACCENT, OVERLAY_COLOR } from "../lib/colors";
 
 export default function SubForMoreSlide(props: {
   backgroundImg?: HTMLImageElement; // Pre-blurred image for background
-  originalImg?: HTMLImageElement; // Original image for luminosity calculation
+  overlayOpacity: number;
   imgX: number;
   numero: number;
   scale: number;
@@ -21,20 +20,8 @@ export default function SubForMoreSlide(props: {
   display: boolean;
 }) {
   const [logo] = useLogoImage();
-  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.61);
 
   const contentRef = useRef<Konva.Text>(null);
-
-  // Calculate overlay opacity based on original image luminosity
-  useEffect(() => {
-    if (props.originalImg) {
-      const luminosity = getImageLuminosity(props.originalImg);
-      const opacity = calculateOverlayOpacity(luminosity, 0.5, 0.8);
-      setOverlayOpacity(opacity);
-    } else {
-      setOverlayOpacity(0.61); // Default opacity when no image
-    }
-  }, [props.originalImg]);
 
   // Calculate vertical offset to center content in story format
   // Original content spans from y=200 to y=1180 in 1350px canvas (980px height)
@@ -67,7 +54,7 @@ export default function SubForMoreSlide(props: {
           y={0}
           width={props.canvasWidth}
           height={props.canvasHeight}
-          fill={`rgba(${OVERLAY_COLOR},${overlayOpacity})`}
+          fill={`rgba(${OVERLAY_COLOR},${props.overlayOpacity})`}
         />
 
         <Text

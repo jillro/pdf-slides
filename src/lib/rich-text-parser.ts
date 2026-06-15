@@ -66,10 +66,3 @@ export function parseRichText(content: string): TextSegment[] {
 
   return segments.length > 0 ? segments : [{ text: "", style: "normal" }];
 }
-
-/**
- * Strip **…** and ==…== markers, returning plain text.
- */
-export function stripRichTextMarkers(content: string): string {
-  return content.replace(/\*\*/g, "").replace(/==/g, "");
-}

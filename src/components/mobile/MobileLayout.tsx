@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./MobileLayout.module.css";
-import { useState, MutableRefObject } from "react";
+import { useState } from "react";
 import TabNavigation, { TabId } from "./TabNavigation";
 import TabPanel from "./TabPanel";
 import CanvasPreview from "./CanvasPreview";
@@ -10,228 +10,40 @@ import ContenuTab from "../tabs/ContenuTab";
 import SlidesTab from "../tabs/SlidesTab";
 import ImageTab from "../tabs/ImageTab";
 import PartagerTab from "../tabs/PartagerTab";
-import { Format } from "../../lib/formats";
-import type { ContentBgThemeId } from "../../lib/contentBgThemes";
+import { slideCount } from "../../lib/slides";
+import { usePostEditor } from "../PostEditorContext";
 
-interface MobileLayoutProps {
-  // Canvas props
-  img: HTMLImageElement | undefined;
-  blurredImg: HTMLImageElement | null;
-  imgX: number;
-  setImgX: (x: number) => void;
-  position: "top" | "bottom";
-  setPosition: (value: "top" | "bottom") => void;
-  unsavedPosition: boolean;
-  rubrique: string;
-  setRubrique: (value: string) => void;
-  unsavedRubrique: boolean;
-  title: string;
-  setTitle: (value: string) => void;
-  unsavedTitle: boolean;
-  intro: string;
-  setIntro: (value: string) => void;
-  unsavedIntro: boolean;
-  format: Format;
-  setFormat: (value: Format) => void;
-  unsavedFormat: boolean;
-  slidesContent: string[];
-  slideThemes: ContentBgThemeId[];
-  onSlidesAndThemesChange: (
-    value: string[],
-    themes: ContentBgThemeId[],
-  ) => void;
-  unsavedSlidesContent: boolean;
-  subForMore: boolean;
-  setSubForMore: (value: boolean) => void;
-  unsavedSubForMore: boolean;
-  numero: number;
-  setNumero: (value: number) => void;
-  unsavedNumero: boolean;
-
-  // Legend props
-  legendContent: string;
-  setLegendContent: (value: string) => void;
-  unsavedLegendContent: boolean;
-  imageCaption: string | null;
-  setImageCaption: (value: string | null) => void;
-  unsavedImageCaption: boolean;
-  articleUrl: string | null;
-
-  // WordPress props
-  wpUrl: string;
-  setWpUrl: (url: string) => void;
-  wpLoading: boolean;
-  wpError: string | null;
-  setWpError: (error: string | null) => void;
-  importWithContent: boolean;
-  setImportWithContent: (value: boolean) => void;
-  onWordPressImport: () => void;
-
-  // Image upload
-  onImageUpload: (file: File) => void;
-
-  // Download
-  onDownload: () => void;
-
-  // Slide navigation
-  currentSlide: number;
-  setCurrentSlide: (slide: number) => void;
-
-  // Stages ref
-  stagesRef: MutableRefObject<unknown[]>;
-}
-
-export default function MobileLayout({
-  img,
-  blurredImg,
-  imgX,
-  setImgX,
-  position,
-  setPosition,
-  unsavedPosition,
-  rubrique,
-  setRubrique,
-  unsavedRubrique,
-  title,
-  setTitle,
-  unsavedTitle,
-  intro,
-  setIntro,
-  unsavedIntro,
-  format,
-  setFormat,
-  unsavedFormat,
-  slidesContent,
-  slideThemes,
-  onSlidesAndThemesChange,
-  unsavedSlidesContent,
-  subForMore,
-  setSubForMore,
-  unsavedSubForMore,
-  numero,
-  setNumero,
-  unsavedNumero,
-  legendContent,
-  setLegendContent,
-  unsavedLegendContent,
-  imageCaption,
-  setImageCaption,
-  unsavedImageCaption,
-  articleUrl,
-  wpUrl,
-  setWpUrl,
-  wpLoading,
-  wpError,
-  setWpError,
-  importWithContent,
-  setImportWithContent,
-  onWordPressImport,
-  onImageUpload,
-  onDownload,
-  currentSlide,
-  setCurrentSlide,
-  stagesRef,
-}: MobileLayoutProps) {
+export default function MobileLayout() {
+  const { post, unsaved } = usePostEditor();
   const [activeTab, setActiveTab] = useState<TabId>("contenu");
   const [focusModeOpen, setFocusModeOpen] = useState(false);
 
   const unsavedByTab: Record<TabId, boolean> = {
-    contenu: unsavedTitle || unsavedIntro || unsavedRubrique,
-    slides: unsavedSlidesContent,
-    image: unsavedFormat || unsavedPosition,
+    contenu: "title" in unsaved || "intro" in unsaved || "rubrique" in unsaved,
+    slides: "slidesContent" in unsaved,
+    image: "format" in unsaved || "position" in unsaved,
     partager:
-      unsavedSubForMore ||
-      unsavedNumero ||
-      unsavedLegendContent ||
-      unsavedImageCaption,
+      "subForMore" in unsaved ||
+      "numero" in unsaved ||
+      "legendContent" in unsaved ||
+      "imageCaption" in unsaved,
   };
 
   // Total number of slides for preview
-  const totalSlides = 1 + slidesContent.length + (subForMore ? 1 : 0);
+  const totalSlides = slideCount(post.slidesContent, post.subForMore);
 
   return (
     <div className={styles.mobileLayout}>
       <CanvasPreview
-        img={img}
-        blurredImg={blurredImg}
-        imgX={imgX}
-        position={position}
-        rubrique={rubrique}
-        title={title}
-        intro={intro}
-        format={format}
-        slidesContent={slidesContent}
-        slideThemes={slideThemes}
-        subForMore={subForMore}
-        numero={numero}
-        currentSlide={currentSlide}
         totalSlides={totalSlides}
         onTap={() => setFocusModeOpen(true)}
-        stagesRef={stagesRef}
       />
 
       <TabPanel>
-        {activeTab === "contenu" && (
-          <ContenuTab
-            wpUrl={wpUrl}
-            setWpUrl={setWpUrl}
-            wpLoading={wpLoading}
-            wpError={wpError}
-            setWpError={setWpError}
-            importWithContent={importWithContent}
-            setImportWithContent={setImportWithContent}
-            onWordPressImport={onWordPressImport}
-            rubrique={rubrique}
-            setRubrique={setRubrique}
-            unsavedRubrique={unsavedRubrique}
-            title={title}
-            setTitle={setTitle}
-            unsavedTitle={unsavedTitle}
-            intro={intro}
-            setIntro={setIntro}
-            unsavedIntro={unsavedIntro}
-          />
-        )}
-        {activeTab === "slides" && (
-          <SlidesTab
-            slidesContent={slidesContent}
-            slideThemes={slideThemes}
-            onSlidesAndThemesChange={onSlidesAndThemesChange}
-            unsavedSlidesContent={unsavedSlidesContent}
-          />
-        )}
-        {activeTab === "image" && (
-          <ImageTab
-            format={format}
-            setFormat={setFormat}
-            unsavedFormat={unsavedFormat}
-            position={position}
-            setPosition={setPosition}
-            unsavedPosition={unsavedPosition}
-            img={img}
-            imgX={imgX}
-            setImgX={setImgX}
-            onImageUpload={onImageUpload}
-          />
-        )}
-        {activeTab === "partager" && (
-          <PartagerTab
-            subForMore={subForMore}
-            setSubForMore={setSubForMore}
-            unsavedSubForMore={unsavedSubForMore}
-            numero={numero}
-            setNumero={setNumero}
-            unsavedNumero={unsavedNumero}
-            legendContent={legendContent}
-            setLegendContent={setLegendContent}
-            unsavedLegendContent={unsavedLegendContent}
-            imageCaption={imageCaption}
-            setImageCaption={setImageCaption}
-            unsavedImageCaption={unsavedImageCaption}
-            articleUrl={articleUrl}
-            onDownload={onDownload}
-          />
-        )}
+        {activeTab === "contenu" && <ContenuTab />}
+        {activeTab === "slides" && <SlidesTab />}
+        {activeTab === "image" && <ImageTab />}
+        {activeTab === "partager" && <PartagerTab />}
       </TabPanel>
 
       <TabNavigation
@@ -241,24 +53,7 @@ export default function MobileLayout({
       />
 
       {focusModeOpen && (
-        <CanvasFocusMode
-          img={img}
-          blurredImg={blurredImg}
-          imgX={imgX}
-          position={position}
-          rubrique={rubrique}
-          title={title}
-          intro={intro}
-          format={format}
-          slidesContent={slidesContent}
-          slideThemes={slideThemes}
-          subForMore={subForMore}
-          numero={numero}
-          currentSlide={currentSlide}
-          onSlideChange={setCurrentSlide}
-          onImgXChange={setImgX}
-          onClose={() => setFocusModeOpen(false)}
-        />
+        <CanvasFocusMode onClose={() => setFocusModeOpen(false)} />
       )}
     </div>
   );

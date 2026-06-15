@@ -2,45 +2,19 @@
 
 import styles from "./PartagerTab.module.css";
 import LegendGenerator from "../LegendGenerator";
+import { usePostEditor, usePostField } from "../PostEditorContext";
 
-interface PartagerTabProps {
-  subForMore: boolean;
-  setSubForMore: (value: boolean) => void;
-  unsavedSubForMore: boolean;
+export default function PartagerTab() {
+  const [subForMore, unsavedSubForMore, setSubForMore] =
+    usePostField("subForMore");
+  const [numero, unsavedNumero, setNumero] = usePostField("numero");
+  const [legendContent, unsavedLegendContent, setLegendContent] =
+    usePostField("legendContent");
+  const [imageCaption, unsavedImageCaption, setImageCaption] =
+    usePostField("imageCaption");
+  const [articleUrl] = usePostField("articleUrl");
+  const { handleDownload } = usePostEditor();
 
-  numero: number;
-  setNumero: (value: number) => void;
-  unsavedNumero: boolean;
-
-  legendContent: string;
-  setLegendContent: (value: string) => void;
-  unsavedLegendContent: boolean;
-
-  imageCaption: string | null;
-  setImageCaption: (value: string | null) => void;
-  unsavedImageCaption: boolean;
-
-  articleUrl: string | null;
-
-  onDownload: () => void;
-}
-
-export default function PartagerTab({
-  subForMore,
-  setSubForMore,
-  unsavedSubForMore,
-  numero,
-  setNumero,
-  unsavedNumero,
-  legendContent,
-  setLegendContent,
-  unsavedLegendContent,
-  imageCaption,
-  setImageCaption,
-  unsavedImageCaption,
-  articleUrl,
-  onDownload,
-}: PartagerTabProps) {
   return (
     <div className={styles.container}>
       <div className={styles.section}>
@@ -110,7 +84,7 @@ export default function PartagerTab({
         articleUrl={articleUrl}
       />
 
-      <button onClick={onDownload} className={styles.downloadButton}>
+      <button onClick={handleDownload} className={styles.downloadButton}>
         Télécharger les slides
       </button>
     </div>
