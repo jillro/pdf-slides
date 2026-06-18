@@ -63,6 +63,7 @@ export type FirstSlideLayout = "gradient" | "split-light" | "split-dark";
 export type Post = {
   id: string;
   img: string | null; // data-url
+  thumb: string | null; // small data-url preview
   imgX: number;
   title: string;
   intro: string;
@@ -102,6 +103,7 @@ type RedisPost = Partial<
 
 const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.img != undefined ? { img: post.img } : {}),
+  ...(post.thumb != undefined ? { thumb: post.thumb ?? "" } : {}),
   ...(post.imgX != undefined ? { imgX: post.imgX } : {}),
   ...(post.title != undefined ? { title: post.title } : {}),
   ...(post.intro != undefined ? { intro: post.intro } : {}),
@@ -142,6 +144,7 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
   slidesContent: post.slidesContent ? JSON.parse(post.slidesContent) : [],
   slideThemes: post.slideThemes ? JSON.parse(post.slideThemes) : [],
   subForMore: post.subForMore === "true",
+  thumb: post.thumb || null,
   imageCaption: post.imageCaption || null,
   articleUrl: post.articleUrl || null,
   updatedAt: post.updatedAt ? Number(post.updatedAt) : 0,
@@ -150,6 +153,7 @@ const toJsValue = (id: string, post: RedisPost): Post => ({
 const newPost = (id: string): Post => ({
   id,
   img: null,
+  thumb: null,
   imgX: 0,
   title: "",
   intro: "",
@@ -256,8 +260,22 @@ export async function listPosts(): Promise<Post[]> {
   const hashes = await Promise.all(
     keys.map(async (key) => {
       const id = key.slice("hash:".length);
-      const hash = (await client.hGetAll(key)) as unknown as RedisPost;
-      return toJsValue(id, hash);
+      // Only fetch the fields the home page needs. Avoids pulling the full
+      // base64 `img` for every post (only loaded as a legacy fallback when a
+      // post has no `thumb`).
+      const [title, thumb, img, updatedAt] = (await client.hmGet(key, [
+        "title",
+        "thumb",
+        "img",
+        "updatedAt",
+      ])) as (string | null)[];
+      return {
+        ...newPost(id),
+        title: title || "",
+        thumb: thumb || null,
+        img: img || null,
+        updatedAt: updatedAt ? Number(updatedAt) : 0,
+      };
     }),
   );
 
