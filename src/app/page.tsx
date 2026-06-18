@@ -32,6 +32,7 @@ export default async function Page() {
                 id: post.id,
                 title: post.title,
                 img: post.img,
+                thumb: post.thumb,
                 updatedAt: post.updatedAt,
               }}
             />

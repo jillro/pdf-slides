@@ -23,7 +23,16 @@ import { slideCount } from "../lib/slides";
 import { createBlurredImage } from "../lib/blur";
 import type { ContentBgThemeId } from "../lib/contentBgThemes";
 
-async function resizeImage(imgBlob: Blob): Promise<string> {
+// Small preview rendered on the home page post list. Kept tiny so it can be
+// stored inline (base64) and served without downloading the full-size image.
+const THUMB_HEIGHT = 200;
+
+async function resizeImage(
+  imgBlob: Blob,
+  targetHeight: number = MAX_FORMAT_HEIGHT,
+  type?: string,
+  quality?: number,
+): Promise<string> {
   // Get image current height
   const img = new Image();
   img.src = URL.createObjectURL(imgBlob);
@@ -31,15 +40,20 @@ async function resizeImage(imgBlob: Blob): Promise<string> {
 
   // Scale down the image to target height, keeping the aspect ratio
   const canvas = document.createElement("canvas");
-  canvas.height = MAX_FORMAT_HEIGHT;
-  canvas.width = (MAX_FORMAT_HEIGHT * img.width) / img.height;
+  canvas.height = targetHeight;
+  canvas.width = (targetHeight * img.width) / img.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL();
+  return canvas.toDataURL(type, quality);
 }
 
-async function uploadImage(postId: string, file: Blob): Promise<string> {
+async function uploadImage(
+  postId: string,
+  file: Blob,
+): Promise<{ full: string; thumb: string }> {
+  const thumb = await resizeImage(file, THUMB_HEIGHT, "image/jpeg", 0.7);
+
   const dataUrl = await resizeImage(file);
   const blob = await (await fetch(dataUrl)).blob();
   const ext = blob.type.split("/")[1] || "png";
@@ -48,7 +62,7 @@ async function uploadImage(postId: string, file: Blob): Promise<string> {
     contentType: blob.type,
     ext,
   });
-  if (!presigned) return dataUrl;
+  if (!presigned) return { full: dataUrl, thumb };
 
   const res = await fetch(presigned.uploadUrl, {
     method: "PUT",
@@ -56,7 +70,7 @@ async function uploadImage(postId: string, file: Blob): Promise<string> {
     headers: { "Content-Type": blob.type },
   });
   if (!res.ok) throw new Error(`S3 upload failed: ${res.status}`);
-  return presigned.publicUrl;
+  return { full: presigned.publicUrl, thumb };
 }
 
 interface PostEditorContextValue {
@@ -145,6 +159,9 @@ export function PostEditorProvider({
   // Image state stays separate from the debounced Post object: it is saved
   // immediately (not through scheduleSave).
   const [imgDataUrl, setImgDataUrl] = useState<string>(initialPost.img || "");
+  const [thumbDataUrl, setThumbDataUrl] = useState<string>(
+    initialPost.thumb || "",
+  );
   const [img] = useImage(imgDataUrl, "anonymous");
   const [blurredImg, setBlurredImg] = useState<HTMLImageElement | null>(null);
 
@@ -164,9 +181,10 @@ export function PostEditorProvider({
       await savePost({
         id,
         img: imgDataUrl,
+        thumb: thumbDataUrl,
       });
     })();
-  }, [id, imgDataUrl]);
+  }, [id, imgDataUrl, thumbDataUrl]);
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
@@ -256,14 +274,18 @@ export function PostEditorProvider({
     if (imageDataUrl) {
       const response = await fetch(imageDataUrl);
       const blob = await response.blob();
-      setImgDataUrl(await uploadImage(id, blob));
+      const { full, thumb } = await uploadImage(id, blob);
+      setImgDataUrl(full);
+      setThumbDataUrl(thumb);
     }
 
     setWpLoading(false);
   };
 
   const handleImageUpload = async (file: File) => {
-    setImgDataUrl(await uploadImage(id, file));
+    const { full, thumb } = await uploadImage(id, file);
+    setImgDataUrl(full);
+    setThumbDataUrl(thumb);
   };
 
   const value: PostEditorContextValue = {

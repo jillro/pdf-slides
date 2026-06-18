@@ -6,7 +6,7 @@ import { deletePostAction, type Post } from "../app/storage";
 import styles from "./PostCard.module.css";
 
 type PostCardProps = {
-  post: Pick<Post, "id" | "title" | "img" | "updatedAt">;
+  post: Pick<Post, "id" | "title" | "img" | "thumb" | "updatedAt">;
 };
 
 function formatRelativeDate(timestamp: number): string {
@@ -48,17 +48,22 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const title = post.title?.trim();
+  // Prefer the lightweight thumbnail; fall back to the full image for posts
+  // created before thumbnails existed.
+  const previewSrc = post.thumb ?? post.img;
 
   return (
     <article className={styles.card}>
       <Link href={`/${post.id}`} className={styles.cardLink}>
-        {post.img ? (
+        {previewSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={post.img}
+            src={previewSrc}
             alt=""
             aria-hidden="true"
             className={styles.thumbnail}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className={styles.thumbnailPlaceholder} aria-hidden="true" />
