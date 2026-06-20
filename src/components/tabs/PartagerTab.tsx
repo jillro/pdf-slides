@@ -2,6 +2,7 @@
 
 import styles from "./PartagerTab.module.css";
 import LegendGenerator from "../LegendGenerator";
+import SocialPublish from "../SocialPublish";
 import { usePostEditor, usePostField } from "../PostEditorContext";
 
 export default function PartagerTab() {
@@ -83,6 +84,8 @@ export default function PartagerTab() {
         imageCaption={imageCaption}
         articleUrl={articleUrl}
       />
+
+      <SocialPublish />
 
       <button onClick={handleDownload} className={styles.downloadButton}>
         Télécharger les slides

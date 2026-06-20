@@ -1,0 +1,80 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: 0;
+}
+
+.legend {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  padding: 0 0.25rem;
+}
+
+.targetLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.publishButton {
+  border-radius: 8px;
+  padding: 0.7em 1.2em;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.publishButton:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.publishButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.resultSuccess,
+.resultError {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+}
+
+.resultSuccess {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.resultError {
+  background-color: var(--bg-tertiary);
+  color: #c0392b;
+}
