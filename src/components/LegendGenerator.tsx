@@ -2,48 +2,13 @@
 
 import { useState } from "react";
 import styles from "./LegendGenerator.module.css";
-import { applyFrenchTypography } from "../lib/french-typography";
+import { generateCaption, type CaptionType } from "../lib/captions";
 
 type Props = {
   legendContent: string;
   imageCaption: string | null;
   articleUrl: string | null;
 };
-
-type CaptionType = "instagram" | "whatsapp" | "bluesky";
-
-function generateCaption(
-  type: CaptionType,
-  legendContent: string,
-  imageCaption: string | null,
-  articleUrl: string | null,
-): string {
-  const content = applyFrenchTypography(legendContent.trim());
-  const caption = imageCaption ? applyFrenchTypography(imageCaption) : null;
-
-  switch (type) {
-    case "instagram": {
-      if (caption) {
-        return `${content}\n\n${caption}`;
-      }
-      return content;
-    }
-    case "whatsapp": {
-      const parts = ["📰 Nouvel article !", "", `_${content}_`];
-      if (articleUrl) {
-        parts.push("", `💡 À lire sur notre site : ${articleUrl}`);
-      }
-      return parts.join("\n");
-    }
-    case "bluesky": {
-      const parts = [content];
-      if (articleUrl) {
-        parts.push("", `💡 À lire sur notre site : ${articleUrl}`);
-      }
-      return parts.join("\n");
-    }
-  }
-}
 
 export default function LegendGenerator({
   legendContent,
@@ -68,7 +33,7 @@ export default function LegendGenerator({
   const networks: { type: CaptionType; name: string }[] = [
     { type: "instagram", name: "Instagram" },
     { type: "whatsapp", name: "WhatsApp" },
-    { type: "bluesky", name: "Bluesky / Mastodon" },
+    { type: "bluesky", name: "Bluesky" },
   ];
 
   const hasContent = legendContent.trim().length > 0;

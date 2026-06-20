@@ -18,10 +18,42 @@ import { useInterval } from "usehooks-ts";
 import { Post, savePost } from "../app/storage";
 import { createUploadUrl } from "../app/s3";
 import { importFromWordPress } from "../app/wordpress";
+import {
+  createZernioPresign,
+  createZernioDraft,
+  type ZernioPlatform,
+} from "../app/zernio";
 import { MAX_FORMAT_HEIGHT } from "../lib/formats";
-import { slideCount } from "../lib/slides";
 import { createBlurredImage } from "../lib/blur";
+import { generateCaption } from "../lib/captions";
+import { parseRichText } from "../lib/rich-text-parser";
 import type { ContentBgThemeId } from "../lib/contentBgThemes";
+
+// Bluesky caps a single post at 4 images.
+const MAX_BLUESKY_IMAGES = 4;
+
+export type PublishTarget = ZernioPlatform;
+
+export type PublishTargetResult = {
+  success: boolean;
+  error?: string;
+  // Non-fatal note, e.g. when slides were dropped to fit a platform limit.
+  note?: string;
+};
+
+export type PublishStatus = {
+  running: boolean;
+  results: Partial<Record<PublishTarget, PublishTargetResult>>;
+};
+
+// Flatten a rich-text slide to plain text for use as image alt text, using the
+// same parser SlidesRenderer uses to draw the slide so the alt matches what's
+// rendered.
+function slideAltText(content: string): string {
+  return parseRichText(content.trim())
+    .map((s) => s.text)
+    .join("");
+}
 
 // Small preview rendered on the home page post list. Kept tiny so it can be
 // stored inline (base64) and served without downloading the full-size image.
@@ -90,6 +122,8 @@ interface PostEditorContextValue {
   setImportWithContent: (value: boolean) => void;
   handleDownload: () => Promise<void>;
   handleWordPressImport: () => Promise<void>;
+  publishDrafts: (targets: PublishTarget[]) => Promise<void>;
+  publishStatus: PublishStatus;
   stagesRef: MutableRefObject<unknown[]>;
 }
 
@@ -195,39 +229,158 @@ export function PostEditorProvider({
 
   const stagesRef = useRef<unknown[]>([]);
 
-  const handleDownload = async () => {
-    const isSingleSlide = slideCount(post.slidesContent, post.subForMore) === 1;
+  const [publishStatus, setPublishStatus] = useState<PublishStatus>({
+    running: false,
+    results: {},
+  });
+
+  // Render every slide stage to a PNG Blob at 2x the original canvas resolution
+  // (regardless of display scale). Shared by download and push-to-drafts.
+  const exportSlideBlobs = async (): Promise<Blob[]> => {
     const stages = stagesRef.current as Konva.Stage[];
-
-    // Export at 2x the original canvas resolution regardless of display scale
     const getPixelRatio = (stage: Konva.Stage) => 2 / (stage.scaleX() || 1);
+    return Promise.all(
+      stages.map(
+        (stage) =>
+          stage.toBlob({ pixelRatio: getPixelRatio(stage) }) as Promise<Blob>,
+      ),
+    );
+  };
 
-    if (isSingleSlide) {
+  const handleDownload = async () => {
+    const blobs = await exportSlideBlobs();
+
+    if (blobs.length === 1) {
       // Single slide: export as PNG directly
-      const stage = stages[0];
-      const blob = await stage.toBlob({ pixelRatio: getPixelRatio(stage) });
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob as Blob);
+      link.href = URL.createObjectURL(blobs[0]);
       link.download = "slide.png";
       link.click();
     } else {
       // Multiple slides: export as ZIP of PNGs
       const zip = new JSZip();
-      await Promise.all(
-        stages.map(async (stage, i) => {
-          zip.file(
-            `${i}.png`,
-            (await stage.toBlob({ pixelRatio: getPixelRatio(stage) })) as Blob,
-          );
+      blobs.forEach((blob, i) => zip.file(`${i}.png`, blob));
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(content);
+      link.download = "slides.zip";
+      link.click();
+    }
+  };
+
+  // Push the rendered slides + per-network captions as drafts to the selected
+  // platforms. Each target is independent: one failing leaves the others intact.
+  const publishDrafts = async (targets: PublishTarget[]) => {
+    if (targets.length === 0) return;
+
+    setPublishStatus({ running: true, results: {} });
+
+    const blobs = await exportSlideBlobs();
+    const { legendContent, imageCaption, articleUrl, title } = post;
+
+    // Per-slide alt text, aligned 1:1 with the exported blobs (stage order:
+    // index 0 = title slide, index i+1 = slidesContent[i], last = sub-slide).
+    const altTexts = [
+      title,
+      ...post.slidesContent.map(slideAltText),
+      ...(post.subForMore ? ["Abonne-toi pour lire la suite"] : []),
+    ];
+
+    const results: PublishStatus["results"] = {};
+    const setResult = (target: PublishTarget, result: PublishTargetResult) => {
+      results[target] = result;
+      setPublishStatus({ running: true, results: { ...results } });
+    };
+
+    if (targets.length > 0) {
+      // Upload each slide once to Zernio storage, reuse the public URLs across
+      // every Zernio platform.
+      const publicUrls = await Promise.all(
+        blobs.map(async (blob, i) => {
+          const contentType = blob.type || "image/png";
+          const presigned = await createZernioPresign({
+            filename: `slide-${i}.png`,
+            contentType,
+          });
+          if (!presigned) return null;
+          const res = await fetch(presigned.uploadUrl, {
+            method: "PUT",
+            body: blob,
+            headers: { "Content-Type": contentType },
+          });
+          if (!res.ok) return null;
+          return presigned.publicUrl;
         }),
       );
-      zip.generateAsync({ type: "blob" }).then((content) => {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(content);
-        link.download = "slides.zip";
-        link.click();
-      });
+
+      if (publicUrls.some((url) => url === null)) {
+        for (const platform of targets) {
+          setResult(platform, {
+            success: false,
+            error: "Échec de l'envoi des images",
+          });
+        }
+      } else {
+        const urls = publicUrls as string[];
+        const media = urls.map((url, i) => ({
+          url,
+          altText: altTexts[i] || undefined,
+        }));
+
+        // Instagram + Facebook share a single Zernio draft (one post, two
+        // account targets, each keeping its own caption). Bluesky stays its own
+        // draft: different caption and a 4-image cap.
+        const igFb = targets.filter(
+          (t) => t === "instagram" || t === "facebook",
+        );
+        const blueskyTargets = targets.filter((t) => t === "bluesky");
+
+        let blueskyMedia = media;
+        let blueskyNote: string | undefined;
+        if (media.length > MAX_BLUESKY_IMAGES) {
+          blueskyMedia = media.slice(0, MAX_BLUESKY_IMAGES);
+          blueskyNote = `Bluesky limité à ${MAX_BLUESKY_IMAGES} images (${media.length - MAX_BLUESKY_IMAGES} ignorée(s))`;
+        }
+
+        const groups: {
+          targets: ZernioPlatform[];
+          media: typeof media;
+          note?: string;
+        }[] = [];
+        if (igFb.length > 0) groups.push({ targets: igFb, media });
+        if (blueskyTargets.length > 0) {
+          groups.push({
+            targets: blueskyTargets,
+            media: blueskyMedia,
+            note: blueskyNote,
+          });
+        }
+
+        for (const group of groups) {
+          const platforms = group.targets.map((platform) => ({
+            platform,
+            content: generateCaption(
+              platform,
+              legendContent,
+              imageCaption,
+              articleUrl,
+            ),
+          }));
+          const res = await createZernioDraft({
+            platforms,
+            media: group.media,
+          });
+          for (const platform of group.targets) {
+            setResult(
+              platform,
+              res.success ? { success: true, note: group.note } : res,
+            );
+          }
+        }
+      }
     }
+
+    setPublishStatus({ running: false, results: { ...results } });
   };
 
   const handleWordPressImport = async () => {
@@ -305,6 +458,8 @@ export function PostEditorProvider({
     setImportWithContent,
     handleDownload,
     handleWordPressImport,
+    publishDrafts,
+    publishStatus,
     stagesRef,
   };
 

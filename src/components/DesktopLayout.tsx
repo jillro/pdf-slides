@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
 import LegendGenerator from "./LegendGenerator";
+import SocialPublish from "./SocialPublish";
 import SlidesRenderer from "./SlidesRenderer";
 
 import { FirstSlideLayout } from "../app/storage";
@@ -296,6 +297,7 @@ export default function DesktopLayout() {
           imageCaption={imageCaption}
           articleUrl={articleUrl}
         />
+        <SocialPublish />
       </div>
       <div className={styles.col + " " + styles.controls}>
         <SlideContentEditor

@@ -94,7 +94,7 @@ npm run format          # Format entire codebase
 - Supported networks and formats:
   - **Instagram**: `{legendContent}` + `\n\n{imageCaption}` (if present)
   - **WhatsApp**: `Nouvel article !\n\n{legendContent}\n\nA lire sur notre site : {articleUrl}`
-  - **Bluesky/Mastodon**: `{legendContent}\n\nA lire sur notre site : {articleUrl}`
+  - **Bluesky**: `{legendContent}\n\nA lire sur notre site : {articleUrl}`
 - One-click copy button for each network caption
 - Fields populated automatically from WordPress import (excerpt, link, image caption)
 
@@ -106,6 +106,24 @@ Client calls `savePost()` server action → Server checks `REDIS_URL` env var:
 - **If no Redis**: Falls back to in-memory Map (data lost on restart)
 
 Client-side state updates immediately; server saves are debounced (batched ~1s).
+
+### Social Drafts Push
+
+The `SocialPublish` component (rendered next to `LegendGenerator` in both layouts)
+pushes the rendered slides plus their per-network captions as **drafts** to social
+platforms. Captions come from the shared `src/lib/captions.ts` (one source of truth
+for both the copy-paste UI and the push flow).
+
+- **Instagram / Facebook / Bluesky** go through **Zernio** (`src/app/zernio.tsx`), a
+  unified social publishing REST API. Flow mirrors the S3 image upload: the client
+  presigns each slide (`POST /v1/media/presign`), `PUT`s the blob to the returned
+  `uploadUrl`, then `createZernioDraft` references the `publicUrl`s in one draft per
+  platform (`POST /v1/posts` with `isDraft: true`). Bluesky drafts are capped at 4
+  images. Facebook reuses the Bluesky-style caption (legend + article link).
+
+Each target publishes independently (one failing leaves the others intact). A platform
+only appears in the UI when its env vars are set, so the whole section stays hidden by
+default. Orchestration lives in `PostEditorContext.publishDrafts` / `publishStatus`.
 
 ### Canvas Rendering
 
@@ -145,6 +163,9 @@ experimental: {
 | `src/app/[id]/page.tsx`              | Dynamic post editor page; fetches post from storage   |
 | `src/app/storage.tsx`                | Server-side data access layer (Redis/Memory)          |
 | `src/app/wordpress.tsx`              | WordPress article import via REST API                 |
+| `src/app/zernio.tsx`                 | Push drafts to Instagram/Facebook/Bluesky via Zernio  |
+| `src/lib/captions.ts`                | Shared per-network caption generation                 |
+| `src/components/SocialPublish.tsx`   | "Push to drafts" UI (configured platforms only)       |
 | `src/lib/formats.ts`                 | Canvas format definitions (post/story dimensions)     |
 | `src/components/AppView.tsx`         | Main client editor, state management, slide rendering |
 | `src/components/FirstSlide.tsx`      | Konva stage for title slide                           |
@@ -207,6 +228,22 @@ REDIS_URL=redis://localhost:6379
 ```
 
 Without it, posts are stored in memory (lost on server restart). Useful for development.
+
+### Optional Social Drafts Push
+
+Uncomment in `.env` to enable the "Pousser en brouillons" UI. Each platform is
+independent and only shows up once its vars are set.
+
+```env
+# Zernio (Instagram / Facebook / Bluesky)
+ZERNIO_API_KEY=sk_...
+ZERNIO_INSTAGRAM_ACCOUNT_ID=
+ZERNIO_FACEBOOK_ACCOUNT_ID=
+ZERNIO_BLUESKY_ACCOUNT_ID=
+```
+
+Without any of these, the push UI stays hidden and download + copy-paste captions
+work exactly as before.
 
 ### Unused Credentials
 
