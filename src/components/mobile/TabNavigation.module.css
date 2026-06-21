@@ -12,6 +12,17 @@
   z-index: 100;
 }
 
+/* Desktop variant: in-flow horizontal tab bar at the top of the panel column */
+.tabBar.top {
+  position: static;
+  height: auto;
+  padding-bottom: 0;
+  border-top: none;
+  border-bottom: 1px solid var(--border-color);
+  justify-content: flex-start;
+  background-color: transparent;
+}
+
 .tab {
   flex: 1;
   display: flex;
@@ -29,6 +40,19 @@
   transition:
     color 0.2s,
     background-color 0.2s;
+}
+
+.tabBar.top .tab {
+  flex: 0 0 auto;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0.6em 1.2em;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tabBar.top .tab.active {
+  border-bottom-color: var(--accent);
 }
 
 .tab:hover {

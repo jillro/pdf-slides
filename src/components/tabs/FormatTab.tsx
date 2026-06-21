@@ -1,10 +1,11 @@
 "use client";
 
-import styles from "./ImageTab.module.css";
+import styles from "./FormatTab.module.css";
 import { useRef, useCallback } from "react";
 import { useResizeObserver } from "usehooks-ts";
 import dynamicImport from "next/dynamic";
 import { FORMAT_DIMENSIONS } from "../../lib/formats";
+import { FirstSlideLayout } from "../../app/storage";
 import { usePostEditor, usePostField } from "../PostEditorContext";
 
 const FirstSlide = dynamicImport(() => import("../FirstSlide"), { ssr: false });
@@ -12,9 +13,13 @@ const FirstSlide = dynamicImport(() => import("../FirstSlide"), { ssr: false });
 // Preview renders at half resolution for performance
 const PREVIEW_SCALE = 0.5;
 
-export default function ImageTab() {
+// On desktop the main left canvas is already interactive and draggable, so the
+// embedded drag-positioning preview is hidden to avoid two previews.
+export default function FormatTab({ desktop = false }: { desktop?: boolean }) {
   const [format, unsavedFormat, setFormat] = usePostField("format");
   const [position, unsavedPosition, setPosition] = usePostField("position");
+  const [firstSlideLayout, unsavedFirstSlideLayout, setFirstSlideLayout] =
+    usePostField("firstSlideLayout");
   const [imgX, , setImgX] = usePostField("imgX");
   const { img, handleImageUpload } = usePostEditor();
 
@@ -77,7 +82,28 @@ export default function ImageTab() {
         </div>
       </div>
 
-      {img && (
+      <div className={styles.section}>
+        <label htmlFor="firstSlideLayout" className={styles.sectionTitle}>
+          Mise en page première slide{" "}
+          {unsavedFirstSlideLayout && (
+            <span className={styles.unsaved}>⏳</span>
+          )}
+        </label>
+        <select
+          id="firstSlideLayout"
+          value={firstSlideLayout}
+          onChange={(e) =>
+            setFirstSlideLayout(e.target.value as FirstSlideLayout)
+          }
+          className={styles.select}
+        >
+          <option value="gradient">Dégradé sur photo</option>
+          <option value="split-light">Moitié + motif clair</option>
+          <option value="split-dark">Moitié + motif foncé</option>
+        </select>
+      </div>
+
+      {!desktop && img && (
         <div className={styles.section}>
           <label className={styles.sectionTitle}>
             Position de l&apos;image (glisser pour ajuster)

@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--control-section-gap);
 }
 
 .section {
@@ -11,7 +11,7 @@
 }
 
 .sectionTitle {
-  font-size: 1rem;
+  font-size: var(--section-title-size);
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -32,11 +32,11 @@
 .formatButton,
 .positionButton {
   flex: 1;
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   font-weight: 500;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -53,10 +53,20 @@
   border-color: var(--accent);
 }
 
+.select {
+  min-height: var(--control-min-height);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  font-size: var(--control-font-size);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 .uploadZone {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .fileInput {
@@ -64,16 +74,17 @@
 }
 
 .uploadLabel {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: calc(var(--touch-target-min) * 2);
-  border: 2px dashed var(--border-color);
+  min-height: var(--control-min-height);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 1rem;
-  font-size: 1rem;
-  color: var(--text-secondary);
+  padding: 0.6em 1em;
+  font-size: var(--control-font-size);
+  font-weight: 500;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   transition:
     border-color 0.2s,

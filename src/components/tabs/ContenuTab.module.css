@@ -1,7 +1,22 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--control-section-gap);
+}
+
+.topRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--control-section-gap);
+}
+
+.topCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--control-section-gap);
 }
 
 .section {
@@ -11,7 +26,7 @@
 }
 
 .sectionTitle {
-  font-size: 1rem;
+  font-size: var(--section-title-size);
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -31,21 +46,21 @@
 .urlInput {
   flex: 1;
   min-width: 0;
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
 .importButton {
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   min-width: 80px;
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   font-weight: 500;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -69,7 +84,7 @@
   gap: 0.5rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
 }
 
 .checkboxLabel input[type="checkbox"] {
@@ -78,21 +93,21 @@
 }
 
 .select {
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
 .textInput {
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -102,7 +117,7 @@
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   resize: vertical;
