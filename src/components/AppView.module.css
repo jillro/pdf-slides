@@ -1,5 +1,7 @@
 .container {
   width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   margin: 0 auto;
   display: flex;
   flex-direction: row;
@@ -16,9 +18,23 @@
   gap: 1rem;
 }
 
+/* Canvas column sizes to its preview; the tabbed panel takes the rest */
+.container .col.result {
+  flex: 0 1 480px;
+  overflow-y: auto;
+}
+
+.container .col.panel {
+  flex: 1 1 0;
+  min-width: 320px;
+  padding: 0;
+  gap: 0;
+}
+
 .container .col.result .canvasContainer {
   border: 1px solid var(--border-color);
   position: relative;
+  align-self: center;
 }
 
 .container .col.result .canvasContainer .canvasOverlay {
@@ -73,34 +89,4 @@
   top: 0;
   right: 0;
   z-index: 100;
-}
-
-.importSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  align-items: flex-start;
-}
-
-.importRow {
-  display: flex;
-  gap: 0.5rem;
-  align-self: stretch;
-}
-
-.importRow input {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-  padding: 0.6em 1.2em;
-  font-size: 0.8rem;
-  font-family: inherit;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.importError {
-  color: #dc3545;
-  font-size: 0.8rem;
 }

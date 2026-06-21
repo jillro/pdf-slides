@@ -132,9 +132,7 @@ const toRedisHash = (post: Partial<Post> & Pick<Post, "id">): RedisPost => ({
   ...(post.firstSlideLayout != undefined
     ? { firstSlideLayout: post.firstSlideLayout }
     : {}),
-  ...(post.updatedAt != undefined
-    ? { updatedAt: String(post.updatedAt) }
-    : {}),
+  ...(post.updatedAt != undefined ? { updatedAt: String(post.updatedAt) } : {}),
   ...(post.wpUrl != undefined ? { wpUrl: post.wpUrl } : {}),
 });
 

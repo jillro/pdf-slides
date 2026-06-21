@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--control-section-gap);
 }
 
 .section {
@@ -11,7 +11,7 @@
 }
 
 .sectionTitle {
-  font-size: 1rem;
+  font-size: var(--section-title-size);
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -27,9 +27,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   color: var(--text-primary);
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
 }
 
 .checkboxLabel input[type="checkbox"] {
@@ -38,23 +38,23 @@
 }
 
 .numberInput {
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   width: 80px;
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   text-align: center;
 }
 
 .textInput {
-  min-height: var(--touch-target-min);
+  min-height: var(--control-min-height);
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -64,7 +64,7 @@
   border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0.6em 1em;
-  font-size: 1rem;
+  font-size: var(--control-font-size);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   resize: vertical;

@@ -2,13 +2,12 @@
 
 import styles from "./MobileLayout.module.css";
 import { useState } from "react";
-import TabNavigation, { TabId } from "./TabNavigation";
+import TabNavigation, { TabId, computeUnsavedByTab } from "./TabNavigation";
 import TabPanel from "./TabPanel";
 import CanvasPreview from "./CanvasPreview";
 import CanvasFocusMode from "./CanvasFocusMode";
 import ContenuTab from "../tabs/ContenuTab";
-import SlidesTab from "../tabs/SlidesTab";
-import ImageTab from "../tabs/ImageTab";
+import FormatTab from "../tabs/FormatTab";
 import PartagerTab from "../tabs/PartagerTab";
 import { slideCount } from "../../lib/slides";
 import { usePostEditor } from "../PostEditorContext";
@@ -18,16 +17,7 @@ export default function MobileLayout() {
   const [activeTab, setActiveTab] = useState<TabId>("contenu");
   const [focusModeOpen, setFocusModeOpen] = useState(false);
 
-  const unsavedByTab: Record<TabId, boolean> = {
-    contenu: "title" in unsaved || "intro" in unsaved || "rubrique" in unsaved,
-    slides: "slidesContent" in unsaved,
-    image: "format" in unsaved || "position" in unsaved,
-    partager:
-      "subForMore" in unsaved ||
-      "numero" in unsaved ||
-      "legendContent" in unsaved ||
-      "imageCaption" in unsaved,
-  };
+  const unsavedByTab = computeUnsavedByTab(unsaved);
 
   // Total number of slides for preview
   const totalSlides = slideCount(post.slidesContent, post.subForMore);
@@ -41,8 +31,7 @@ export default function MobileLayout() {
 
       <TabPanel>
         {activeTab === "contenu" && <ContenuTab />}
-        {activeTab === "slides" && <SlidesTab />}
-        {activeTab === "image" && <ImageTab />}
+        {activeTab === "format" && <FormatTab />}
         {activeTab === "partager" && <PartagerTab />}
       </TabPanel>
 

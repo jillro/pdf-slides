@@ -1,8 +1,9 @@
 "use client";
 
 import styles from "./TabNavigation.module.css";
+import { Post } from "../../app/storage";
 
-export type TabId = "contenu" | "slides" | "image" | "partager";
+export type TabId = "contenu" | "format" | "partager";
 
 interface TabConfig {
   id: TabId;
@@ -12,25 +13,52 @@ interface TabConfig {
 
 const TABS: TabConfig[] = [
   { id: "contenu", label: "Contenu", icon: "📝" },
-  { id: "slides", label: "Slides", icon: "📑" },
-  { id: "image", label: "Image", icon: "🖼️" },
+  { id: "format", label: "Format", icon: "🖼️" },
   { id: "partager", label: "Partager", icon: "📤" },
 ];
+
+// Shared by both layouts so the unsaved dots stay identical across devices.
+export function computeUnsavedByTab(
+  unsaved: Partial<Post>,
+): Record<TabId, boolean> {
+  return {
+    contenu:
+      "title" in unsaved ||
+      "intro" in unsaved ||
+      "rubrique" in unsaved ||
+      "slidesContent" in unsaved,
+    format:
+      "format" in unsaved ||
+      "position" in unsaved ||
+      "firstSlideLayout" in unsaved,
+    partager:
+      "subForMore" in unsaved ||
+      "numero" in unsaved ||
+      "legendContent" in unsaved ||
+      "imageCaption" in unsaved,
+  };
+}
 
 interface TabNavigationProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   unsavedByTab: Record<TabId, boolean>;
+  variant?: "bottom" | "top";
+  tabs?: TabId[];
 }
 
 export default function TabNavigation({
   activeTab,
   onTabChange,
   unsavedByTab,
+  variant = "bottom",
+  tabs,
 }: TabNavigationProps) {
+  const visibleTabs = tabs ? TABS.filter((t) => tabs.includes(t.id)) : TABS;
+
   return (
-    <nav className={styles.tabBar}>
-      {TABS.map((tab) => (
+    <nav className={`${styles.tabBar} ${variant === "top" ? styles.top : ""}`}>
+      {visibleTabs.map((tab) => (
         <button
           key={tab.id}
           className={`${styles.tab} ${activeTab === tab.id ? styles.active : ""}`}

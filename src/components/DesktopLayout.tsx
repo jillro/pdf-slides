@@ -2,70 +2,80 @@
 
 import styles from "./AppView.module.css";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useResizeObserver } from "usehooks-ts";
-import SlideContentEditor from "./SlideContentEditor/SlideContentEditor";
-import LegendGenerator from "./LegendGenerator";
-import SocialPublish from "./SocialPublish";
 import SlidesRenderer from "./SlidesRenderer";
+import TabNavigation, {
+  TabId,
+  computeUnsavedByTab,
+} from "./mobile/TabNavigation";
+import TabPanel from "./mobile/TabPanel";
+import ContenuTab from "./tabs/ContenuTab";
+import FormatTab from "./tabs/FormatTab";
+import PartagerTab from "./tabs/PartagerTab";
 
-import { FirstSlideLayout } from "../app/storage";
-import { Format, FORMAT_DIMENSIONS } from "../lib/formats";
+import { FORMAT_DIMENSIONS } from "../lib/formats";
 import { slideCount } from "../lib/slides";
 import { usePostEditor, usePostField } from "./PostEditorContext";
 
 export default function DesktopLayout() {
-  const ref = useRef<HTMLDivElement>(null);
+  const colRef = useRef<HTMLDivElement>(null);
+  const formatRef = useRef<HTMLDivElement>(null);
 
-  const { width: colWidth } = useResizeObserver({
-    ref,
+  // The result column holds the preview canvas plus the format panel and must
+  // not exceed the viewport height. We measure the column (available space) and
+  // the format panel, then shrink the preview so both fit without scrolling.
+  const { width: colWidth = 0, height: colHeight = 0 } = useResizeObserver({
+    ref: colRef,
     box: "content-box",
   });
+  const { height: formatHeight = 0 } = useResizeObserver({
+    ref: formatRef,
+    box: "border-box",
+  });
 
-  const [title, unsavedTitle, setTitle] = usePostField("title");
-  const [intro, unsavedIntro, setIntro] = usePostField("intro");
-  const [rubrique, unsavedRubrique, setRubrique] = usePostField("rubrique");
-  const [slidesContent, unsavedSlidesContent] = usePostField("slidesContent");
+  const [activeTab, setActiveTab] = useState<TabId>("contenu");
+
+  const [title] = usePostField("title");
+  const [intro] = usePostField("intro");
+  const [rubrique] = usePostField("rubrique");
+  const [slidesContent] = usePostField("slidesContent");
   const [slideThemes] = usePostField("slideThemes");
-  const [position, unsavedPosition, setPosition] = usePostField("position");
-  const [subForMore, unsavedSubForMore, setSubForMore] =
-    usePostField("subForMore");
+  const [position] = usePostField("position");
+  const [subForMore] = usePostField("subForMore");
   const [imgX, , setImgX] = usePostField("imgX");
-  const [numero, unsavedNumero, setNumero] = usePostField("numero");
-  const [format, unsavedFormat, setFormat] = usePostField("format");
-  const [firstSlideLayout, unsavedFirstSlideLayout, setFirstSlideLayout] =
-    usePostField("firstSlideLayout");
-  const [legendContent, unsavedLegendContent, setLegendContent] =
-    usePostField("legendContent");
-  const [imageCaption, unsavedImageCaption, setImageCaption] =
-    usePostField("imageCaption");
-  const [articleUrl] = usePostField("articleUrl");
-  const [wpUrl, , setWpUrl] = usePostField("wpUrl");
+  const [numero] = usePostField("numero");
+  const [format] = usePostField("format");
+  const [firstSlideLayout] = usePostField("firstSlideLayout");
 
-  const {
-    img,
-    blurredImg,
-    handleImageUpload,
-    handleDownload,
-    handleWordPressImport,
-    wpLoading,
-    wpError,
-    setWpError,
-    importWithContent,
-    setImportWithContent,
-    currentSlide,
-    setCurrentSlide,
-    setSlidesAndThemes,
-    stagesRef,
-  } = usePostEditor();
+  const { img, blurredImg, currentSlide, setCurrentSlide, stagesRef, unsaved } =
+    usePostEditor();
 
-  const { width: canvasWidth } = FORMAT_DIMENSIONS[format];
-  const scale = colWidth ? colWidth / canvasWidth : 0;
+  const unsavedByTab = computeUnsavedByTab(unsaved);
+
+  const { width: canvasWidth, height: canvasHeight } =
+    FORMAT_DIMENSIONS[format];
+
+  // Space left for the preview once the format panel and the column gap (1rem)
+  // are removed. Convert that height budget into a width via the canvas aspect
+  // ratio, then keep whichever of width/height limit is more constraining.
+  // Column gap (1rem) plus the canvas container's 1px top/bottom border.
+  const RESERVED_HEIGHT = 16 + 2;
+  const availableHeight = colHeight - formatHeight - RESERVED_HEIGHT;
+  const widthFromHeight =
+    availableHeight > 0
+      ? (availableHeight * canvasWidth) / canvasHeight
+      : colWidth;
+  const displayWidth = Math.min(colWidth, widthFromHeight);
+  const scale = canvasWidth ? displayWidth / canvasWidth : 0;
 
   return (
     <div className={styles.container}>
-      <div className={styles.col + " " + styles.result}>
-        <div className={styles.canvasContainer} ref={ref}>
+      <div className={styles.col + " " + styles.result} ref={colRef}>
+        <div
+          className={styles.canvasContainer}
+          style={{ width: displayWidth || undefined }}
+        >
           {currentSlide > 0 ? (
             <button
               className={styles.canvasOverlay + " " + styles.canvasPrev}
@@ -99,213 +109,28 @@ export default function DesktopLayout() {
             numero={numero}
             currentSlide={currentSlide}
             scale={scale}
-            width={colWidth}
+            width={displayWidth}
             onImgXChange={setImgX}
             stagesRef={stagesRef}
           />
         </div>
 
-        <button onClick={handleDownload}>Télécharger</button>
+        <div ref={formatRef}>
+          <FormatTab desktop />
+        </div>
       </div>
-      <div className={styles.col + " " + styles.controls}>
-        <div className={styles.importSection}>
-          <label>Importer depuis WordPress</label>
-          <div className={styles.importRow}>
-            <input
-              type="url"
-              placeholder="URL de l'article"
-              value={wpUrl}
-              onChange={(e) => {
-                setWpUrl(e.target.value);
-                setWpError(null);
-              }}
-            />
-            <button onClick={handleWordPressImport} disabled={wpLoading}>
-              {wpLoading ? "..." : "Importer"}
-            </button>
-          </div>
-          {wpError && <div className={styles.importError}>{wpError}</div>}
-          <div className="input-group">
-            <label htmlFor="importWithContent">
-              <input
-                type="checkbox"
-                id="importWithContent"
-                checked={importWithContent}
-                onChange={(e) => setImportWithContent(e.target.checked)}
-              />
-              Importer le contenu de l&apos;article
-            </label>
-          </div>
-        </div>
-        <div className="input-group">
-          <label htmlFor="format">Format {unsavedFormat ? "⏳" : null}</label>
-          <select
-            name="format"
-            value={format}
-            onChange={(e) => setFormat(e.target.value as Format)}
-          >
-            <option value="post">Post (4:5)</option>
-            <option value="story">Story (9:16)</option>
-          </select>
-        </div>
-        <div className="input-group">
-          <label htmlFor="firstSlideLayout">
-            Mise en page première slide {unsavedFirstSlideLayout ? "⏳" : null}
-          </label>
-          <select
-            name="firstSlideLayout"
-            value={firstSlideLayout}
-            onChange={(e) =>
-              setFirstSlideLayout(e.target.value as FirstSlideLayout)
-            }
-          >
-            <option value="gradient">Dégradé sur photo</option>
-            <option value="split-light">Moitié + motif clair</option>
-            <option value="split-dark">Moitié + motif foncé</option>
-          </select>
-        </div>
-        <div className="input-group">
-          <label htmlFor="rubrique">
-            Rubrique {unsavedRubrique ? "⏳" : null}
-          </label>
-          <select
-            name="rubrique"
-            value={rubrique}
-            onChange={(e) => setRubrique(e.target.value)}
-          >
-            <option value="édito">Édito</option>
-            <option value="actu">Actu</option>
-            <option value="ailleurs">Ailleurs</option>
-            <option value="pop !">Pop !</option>
-            <option value="comprendre">Comprendre</option>
-            <option value="dossier">Dossier</option>
-            <option value="au cas où">Au cas où</option>
-          </select>
-        </div>
-        <div className="input-group">
-          <label htmlFor="image">Image</label>
-          <input
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={async (e) => {
-              if (e.target.files?.[0]) {
-                await handleImageUpload(e.target.files[0]);
-              }
-            }}
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="title">Titre {unsavedTitle ? "⏳" : null}</label>
-          <input
-            name="title"
-            type="text"
-            value={title}
-            className={unsavedTitle ? styles.unsavedInput : ""}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="intro">Intro {unsavedIntro ? "⏳" : null}</label>
-          <textarea
-            rows={4}
-            name="intro"
-            value={intro}
-            className={unsavedIntro ? styles.unsavedInput : ""}
-            onChange={(e) => setIntro(e.target.value)}
-          />
-        </div>
-        <div
-          onChange={(e) =>
-            setPosition(
-              (e.target as HTMLInputElement).value as "top" | "bottom",
-            )
-          }
-        >
-          <input
-            type="radio"
-            id="top"
-            name="position"
-            value="top"
-            defaultChecked={position === "top"}
-          />
-          <label htmlFor="top">En haut</label>
-          <input
-            type="radio"
-            id="bottom"
-            name="position"
-            value="bottom"
-            defaultChecked={position === "bottom"}
-          />
-          <label htmlFor="bottom">En bas {unsavedPosition ? "⏳" : null}</label>
-        </div>
-        <div className="input-group">
-          <label htmlFor="subscribeformore">
-            <input
-              type="checkbox"
-              id="subscribeformore"
-              defaultChecked={subForMore}
-              onChange={(e) => setSubForMore(e.target.checked)}
-            />
-            Ajouter la slide « Abonne-toi pour lire la suite »{" "}
-            {unsavedSubForMore ? "⏳" : null}
-          </label>
-        </div>
-        {subForMore ? (
-          <div className="input-group">
-            <label htmlFor="numero">Numéro</label>
-            <input
-              type="text"
-              id="numero"
-              className={unsavedNumero ? styles.unsavedInput : ""}
-              value={numero}
-              maxLength={2}
-              onChange={(e) =>
-                !isNaN(Number(e.target.value)) &&
-                (Number(e.target.value) || e.target.value === "") &&
-                setNumero(Number(e.target.value))
-              }
-            />
-          </div>
-        ) : null}
-        <div className="input-group">
-          <label htmlFor="legendContent">
-            Légende {unsavedLegendContent ? "⏳" : null}
-          </label>
-          <textarea
-            rows={3}
-            name="legendContent"
-            value={legendContent}
-            className={unsavedLegendContent ? styles.unsavedInput : ""}
-            onChange={(e) => setLegendContent(e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <label htmlFor="imageCaption">
-            Crédit image {unsavedImageCaption ? "⏳" : null}
-          </label>
-          <input
-            type="text"
-            name="imageCaption"
-            value={imageCaption || ""}
-            className={unsavedImageCaption ? styles.unsavedInput : ""}
-            onChange={(e) => setImageCaption(e.target.value || null)}
-          />
-        </div>
-        <LegendGenerator
-          legendContent={legendContent}
-          imageCaption={imageCaption}
-          articleUrl={articleUrl}
+      <div className={styles.col + " " + styles.panel}>
+        <TabNavigation
+          variant="top"
+          tabs={["contenu", "partager"]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          unsavedByTab={unsavedByTab}
         />
-        <SocialPublish />
-      </div>
-      <div className={styles.col + " " + styles.controls}>
-        <SlideContentEditor
-          value={slidesContent}
-          slideThemes={slideThemes}
-          onChange={setSlidesAndThemes}
-          unsaved={unsavedSlidesContent}
-        />
+        <TabPanel variant="top">
+          {activeTab === "contenu" && <ContenuTab desktop />}
+          {activeTab === "partager" && <PartagerTab />}
+        </TabPanel>
       </div>
     </div>
   );

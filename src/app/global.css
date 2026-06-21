@@ -27,6 +27,12 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-top: env(safe-area-inset-top, 0px);
 
+  /* Tab control sizing (mobile-first: touch-sized; compact on desktop) */
+  --control-min-height: var(--touch-target-min); /* 44px touch */
+  --control-font-size: 1rem;
+  --control-section-gap: 1.5rem;
+  --section-title-size: 1rem;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -61,6 +67,16 @@
   --toast-text: #fff;
 
   color-scheme: light;
+}
+
+/* Compact tab controls on desktop; mobile keeps the touch-sized defaults. */
+@media (min-width: 768px) {
+  :root {
+    --control-min-height: 0px;
+    --control-font-size: 0.85rem;
+    --control-section-gap: 1rem;
+    --section-title-size: 0.9rem;
+  }
 }
 
 a {
@@ -138,29 +154,6 @@ select {
   padding: 0.6em 1.2em;
   font-size: 0.8rem;
   font-family: inherit;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  align-items: flex-start;
-}
-
-.input-group input[type="checkbox"] {
-  margin-right: 0.8rem;
-}
-
-.input-group input[type="text"],
-textarea {
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-  padding: 0.6em 1.2em;
-  font-size: 0.8rem;
-  font-family: inherit;
-  align-self: stretch;
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }

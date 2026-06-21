@@ -21,13 +21,11 @@ function formatRelativeDate(timestamp: number): string {
   const diffYear = Math.round(diffDay / 365);
 
   if (diffSec < 60) return "à l'instant";
-  if (diffMin < 60)
-    return `il y a ${diffMin} minute${diffMin > 1 ? "s" : ""}`;
+  if (diffMin < 60) return `il y a ${diffMin} minute${diffMin > 1 ? "s" : ""}`;
   if (diffHour < 24)
     return `il y a ${diffHour} heure${diffHour > 1 ? "s" : ""}`;
   if (diffDay < 30) return `il y a ${diffDay} jour${diffDay > 1 ? "s" : ""}`;
-  if (diffMonth < 12)
-    return `il y a ${diffMonth} mois`;
+  if (diffMonth < 12) return `il y a ${diffMonth} mois`;
   return `il y a ${diffYear} an${diffYear > 1 ? "s" : ""}`;
 }
 
