@@ -294,87 +294,96 @@ export function PostEditorProvider({
 
     if (targets.length > 0) {
       // Upload each slide once to Zernio storage, reuse the public URLs across
-      // every Zernio platform.
-      const publicUrls = await Promise.all(
-        blobs.map(async (blob, i) => {
-          const contentType = blob.type || "image/png";
-          const presigned = await createZernioPresign({
-            filename: `slide-${i}.png`,
-            contentType,
-          });
-          if (!presigned) return null;
-          const res = await fetch(presigned.uploadUrl, {
-            method: "PUT",
-            body: blob,
-            headers: { "Content-Type": contentType },
-          });
-          if (!res.ok) return null;
-          return presigned.publicUrl;
-        }),
-      );
-
-      if (publicUrls.some((url) => url === null)) {
+      // every Zernio platform. The server action throws (and logs) on a real
+      // Zernio failure; here we only surface a generic message to the user.
+      let urls: string[];
+      try {
+        urls = await Promise.all(
+          blobs.map(async (blob, i) => {
+            const contentType = blob.type || "image/png";
+            const presigned = await createZernioPresign({
+              filename: `slide-${i}.png`,
+              contentType,
+            });
+            if (!presigned) throw new Error("Zernio non configuré");
+            const res = await fetch(presigned.uploadUrl, {
+              method: "PUT",
+              body: blob,
+              headers: { "Content-Type": contentType },
+            });
+            if (!res.ok) throw new Error(`Zernio upload failed: ${res.status}`);
+            return presigned.publicUrl;
+          }),
+        );
+      } catch (err) {
+        console.error(err);
         for (const platform of targets) {
           setResult(platform, {
             success: false,
             error: "Échec de l'envoi des images",
           });
         }
-      } else {
-        const urls = publicUrls as string[];
-        const media = urls.map((url, i) => ({
-          url,
-          altText: altTexts[i] || undefined,
-        }));
+        setPublishStatus({ running: false, results: { ...results } });
+        return;
+      }
 
-        // Instagram + Facebook share a single Zernio draft (one post, two
-        // account targets, each keeping its own caption). Bluesky stays its own
-        // draft: different caption and a 4-image cap.
-        const igFb = targets.filter(
-          (t) => t === "instagram" || t === "facebook",
-        );
-        const blueskyTargets = targets.filter((t) => t === "bluesky");
+      const media = urls.map((url, i) => ({
+        url,
+        altText: altTexts[i] || undefined,
+      }));
 
-        let blueskyMedia = media;
-        let blueskyNote: string | undefined;
-        if (media.length > MAX_BLUESKY_IMAGES) {
-          blueskyMedia = media.slice(0, MAX_BLUESKY_IMAGES);
-          blueskyNote = `Bluesky limité à ${MAX_BLUESKY_IMAGES} images (${media.length - MAX_BLUESKY_IMAGES} ignorée(s))`;
-        }
+      // Instagram + Facebook share a single Zernio draft (one post, two
+      // account targets, each keeping its own caption). Bluesky stays its own
+      // draft: different caption and a 4-image cap.
+      const igFb = targets.filter((t) => t === "instagram" || t === "facebook");
+      const blueskyTargets = targets.filter((t) => t === "bluesky");
 
-        const groups: {
-          targets: ZernioPlatform[];
-          media: typeof media;
-          note?: string;
-        }[] = [];
-        if (igFb.length > 0) groups.push({ targets: igFb, media });
-        if (blueskyTargets.length > 0) {
-          groups.push({
-            targets: blueskyTargets,
-            media: blueskyMedia,
-            note: blueskyNote,
-          });
-        }
+      let blueskyMedia = media;
+      let blueskyNote: string | undefined;
+      if (media.length > MAX_BLUESKY_IMAGES) {
+        blueskyMedia = media.slice(0, MAX_BLUESKY_IMAGES);
+        blueskyNote = `Bluesky limité à ${MAX_BLUESKY_IMAGES} images (${media.length - MAX_BLUESKY_IMAGES} ignorée(s))`;
+      }
 
-        for (const group of groups) {
-          const platforms = group.targets.map((platform) => ({
+      const groups: {
+        targets: ZernioPlatform[];
+        media: typeof media;
+        note?: string;
+      }[] = [];
+      if (igFb.length > 0) groups.push({ targets: igFb, media });
+      if (blueskyTargets.length > 0) {
+        groups.push({
+          targets: blueskyTargets,
+          media: blueskyMedia,
+          note: blueskyNote,
+        });
+      }
+
+      for (const group of groups) {
+        const platforms = group.targets.map((platform) => ({
+          platform,
+          content: generateCaption(
             platform,
-            content: generateCaption(
-              platform,
-              legendContent,
-              imageCaption,
-              articleUrl,
-            ),
-          }));
-          const res = await createZernioDraft({
+            legendContent,
+            imageCaption,
+            articleUrl,
+          ),
+        }));
+        try {
+          await createZernioDraft({
             platforms,
             media: group.media,
           });
           for (const platform of group.targets) {
-            setResult(
-              platform,
-              res.success ? { success: true, note: group.note } : res,
-            );
+            setResult(platform, { success: true, note: group.note });
+          }
+        } catch (err) {
+          console.error(err);
+          for (const platform of group.targets) {
+            setResult(platform, {
+              success: false,
+              error: "Échec de la création du brouillon",
+            });
           }
         }
       }
