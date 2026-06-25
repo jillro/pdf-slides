@@ -54,7 +54,8 @@ export async function importFromWordPress(
       return { success: false, error: "Article non trouvé" };
     }
     postData = posts[0];
-  } catch {
+  } catch (e) {
+    console.error("WordPress post fetch failed", { domain, slug, error: e });
     return {
       success: false,
       error: "Impossible de contacter le site WordPress",
@@ -86,8 +87,9 @@ export async function importFromWordPress(
         const categorySlug = category.slug?.toLowerCase();
         rubrique = RUBRIQUE_MAPPING[categorySlug] || null;
       }
-    } catch {
-      // Silent fail for category - not critical
+    } catch (e) {
+      // Non-critical: keep importing without the rubrique, but log the cause
+      console.error("WordPress category fetch failed", { domain, error: e });
     }
   }
 
@@ -121,8 +123,9 @@ export async function importFromWordPress(
           }
         }
       }
-    } catch {
-      // Silent fail for image - not critical
+    } catch (e) {
+      // Non-critical: keep importing without the image, but log the cause
+      console.error("WordPress media fetch failed", { domain, error: e });
     }
   }
 
